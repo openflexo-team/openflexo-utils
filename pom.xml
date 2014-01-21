@@ -28,7 +28,6 @@
 		<module>flexohelp</module>
 		<module>flexojavacvs</module>
 		<module>flexojavaparser</module>
-		<module>flexoprjsharing</module>
 		<module>flexowysiwyg</module>
 		<module>jiraclient</module>
     </modules>
