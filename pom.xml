@@ -27,7 +27,7 @@
 		<module>flexodocresourcemanager</module>
 		<module>flexohelp</module>
 		<module>flexojavacvs</module>
-		<module>flexojavaparser</module>
+		<!--  <module>flexojavaparser</module> -->
 		<module>flexowysiwyg</module>
 		<module>jiraclient</module>
     </modules>
