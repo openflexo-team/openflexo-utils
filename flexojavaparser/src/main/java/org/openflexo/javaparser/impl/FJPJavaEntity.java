@@ -17,11 +17,11 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.logging.Logger;
 
-import org.openflexo.foundation.dm.javaparser.ParsedJavaElement;
+import org.openflexo.javaparser.ParsedJavaElement;
 
 import com.thoughtworks.qdox.model.AbstractJavaEntity;
 import com.thoughtworks.qdox.model.JavaClassParent;
@@ -33,7 +33,7 @@ public abstract class FJPJavaEntity extends FJPJavaElement implements ParsedJava
 	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(FJPJavaEntity.class.getPackage().getName());
 
-	private AbstractJavaEntity _qdJavaEntity;
+	private final AbstractJavaEntity _qdJavaEntity;
 	private JavadocItem _javadocItem;
 
 	public FJPJavaEntity(AbstractJavaEntity qdJavaEntity, FJPJavaSource aJavaSource) {

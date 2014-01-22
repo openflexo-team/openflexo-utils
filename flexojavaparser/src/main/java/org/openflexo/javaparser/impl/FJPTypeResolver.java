@@ -17,19 +17,14 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.openflexo.foundation.FlexoException;
-import org.openflexo.foundation.dm.DMEntity;
-import org.openflexo.foundation.dm.DMModel;
-import org.openflexo.foundation.dm.DMPackage;
-import org.openflexo.foundation.dm.DMSet.PackageReference.ClassReference;
-import org.openflexo.foundation.dm.DMType;
-import org.openflexo.foundation.dm.LoadableDMEntity;
-import org.openflexo.javaparser.FJPJavaSource.FJPImportDeclarations.FJPImportDeclaration;
+import org.openflexo.javaparser.impl.FJPJavaSource.FJPImportDeclarations.FJPImportDeclaration;
+import org.openflexo.javaparser.model.DMEntity;
 
 import com.thoughtworks.qdox.model.Type;
 
@@ -186,7 +181,7 @@ public class FJPTypeResolver {
 	}
 
 	public static class UnresolvedTypeException extends FlexoException {
-		private Type _unresolvedType;
+		private final Type _unresolvedType;
 
 		public UnresolvedTypeException(Type unresolvedType) {
 			super("Cannot resolve " + unresolvedType);

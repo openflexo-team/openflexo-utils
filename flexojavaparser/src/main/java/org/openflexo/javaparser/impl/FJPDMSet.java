@@ -17,23 +17,23 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import org.openflexo.foundation.dm.DMEntity;
-import org.openflexo.foundation.dm.DMMethod;
-import org.openflexo.foundation.dm.DMPackage;
-import org.openflexo.foundation.dm.DMProperty;
-import org.openflexo.foundation.dm.DMSet;
-import org.openflexo.foundation.dm.DMSet.PackageReference.ClassReference;
-import org.openflexo.foundation.dm.DMSet.PackageReference.ClassReference.MethodReference;
-import org.openflexo.foundation.dm.DMSet.PackageReference.ClassReference.PropertyReference;
 import org.openflexo.foundation.FlexoProject;
-import org.openflexo.javaparser.FJPDMSet.FJPPackageReference.FJPClassReference;
+import org.openflexo.javaparser.impl.FJPDMSet.FJPPackageReference.FJPClassReference;
+import org.openflexo.javaparser.impl.model.DMEntity;
+import org.openflexo.javaparser.impl.model.DMMethod;
+import org.openflexo.javaparser.impl.model.DMPackage;
+import org.openflexo.javaparser.impl.model.DMProperty;
+import org.openflexo.javaparser.impl.model.DMSet;
+import org.openflexo.javaparser.impl.model.DMSet.PackageReference.ClassReference;
+import org.openflexo.javaparser.impl.model.DMSet.PackageReference.ClassReference.MethodReference;
+import org.openflexo.javaparser.impl.model.DMSet.PackageReference.ClassReference.PropertyReference;
 import org.openflexo.logging.FlexoLogger;
 
 public class FJPDMSet extends DMSet {

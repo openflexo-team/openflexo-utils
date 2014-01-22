@@ -17,12 +17,9 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.logging.Logger;
-
-import org.openflexo.foundation.TemporaryFlexoModelObject;
-import org.openflexo.inspector.InspectableObject;
 
 import com.thoughtworks.qdox.model.AbstractJavaEntity;
 import com.thoughtworks.qdox.model.ClassLibrary;
@@ -31,7 +28,7 @@ import com.thoughtworks.qdox.model.JavaField;
 import com.thoughtworks.qdox.model.JavaMethod;
 import com.thoughtworks.qdox.model.Type;
 
-public abstract class FJPJavaElement extends TemporaryFlexoModelObject implements InspectableObject {
+public abstract class FJPJavaElement {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(FJPJavaElement.class.getPackage().getName());
@@ -98,8 +95,5 @@ public abstract class FJPJavaElement extends TemporaryFlexoModelObject implement
 	public FJPJavaClass getClassByName(String fullQualifiedName) {
 		return getJavaParser().getClassByName(fullQualifiedName);
 	}
-
-	@Override
-	public abstract String getInspectorName();
 
 }

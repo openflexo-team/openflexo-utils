@@ -17,26 +17,26 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.openflexo.foundation.dm.DMMethod;
-import org.openflexo.foundation.dm.DMModel;
-import org.openflexo.foundation.dm.DMProperty;
-import org.openflexo.foundation.dm.DuplicateMethodSignatureException;
-import org.openflexo.foundation.dm.javaparser.JavaClassParser;
-import org.openflexo.foundation.dm.javaparser.JavaFieldParser;
-import org.openflexo.foundation.dm.javaparser.JavaMethodParser;
-import org.openflexo.foundation.dm.javaparser.JavaParseException;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaClass;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaField;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaMethod;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaMethod.ParsedJavaMethodParameter;
-import org.openflexo.foundation.dm.javaparser.ParsedJavadoc;
-import org.openflexo.foundation.dm.javaparser.ParsedJavadocItem;
-import org.openflexo.javaparser.FJPTypeResolver.CrossReferencedEntitiesException;
+import org.openflexo.javaparser.DuplicateMethodSignatureException;
+import org.openflexo.javaparser.JavaClassParser;
+import org.openflexo.javaparser.JavaFieldParser;
+import org.openflexo.javaparser.JavaMethodParser;
+import org.openflexo.javaparser.JavaParseException;
+import org.openflexo.javaparser.ParsedJavaClass;
+import org.openflexo.javaparser.ParsedJavaField;
+import org.openflexo.javaparser.ParsedJavaMethod;
+import org.openflexo.javaparser.ParsedJavaMethod.ParsedJavaMethodParameter;
+import org.openflexo.javaparser.ParsedJavadoc;
+import org.openflexo.javaparser.ParsedJavadocItem;
+import org.openflexo.javaparser.impl.FJPTypeResolver.CrossReferencedEntitiesException;
+import org.openflexo.javaparser.model.DMClassLibrary;
+import org.openflexo.javaparser.model.DMMethod;
+import org.openflexo.javaparser.model.DMProperty;
 import org.openflexo.toolbox.StringUtils;
 
 import com.thoughtworks.qdox.parser.ParseException;
@@ -46,10 +46,10 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 	private static final Logger logger = Logger.getLogger(DefaultJavaParser.class.getPackage().getName());
 
 	@Override
-	public ParsedJavadoc parseJavadocForClass(String classCode, DMModel dataModel) throws JavaParseException {
+	public ParsedJavadoc parseJavadocForClass(String classCode, DMClassLibrary classLibrary) throws JavaParseException {
 		try {
 			String sourceName = "TemporaryClass";
-			FJPJavaSource source = new FJPJavaSource(sourceName, classCode, dataModel.getClassLibrary());
+			FJPJavaSource source = new FJPJavaSource(sourceName, classCode, classLibrary);
 			FJPJavaClass parsedClass = source.getRootClass();
 			return parsedClass.getJavadoc();
 		}
@@ -64,10 +64,10 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 	}
 
 	@Override
-	public ParsedJavaClass parseClass(String classCode, DMModel dataModel) throws JavaParseException {
+	public ParsedJavaClass parseClass(String classCode, DMClassLibrary classLibrary) throws JavaParseException {
 		try {
 			String sourceName = "TemporaryClass";
-			FJPJavaSource source = new FJPJavaSource(sourceName, classCode, dataModel.getClassLibrary());
+			FJPJavaSource source = new FJPJavaSource(sourceName, classCode, classLibrary);
 			FJPJavaClass parsedClass = source.getRootClass();
 			return parsedClass;
 		}
@@ -84,7 +84,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 	}
 
 	@Override
-	public FJPJavaMethod parseMethod(String methodCode, DMModel dataModel) throws JavaParseException {
+	public FJPJavaMethod parseMethod(String methodCode, DMClassLibrary classLibrary) throws JavaParseException {
 		try {
 			String parsedString = "public class TemporaryClass {" + StringUtils.LINE_SEPARATOR + methodCode + StringUtils.LINE_SEPARATOR
 					+ "}" + StringUtils.LINE_SEPARATOR;
@@ -94,7 +94,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 			}
 
 			String sourceName = "TemporaryClass";
-			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, dataModel.getClassLibrary());
+			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, classLibrary);
 			FJPJavaClass parsedClass = source.getRootClass();
 			if (parsedClass.getMethods().length == 0) {
 				return null;
@@ -114,7 +114,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 	}
 
 	@Override
-	public ParsedJavaField parseField(String fieldCode, DMModel dataModel) throws JavaParseException {
+	public ParsedJavaField parseField(String fieldCode, DMClassLibrary classLibrary) throws JavaParseException {
 		String parsedString = null;
 		try {
 			parsedString = "public class TemporaryClass {" + StringUtils.LINE_SEPARATOR + fieldCode + StringUtils.LINE_SEPARATOR + "}"
@@ -125,7 +125,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 			}
 
 			String sourceName = "TemporaryClass";
-			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, dataModel.getClassLibrary());
+			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, classLibrary);
 			FJPJavaClass parsedClass = source.getRootClass();
 			if (parsedClass.getFields().length == 0) {
 				return null;
@@ -145,7 +145,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 	}
 
 	@Override
-	public ParsedJavadoc parseJavadocForMethod(String methodCode, DMModel dataModel) throws JavaParseException {
+	public ParsedJavadoc parseJavadocForMethod(String methodCode, DMClassLibrary classLibrary) throws JavaParseException {
 		try {
 			String parsedString = "public class TemporaryClass {" + StringUtils.LINE_SEPARATOR + methodCode + StringUtils.LINE_SEPARATOR
 					+ "}" + StringUtils.LINE_SEPARATOR;
@@ -155,7 +155,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 			}
 
 			String sourceName = "TemporaryClass";
-			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, dataModel.getClassLibrary());
+			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, classLibrary);
 			FJPJavaClass parsedClass = source.getRootClass();
 			if (parsedClass.getMethods().length == 0) {
 				return null;
@@ -174,7 +174,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 	}
 
 	@Override
-	public ParsedJavadoc parseJavadocForField(String fieldCode, DMModel dataModel) throws JavaParseException {
+	public ParsedJavadoc parseJavadocForField(String fieldCode, DMClassLibrary classLibrary) throws JavaParseException {
 		try {
 			String parsedString = "public class TemporaryClass {" + StringUtils.LINE_SEPARATOR + fieldCode + StringUtils.LINE_SEPARATOR
 					+ "}" + StringUtils.LINE_SEPARATOR;
@@ -184,7 +184,7 @@ public class DefaultJavaParser implements JavaClassParser, JavaMethodParser, Jav
 			}
 
 			String sourceName = "TemporaryClass";
-			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, dataModel.getClassLibrary());
+			FJPJavaSource source = new FJPJavaSource(sourceName, parsedString, classLibrary);
 			FJPJavaClass parsedClass = source.getRootClass();
 			if (parsedClass.getFields().length == 0) {
 				return null;

@@ -17,7 +17,7 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,21 +28,13 @@ import java.util.logging.Logger;
 
 import javax.naming.InvalidNameException;
 
-import org.openflexo.foundation.Inspectors;
-import org.openflexo.foundation.dm.DMEntity;
-import org.openflexo.foundation.dm.DMMethod;
-import org.openflexo.foundation.dm.DMObject;
-import org.openflexo.foundation.dm.DMProperty;
-import org.openflexo.foundation.dm.DMSet.PackageReference.ClassReference;
-import org.openflexo.foundation.dm.DMSet.PackageReference.ClassReference.MethodReference;
-import org.openflexo.foundation.dm.DMSet.PackageReference.ClassReference.PropertyReference;
-import org.openflexo.foundation.dm.DMType;
-import org.openflexo.foundation.dm.DuplicateClassNameException;
-import org.openflexo.foundation.dm.DuplicateMethodSignatureException;
-import org.openflexo.foundation.dm.DuplicatePropertyNameException;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaClass;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaElement;
-import org.openflexo.javaparser.FJPTypeResolver.UnresolvedTypeException;
+import org.openflexo.javaparser.DuplicateMethodSignatureException;
+import org.openflexo.javaparser.ParsedJavaClass;
+import org.openflexo.javaparser.ParsedJavaElement;
+import org.openflexo.javaparser.impl.FJPTypeResolver.UnresolvedTypeException;
+import org.openflexo.javaparser.model.DMEntity;
+import org.openflexo.javaparser.model.DMMethod;
+import org.openflexo.javaparser.model.DMProperty;
 
 import com.thoughtworks.qdox.model.JavaClass;
 import com.thoughtworks.qdox.model.Type;
@@ -51,14 +43,13 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 
 	private static final Logger logger = Logger.getLogger(FJPJavaClass.class.getPackage().getName());
 
-	private JavaClass _qdJavaClass;
+	private final JavaClass _qdJavaClass;
 
 	public FJPJavaClass(JavaClass qdJavaClass, FJPJavaSource aJavaSource) {
 		super(qdJavaClass, aJavaSource);
 		_qdJavaClass = qdJavaClass;
 	}
 
-	@Override
 	public String getName() {
 		return _qdJavaClass.getName();
 	}
@@ -90,7 +81,6 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 		return _fields;
 	}
 
-	@Override
 	public String getFullyQualifiedName() {
 		return _qdJavaClass.getFullyQualifiedName();
 	}
@@ -132,7 +122,7 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 		return _methods;
 	}
 
-	public FJPJavaMethod getMethodBySignature(String name, DMType[] parameterTypes, boolean superclasses) {
+	public FJPJavaMethod getMethodBySignature(String name, Type[] parameterTypes, boolean superclasses) {
 		return getMethod(_qdJavaClass.getMethodBySignature(name, parameterTypes, superclasses));
 	}
 
@@ -162,7 +152,7 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 		return null;
 	}
 
-	public FJPJavaMethod getMethodBySignature(String name, DMType... parameterTypes) {
+	public FJPJavaMethod getMethodBySignature(String name, Type... parameterTypes) {
 		return getMethod(_qdJavaClass.getMethodBySignature(name, parameterTypes));
 	}
 
@@ -170,7 +160,7 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 		return retrieveMethods(_qdJavaClass.getMethods(name));
 	}
 
-	public FJPJavaMethod[] getMethodsBySignature(String name, DMType[] parameterTypes, boolean superclasses) {
+	public FJPJavaMethod[] getMethodsBySignature(String name, Type[] parameterTypes, boolean superclasses) {
 		return retrieveMethods(_qdJavaClass.getMethodsBySignature(name, parameterTypes, superclasses));
 	}
 
@@ -191,9 +181,9 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 		return _qdJavaClass.getPackage();
 	}
 
-	public DMType getSuperClass() {
+	public Type getSuperClass() {
 		if (_qdJavaClass != null) {
-			return (DMType) _qdJavaClass.getSuperClass();
+			return (Type) _qdJavaClass.getSuperClass();
 		}
 		return null;
 	}
@@ -204,7 +194,7 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 
 	public String getSuperClassAsString() {
 		if (getSuperClass() != null) {
-			return getSuperClass().getStringRepresentation();
+			return getSuperClass().toString();
 		}
 		return "java.lang.Object";
 	}
@@ -219,11 +209,6 @@ public class FJPJavaClass extends FJPJavaEntity implements ParsedJavaClass {
 
 	public boolean isInterface() {
 		return _qdJavaClass.isInterface();
-	}
-
-	@Override
-	public String getInspectorName() {
-		return Inspectors.CG.JAVA_CLASS_INSPECTOR;
 	}
 
 	private Vector<FJPJavaEntity> orderedChildren = null;

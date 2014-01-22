@@ -26,12 +26,12 @@ import java.util.logging.Logger;
 
 import junit.framework.TestCase;
 
-import org.openflexo.foundation.dm.DMType;
-import org.openflexo.javaparser.FJPJavaClass;
-import org.openflexo.javaparser.FJPJavaField;
-import org.openflexo.javaparser.FJPJavaMethod;
-import org.openflexo.javaparser.FJPJavaSource;
-import org.openflexo.javaparser.JavaParser;
+import org.openflexo.javaparser.impl.FJPJavaClass;
+import org.openflexo.javaparser.impl.FJPJavaField;
+import org.openflexo.javaparser.impl.FJPJavaMethod;
+import org.openflexo.javaparser.impl.FJPJavaSource;
+import org.openflexo.javaparser.impl.JavaParser;
+import org.openflexo.javaparser.impl.model.DMType;
 import org.openflexo.toolbox.FileResource;
 
 import com.thoughtworks.qdox.model.ClassLibrary;

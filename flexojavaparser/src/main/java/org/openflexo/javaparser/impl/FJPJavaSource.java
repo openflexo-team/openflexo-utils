@@ -17,7 +17,7 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -27,7 +27,7 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import org.openflexo.foundation.Inspectors;
-import org.openflexo.foundation.dm.DMClassLibrary;
+import org.openflexo.javaparser.model.DMClassLibrary;
 import org.openflexo.toolbox.FileUtils;
 
 import com.thoughtworks.qdox.model.AbstractJavaEntity;

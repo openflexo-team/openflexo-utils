@@ -17,31 +17,25 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.logging.Logger;
 
-import org.openflexo.foundation.dm.DMType;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaMethod.ParsedJavaMethodParameter;
+import org.openflexo.javaparser.ParsedJavaMethod.ParsedJavaMethodParameter;
 
 import com.thoughtworks.qdox.model.JavaParameter;
+import com.thoughtworks.qdox.model.Type;
 
 public class FJPJavaParameter extends FJPJavaElement implements ParsedJavaMethodParameter {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(FJPJavaParameter.class.getPackage().getName());
 
-	private JavaParameter _qdJavaParameter;
+	private final JavaParameter _qdJavaParameter;
 
 	public FJPJavaParameter(JavaParameter qdJavaParameter, FJPJavaSource aJavaSource) {
 		super(aJavaSource);
 		_qdJavaParameter = qdJavaParameter;
-	}
-
-	@Override
-	public String getInspectorName() {
-		// not inspectable alone
-		return null;
 	}
 
 	@Override
@@ -54,8 +48,8 @@ public class FJPJavaParameter extends FJPJavaElement implements ParsedJavaMethod
 	}
 
 	@Override
-	public DMType getType() {
-		return (DMType) _qdJavaParameter.getType();
+	public Type getType() {
+		return _qdJavaParameter.getType();
 	}
 
 	public String getTypeAsString() {

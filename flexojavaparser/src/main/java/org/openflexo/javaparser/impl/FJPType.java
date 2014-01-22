@@ -17,17 +17,16 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
-import org.openflexo.foundation.dm.DMClassLibrary;
-import org.openflexo.foundation.dm.DMType;
+import org.openflexo.javaparser.model.DMClassLibrary;
 
 import com.thoughtworks.qdox.model.JavaClassParent;
 import com.thoughtworks.qdox.model.Type;
 
-public class FJPType extends DMType {
+public class FJPType extends Type {
 
-	private String name;
+	private final String name;
 
 	public FJPType(String fullName, String name, int dimensions, JavaClassParent context) {
 		super(fullName, name, dimensions, context);
@@ -46,7 +45,6 @@ public class FJPType extends DMType {
 		return new FJPType(null, name, dimensions, context);
 	}
 
-	@Override
 	public String getName() {
 		return name;
 	}

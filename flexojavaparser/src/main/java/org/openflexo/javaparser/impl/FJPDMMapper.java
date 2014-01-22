@@ -17,7 +17,7 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -25,18 +25,13 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.openflexo.foundation.dm.DMCardinality;
-import org.openflexo.foundation.dm.DMMethod;
-import org.openflexo.foundation.dm.DMMethod.DMMethodParameter;
-import org.openflexo.foundation.dm.DMModel;
-import org.openflexo.foundation.dm.DMProperty;
-import org.openflexo.foundation.dm.DMPropertyImplementationType;
-import org.openflexo.foundation.dm.DMType;
-import org.openflexo.foundation.dm.DMVisibilityType;
-import org.openflexo.foundation.dm.DuplicateMethodSignatureException;
-import org.openflexo.foundation.dm.javaparser.ParsedJavadocItem;
-import org.openflexo.foundation.dm.javaparser.ParserNotInstalledException;
-import org.openflexo.javaparser.FJPTypeResolver.CrossReferencedEntitiesException;
+import org.openflexo.javaparser.DuplicateMethodSignatureException;
+import org.openflexo.javaparser.ParsedJavadocItem;
+import org.openflexo.javaparser.ParserNotInstalledException;
+import org.openflexo.javaparser.impl.FJPTypeResolver.CrossReferencedEntitiesException;
+import org.openflexo.javaparser.model.DMClassLibrary;
+import org.openflexo.javaparser.model.DMMethod;
+import org.openflexo.javaparser.model.DMProperty;
 
 import com.thoughtworks.qdox.model.Type;
 
@@ -50,14 +45,14 @@ public class FJPDMMapper {
 
 	private static final Logger logger = Logger.getLogger(FJPDMMapper.class.getPackage().getName());
 
-	public static Vector<DMMethod> searchForMethods(FJPJavaClass aClass, DMModel dataModel, FJPDMSet context, FJPJavaSource source,
-			boolean importReferencedEntities, Vector<String> excludedSignatures) {
+	public static Vector<DMMethod> searchForMethods(FJPJavaClass aClass, DMClassLibrary classLibrary, FJPDMSet context,
+			FJPJavaSource source, boolean importReferencedEntities, Vector<String> excludedSignatures) {
 		Vector<DMMethod> returned = new Vector<DMMethod>();
 
 		try {
 			FJPJavaMethod[] declaredMethods = aClass.getMethods();
 			for (FJPJavaMethod method : declaredMethods) {
-				DMMethod newMethod = makeMethod(method, dataModel, context, source, importReferencedEntities);
+				DMMethod newMethod = makeMethod(method, classLibrary, context, source, importReferencedEntities);
 				if (newMethod != null && (excludedSignatures == null || !excludedSignatures.contains(newMethod.getSignature()))) {
 					returned.add(newMethod);
 					// logger.info("Add "+newMethod.getSignature());
@@ -86,15 +81,15 @@ public class FJPDMMapper {
 		return returned;
 	}
 
-	public static Vector<DMProperty> searchForProperties(FJPJavaClass aClass, DMModel dataModel, FJPDMSet context, FJPJavaSource source,
-			boolean includesGetOnlyProperties, boolean importReferencedEntities, Vector<String> excludedSignatures) {
+	public static Vector<DMProperty> searchForProperties(FJPJavaClass aClass, DMClassLibrary classLibrary, FJPDMSet context,
+			FJPJavaSource source, boolean includesGetOnlyProperties, boolean importReferencedEntities, Vector<String> excludedSignatures) {
 		Vector<DMProperty> returned = new Vector<DMProperty>();
 
 		FJPJavaMethod[] declaredMethods = aClass.getMethods();
 		for (FJPJavaMethod method : declaredMethods) {
 			DMProperty newProperty = null;
 			try {
-				newProperty = makeProperty(method, dataModel, context, source, includesGetOnlyProperties, importReferencedEntities,
+				newProperty = makeProperty(method, classLibrary, context, source, includesGetOnlyProperties, importReferencedEntities,
 						excludedSignatures);
 			} catch (FJPTypeResolver.CrossReferencedEntitiesException e) {
 			}
@@ -110,7 +105,7 @@ public class FJPDMMapper {
 			FJPJavaField field = declaredFields[i];
 			DMProperty newProperty = null;
 			try {
-				newProperty = makeProperty(field, dataModel, context, source, importReferencedEntities);
+				newProperty = makeProperty(field, classLibrary, context, source, importReferencedEntities);
 			} catch (FJPTypeResolver.CrossReferencedEntitiesException e) {
 			}
 			if (newProperty != null) {
@@ -127,22 +122,22 @@ public class FJPDMMapper {
 		return returned;
 	}
 
-	static DMMethod makeMethod(FJPJavaClass aClass, String signature, DMModel dataModel, FJPDMSet context, FJPJavaSource source,
+	static DMMethod makeMethod(FJPJavaClass aClass, String signature, DMClassLibrary classLibrary, FJPDMSet context, FJPJavaSource source,
 			boolean importReferencedEntities) throws FJPTypeResolver.CrossReferencedEntitiesException {
-		FJPJavaMethod method = searchMatchingMethod(aClass, signature, dataModel, context, source);
+		FJPJavaMethod method = searchMatchingMethod(aClass, signature, classLibrary, context, source);
 		if (method != null) {
-			return makeMethod(method, dataModel, context, source, importReferencedEntities);
+			return makeMethod(method, classLibrary, context, source, importReferencedEntities);
 		}
 		return null;
 	}
 
-	static DMMethod makeMethod(FJPJavaMethod method, DMModel dataModel, FJPDMSet context, FJPJavaSource source,
+	static DMMethod makeMethod(FJPJavaMethod method, DMClassLibrary classLibrary, FJPDMSet context, FJPJavaSource source,
 			boolean importReferencedEntities) throws FJPTypeResolver.CrossReferencedEntitiesException {
 		if (method.isConstructor()) {
 			return null;
 		}
 
-		DMType returnType = method.getReturns();
+		Type returnType = method.getReturns();
 		Vector<FJPJavaParameter> parameters = method.getParameters();
 		String methodName = method.getName();
 
@@ -251,8 +246,8 @@ public class FJPDMMapper {
 	 * 
 	 * @throws CrossReferencedEntitiesException
 	 */
-	static DMProperty makeProperty(FJPJavaClass aClass, String propertyName, DMModel dataModel, FJPDMSet context, FJPJavaSource source,
-			boolean includesGetOnlyProperties, boolean importReferencedEntities, Vector<String> excludedSignatures)
+	static DMProperty makeProperty(FJPJavaClass aClass, String propertyName, DMClassLibrary classLibrary, FJPDMSet context,
+			FJPJavaSource source, boolean includesGetOnlyProperties, boolean importReferencedEntities, Vector<String> excludedSignatures)
 			throws FJPTypeResolver.CrossReferencedEntitiesException {
 		if (logger.isLoggable(Level.FINE)) {
 			logger.fine("Looking for " + propertyName);
@@ -282,7 +277,7 @@ public class FJPDMMapper {
 	 * 
 	 * @throws CrossReferencedEntitiesException
 	 */
-	static DMProperty makeProperty(FJPJavaMethod method, DMModel dataModel, FJPDMSet context, FJPJavaSource source,
+	static DMProperty makeProperty(FJPJavaMethod method, DMClassLibrary classLibrary, FJPDMSet context, FJPJavaSource source,
 			boolean includesGetOnlyProperties, boolean importReferencedEntities, Vector<String> excludedSignatures)
 			throws FJPTypeResolver.CrossReferencedEntitiesException {
 		if (logger.isLoggable(Level.FINE)) {
@@ -500,7 +495,7 @@ public class FJPDMMapper {
 	 * 
 	 * @throws CrossReferencedEntitiesException
 	 */
-	static DMProperty makeProperty(FJPJavaField field, DMModel dataModel, FJPDMSet context, FJPJavaSource source,
+	static DMProperty makeProperty(FJPJavaField field, DMClassLibrary classLibrary, FJPDMSet context, FJPJavaSource source,
 			boolean importReferencedEntities) throws FJPTypeResolver.CrossReferencedEntitiesException {
 		DMType fieldType = field.getType();
 		if (!fieldType.isVoid() && field.isPublic() && !field.isStatic()) {
@@ -535,7 +530,7 @@ public class FJPDMMapper {
 	 * 
 	 * Returns corresponding method, null if no such method exist
 	 */
-	private static FJPJavaMethod searchMatchingMethod(FJPJavaClass aClass, String signature, DMModel dataModel, FJPDMSet context,
+	private static FJPJavaMethod searchMatchingMethod(FJPJavaClass aClass, String signature, DMClassLibrary classLibrary, FJPDMSet context,
 			FJPJavaSource source) {
 		if (logger.isLoggable(Level.FINE)) {
 			logger.fine("Searching " + signature);
@@ -551,12 +546,14 @@ public class FJPDMMapper {
 		return null;
 	}
 
-	private static String getFullQualifiedCallSignature(FJPJavaMethod method, DMModel dataModel, FJPDMSet context, FJPJavaSource source) {
+	private static String getFullQualifiedCallSignature(FJPJavaMethod method, DMClassLibrary classLibrary, FJPDMSet context,
+			FJPJavaSource source) {
 		String returned = method.getName() + "(" + getParametersTypesAsString(method, dataModel, context, source) + ")";
 		return returned;
 	}
 
-	private static String getParametersTypesAsString(FJPJavaMethod method, DMModel dataModel, FJPDMSet context, FJPJavaSource source) {
+	private static String getParametersTypesAsString(FJPJavaMethod method, DMClassLibrary classLibrary, FJPDMSet context,
+			FJPJavaSource source) {
 		boolean isFirst = true;
 		StringBuffer sb = new StringBuffer();
 		for (FJPJavaParameter p : method.getParameters()) {

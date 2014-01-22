@@ -17,14 +17,14 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.openflexo.foundation.KVCFlexoObject;
-import org.openflexo.foundation.dm.javaparser.ParsedJavadoc;
-import org.openflexo.foundation.dm.javaparser.ParsedJavadocItem;
+import org.openflexo.javaparser.ParsedJavadoc;
+import org.openflexo.javaparser.ParsedJavadocItem;
 import org.openflexo.toolbox.StringUtils;
 
 import com.thoughtworks.qdox.model.DocletTag;

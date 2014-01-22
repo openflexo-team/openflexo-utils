@@ -17,7 +17,7 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.openflexo.foundation.dm.DMClassLibrary;
+import org.openflexo.javaparser.model.DMClassLibrary;
 
 import com.thoughtworks.qdox.model.AbstractJavaEntity;
 import com.thoughtworks.qdox.model.ClassLibrary;

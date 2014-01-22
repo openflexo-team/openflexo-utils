@@ -17,15 +17,12 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import org.openflexo.foundation.Inspectors;
-import org.openflexo.foundation.dm.DMType;
-import org.openflexo.foundation.dm.DMType.DMTypeTokenizer;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaMethod;
+import org.openflexo.javaparser.ParsedJavaMethod;
 import org.openflexo.toolbox.StringUtils;
 
 import com.thoughtworks.qdox.model.JavaMethod;
@@ -36,7 +33,7 @@ public class FJPJavaMethod extends FJPJavaEntity implements ParsedJavaMethod {
 
 	private static final Logger logger = Logger.getLogger(FJPJavaMethod.class.getPackage().getName());
 
-	private JavaMethod _qdJavaMethod;
+	private final JavaMethod _qdJavaMethod;
 
 	public FJPJavaMethod(JavaMethod qdJavaMethod, FJPJavaSource aJavaSource) {
 		super(qdJavaMethod, aJavaSource);
@@ -106,8 +103,8 @@ public class FJPJavaMethod extends FJPJavaEntity implements ParsedJavaMethod {
 		return _qdJavaMethod.getPropertyType();
 	}
 
-	public DMType getReturns() {
-		return (DMType) _qdJavaMethod.getReturns();
+	public Type getReturns() {
+		return _qdJavaMethod.getReturns();
 	}
 
 	private String _sourceCode = null;
@@ -175,11 +172,6 @@ public class FJPJavaMethod extends FJPJavaEntity implements ParsedJavaMethod {
 
 	public boolean isPropertyMutator() {
 		return _qdJavaMethod.isPropertyMutator();
-	}
-
-	@Override
-	public String getInspectorName() {
-		return Inspectors.CG.JAVA_METHOD_INSPECTOR;
 	}
 
 	private String exceptionsAsString = null;

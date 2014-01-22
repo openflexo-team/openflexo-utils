@@ -17,7 +17,7 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.logging.Logger;
 
@@ -37,11 +37,6 @@ public class FJPJavaParseException extends FJPJavaElement {
 		super(null);
 		_parseException = parseException;
 		_sourceName = sourceName;
-	}
-
-	@Override
-	public String getInspectorName() {
-		return null;
 	}
 
 	public int getColumn() {

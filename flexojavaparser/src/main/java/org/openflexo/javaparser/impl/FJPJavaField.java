@@ -17,13 +17,13 @@
  * along with OpenFlexo. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.openflexo.javaparser;
+package org.openflexo.javaparser.impl;
 
 import java.util.logging.Logger;
 
 import org.openflexo.foundation.Inspectors;
-import org.openflexo.foundation.dm.DMType;
-import org.openflexo.foundation.dm.javaparser.ParsedJavaField;
+import org.openflexo.javaparser.ParsedJavaField;
+import org.openflexo.javaparser.impl.model.DMType;
 
 import com.thoughtworks.qdox.model.JavaClass;
 import com.thoughtworks.qdox.model.JavaField;
