@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import org.openflexo.foundation.FlexoException;
 import org.openflexo.javaparser.impl.FJPJavaSource.FJPImportDeclarations.FJPImportDeclaration;
+import org.openflexo.javaparser.model.DMClassLibrary;
 import org.openflexo.javaparser.model.DMEntity;
 
 import com.thoughtworks.qdox.model.Type;
@@ -38,7 +39,7 @@ public class FJPTypeResolver {
 
 	private static final Logger logger = Logger.getLogger(FJPTypeResolver.class.getPackage().getName());
 
-	private static DMEntity entityForType(Type type, DMModel dataModel) {
+	private static DMEntity entityForType(Type type, DMClassLibrary classLibrary) {
 		DMEntity returned = dataModel.getCachedEntitiesForTypes().get(type.getValue());
 		return returned;
 	}
