@@ -16,15 +16,12 @@
 		<connie.version>1.0-SNAPSHOT</connie.version>
 		<pamela.version>1.0-SNAPSHOT</pamela.version>
 		<diana.version>1.0-SNAPSHOT</diana.version>
-		<openflexo.version>1.7-SNAPSHOT</openflexo.version>
 	</properties>
 	<scm>
 		<connection>scm:git:ssh://git@github.com:openflexo-team/openflexo-utils.git</connection>
 		<url>https://github.com/openflexo-team/openflexo-utils</url>
 	</scm>
 	<modules>
-		<module>flexodocresourcecenter</module>
-		<module>flexodocresourcemanager</module>
 		<module>flexohelp</module>
 		<module>flexojavacvs</module>
 		<!--  <module>flexojavaparser</module> -->
@@ -36,33 +33,6 @@
 		
 			<dependency>
 				<groupId>org.openflexo</groupId>
-				<artifactId>flexodocresourcecenter</artifactId>
-				<version>${project.version}</version>
-				<classifier>resources</classifier>
-				<type>zip</type>
-			</dependency>
-
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexodocresourcemanager</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexodocresourcemanager</artifactId>
-				<version>${project.version}</version>
-				<classifier>tests</classifier>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexodocresourcemanager</artifactId>
-				<version>${project.version}</version>
-				<classifier>resources</classifier>
-				<type>zip</type>
-			</dependency>
-		
-			<dependency>
-				<groupId>org.openflexo</groupId>
 				<artifactId>flexohelp</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -120,25 +90,6 @@
 		
 			<dependency>
 				<groupId>org.openflexo</groupId>
-				<artifactId>flexoprjsharing</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexoprjsharing</artifactId>
-				<version>${project.version}</version>
-				<classifier>tests</classifier>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexoprjsharing</artifactId>
-				<version>${project.version}</version>
-				<classifier>resources</classifier>
-				<type>zip</type>
-			</dependency>
-		
-			<dependency>
-				<groupId>org.openflexo</groupId>
 				<artifactId>flexowysiwyg</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -174,26 +125,6 @@
 				<classifier>resources</classifier>
 				<type>zip</type>
 			</dependency>
-		
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexo-foundation</artifactId>
-				<version>${openflexo.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexo-foundation</artifactId>
-				<version>${openflexo.version}</version>
-				<classifier>tests</classifier>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexo-foundation</artifactId>
-				<version>${openflexo.version}</version>
-				<classifier>resources</classifier>
-				<type>zip</type>
-			</dependency>
-
 		
 			<dependency>
 				<groupId>org.openflexo</groupId>
@@ -547,14 +478,14 @@
 			
 			<!-- Following jars are required (verified) -->
 			<dependency>
-				<groupId>com.google.code.gson</groupId>
-				<artifactId>gson</artifactId>
-				<version>2.2.2</version>
-			</dependency>
-			<dependency>
 				<groupId>javax.help</groupId>
 				<artifactId>javahelp</artifactId>
 				<version>2.0.05</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.code.gson</groupId>
+				<artifactId>gson</artifactId>
+				<version>2.2.2</version>
 			</dependency>
 			<dependency>
 				<groupId>com.sferyx.htmleditor</groupId>
