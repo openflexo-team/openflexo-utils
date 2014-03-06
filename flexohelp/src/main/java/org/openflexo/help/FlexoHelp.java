@@ -30,7 +30,8 @@ import java.util.logging.Logger;
 import javax.help.HelpBroker;
 import javax.help.HelpSet;
 
-import org.openflexo.toolbox.FileResource;
+import org.openflexo.toolbox.ResourceLocator;
+
 
 /**
  * Please comment this class
@@ -136,7 +137,7 @@ public class FlexoHelp extends Observable {
 	}
 
 	public static File getHelpSetDirectory() {
-		return new FileResource("Help");
+		return ResourceLocator.locateDirectory("Help");
 	}
 
 	private static File getMostRecentHelpsetFile() {
