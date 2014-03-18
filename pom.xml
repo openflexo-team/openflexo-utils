@@ -71,44 +71,6 @@
 		
 			<dependency>
 				<groupId>org.openflexo</groupId>
-				<artifactId>flexojavaparser</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexojavaparser</artifactId>
-				<version>${project.version}</version>
-				<classifier>tests</classifier>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexojavaparser</artifactId>
-				<version>${project.version}</version>
-				<classifier>resources</classifier>
-				<type>zip</type>
-			</dependency>
-		
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexowysiwyg</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexowysiwyg</artifactId>
-				<version>${project.version}</version>
-				<classifier>tests</classifier>
-			</dependency>
-			<dependency>
-				<groupId>org.openflexo</groupId>
-				<artifactId>flexowysiwyg</artifactId>
-				<version>${project.version}</version>
-				<classifier>resources</classifier>
-				<type>zip</type>
-			</dependency>
-		
-			<dependency>
-				<groupId>org.openflexo</groupId>
 				<artifactId>jiraclient</artifactId>
 				<version>${project.version}</version>
 			</dependency>

@@ -26,11 +26,5 @@
 			</plugin>
         </plugins>
     </build>
-	<dependencies>
-		<dependency>
-			<groupId>org.openflexo</groupId>
-			<artifactId>flexo-foundation</artifactId>
-		</dependency>
-	</dependencies>
 </project>
 

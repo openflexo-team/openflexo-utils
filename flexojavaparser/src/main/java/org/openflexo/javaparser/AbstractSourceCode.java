@@ -22,6 +22,7 @@ package org.openflexo.javaparser;
 import java.beans.PropertyChangeSupport;
 import java.util.logging.Logger;
 
+
 import org.openflexo.diff.ComputeDiff;
 import org.openflexo.diff.ComputeDiff.DiffReport;
 import org.openflexo.toolbox.HasPropertyChangeSupport;

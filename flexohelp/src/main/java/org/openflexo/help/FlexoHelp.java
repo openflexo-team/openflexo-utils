@@ -1,5 +1,6 @@
 /*
  * (c) Copyright 2010-2011 AgileBirds
+ * (c) Copyright 2013-2014 Openflexo
  *
  * This file is part of OpenFlexo.
  *
@@ -22,15 +23,20 @@ package org.openflexo.help;
 import java.io.File;
 import java.io.FileFilter;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.help.HelpBroker;
 import javax.help.HelpSet;
 
-import org.openflexo.toolbox.ResourceLocator;
+import org.openflexo.rm.Resource;
+import org.openflexo.rm.ResourceLocator;
+import org.openflexo.toolbox.FileUtils;
 
 
 /**
@@ -42,7 +48,8 @@ import org.openflexo.toolbox.ResourceLocator;
 public class FlexoHelp extends Observable {
 
 	private static final Logger logger = Logger.getLogger(FlexoHelp.class.getPackage().getName());
-
+	private static final ResourceLocator rl = ResourceLocator.getResourceLocator();
+	
 	private static HelpSet _hs = null;
 	private static HelpBroker _hb = null;
 	private static File _helpSetFile;
@@ -136,14 +143,20 @@ public class FlexoHelp extends Observable {
 		return _helpSetFile.toURL();
 	}
 
-	public static File getHelpSetDirectory() {
-		return ResourceLocator.locateDirectory("Help");
+	public static Resource getHelpSetDirectory() {
+		return ResourceLocator.locateResource("Help");
 	}
 
 	private static File getMostRecentHelpsetFile() {
 		String endPattern = "_" + distributionName + "_" + languageIdentifier + ".helpset";
 
-		File[] allFiles = getHelpSetDirectory().listFiles(new FileFilter() {
+		List<Resource> allFiles = null;
+		
+		// TODO en fait on veut juste les répertoires qui contiennent des .hs....
+		allFiles = (List<Resource>) getHelpSetDirectory().getContents(Pattern.compile(".*[.]hs"));
+				
+		/*
+		ResourceLocation[] allFiles = getHelpSetDirectory().listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File pathname) {
 				if (!pathname.isDirectory()) {
@@ -161,12 +174,15 @@ public class FlexoHelp extends Observable {
 				return false;
 			}
 		});
+		*/
+		
 		if (allFiles == null) {
 			if (logger.isLoggable(Level.WARNING)) {
-				logger.warning("Missing help directory: " + getHelpSetDirectory().getAbsolutePath());
+				logger.warning("Missing help directory: " + getHelpSetDirectory().getURI());
 			}
 			return null;
 		}
+		/*
 		File directory = null;
 		for (int i = 0; i < allFiles.length; i++) {
 			if (allFiles[i].getName().endsWith(endPattern) && (directory == null || allFiles[i].lastModified() > directory.lastModified())) {
@@ -191,6 +207,7 @@ public class FlexoHelp extends Observable {
 				return allFiles[i];
 			}
 		}
+		*/
 		return null;
 	}
 
