@@ -48,7 +48,7 @@ import org.openflexo.toolbox.FileUtils;
 public class FlexoHelp extends Observable {
 
 	private static final Logger logger = Logger.getLogger(FlexoHelp.class.getPackage().getName());
-	private static final ResourceLocator rl = ResourceLocator.getResourceLocator();
+	
 	
 	private static HelpSet _hs = null;
 	private static HelpBroker _hb = null;
