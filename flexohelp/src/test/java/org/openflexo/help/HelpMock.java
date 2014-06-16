@@ -32,7 +32,7 @@ import javax.swing.JMenuItem;
  * @author sguerin
  * 
  */
-public class HelpTest {
+public class HelpMock {
 	JFrame f;
 
 	JMenuItem overviewHelp;
@@ -45,7 +45,7 @@ public class HelpTest {
 
 	JMenuItem cgfModuleHelp;
 
-	public HelpTest() {
+	public HelpMock() {
 		f = new JFrame("Test help");
 		JButton button = new JButton("DM Module");
 		f.getContentPane().add(button);
