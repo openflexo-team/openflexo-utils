@@ -73,7 +73,7 @@ public class HelpMock {
 	}
 
 	public static void main(String argv[]) {
-		new HelpTest();
+		new HelpMock();
 	}
 
 }
