@@ -24,8 +24,7 @@
 	<modules>
 		<module>flexohelp</module>
 		<module>flexojavacvs</module>
-		<!--  <module>flexojavaparser</module> -->
-		
+		<module>flexojavaparser</module>
 		<module>jiraclient</module>
     </modules>
 	<dependencyManagement>
