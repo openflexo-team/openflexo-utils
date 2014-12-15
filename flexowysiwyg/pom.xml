@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.openflexo</groupId>
 		<artifactId>openflexo-utils</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>flexowysiwyg</artifactId>
 	<name>GUI :: FlexoWysiwyg</name>
