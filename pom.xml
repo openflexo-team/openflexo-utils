@@ -99,7 +99,7 @@
 		    <dependency>
 			   <groupId>org.openflexo</groupId>
 			   <artifactId>flexographicsutils</artifactId>
-			   <version>1.7-SNAPSHOT</version>
+			   <version>${diana.version}</version>
 		    </dependency>
 			<dependency>
 				<groupId>org.openflexo</groupId>
