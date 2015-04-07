@@ -19,7 +19,7 @@
 	<scm>
 		<connection>scm:git:ssh://git@github.com/openflexo-team/openflexo-utils.git</connection>
 		<url>https://github.com/openflexo-team/openflexo-utils</url>
-	  <tag>1.1</tag>
+	  <tag>1.2</tag>
   </scm>
 	<modules>
 		<module>flexohelp</module>
