@@ -31,6 +31,7 @@ import org.netbeans.lib.cvsclient.event.EventManager;
 import org.netbeans.lib.cvsclient.event.TerminationEvent;
 import org.netbeans.lib.cvsclient.request.ArgumentRequest;
 import org.netbeans.lib.cvsclient.request.CommandRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.RootRequest;
 import org.netbeans.lib.cvsclient.request.UseUnchangedRequest;
 
@@ -43,7 +44,7 @@ public class HistoryCommand extends Command {
 	/**
 	 * The requests that are sent and processed.
 	 */
-	private final List requests = new LinkedList();
+	private final List<Request> requests = new LinkedList<Request>();
 
 	/**
 	 * The event manager to use
@@ -177,14 +178,14 @@ public class HistoryCommand extends Command {
 		}
 	}
 
-	private void addStringArgument(List reqList, String property, String cvsSwitch) {
+	private void addStringArgument(List<Request> reqList, String property, String cvsSwitch) {
 		if (property != null) {
 			reqList.add(new ArgumentRequest(cvsSwitch));
 			reqList.add(new ArgumentRequest(property));
 		}
 	}
 
-	private void addStringArrayArgument(List reqList, String[] property, String cvsSwitch) {
+	private void addStringArrayArgument(List<Request> reqList, String[] property, String cvsSwitch) {
 		if (property != null) {
 			for (int i = 0; i < property.length; i++) {
 				reqList.add(new ArgumentRequest(cvsSwitch));
@@ -193,7 +194,7 @@ public class HistoryCommand extends Command {
 		}
 	}
 
-	private void addBooleanArgument(List reqList, boolean property, String cvsSwitch) {
+	private void addBooleanArgument(List<Request> reqList, boolean property, String cvsSwitch) {
 		if (property == true) {
 			reqList.add(new ArgumentRequest(cvsSwitch));
 		}

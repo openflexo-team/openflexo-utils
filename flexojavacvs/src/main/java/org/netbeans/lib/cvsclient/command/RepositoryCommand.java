@@ -43,7 +43,7 @@ public abstract class RepositoryCommand extends BuildableCommand {
 	/**
 	 * The requests that are sent and processed.
 	 */
-	protected List requests = new LinkedList();
+	protected List<Request> requests = new LinkedList<Request>();
 
 	/**
 	 * The client services that are provided to this command.
@@ -58,12 +58,12 @@ public abstract class RepositoryCommand extends BuildableCommand {
 	/**
 	 * The modules to process. These names are unexpanded and will be passed to a module-expansion request.
 	 */
-	protected final List modules = new LinkedList();
+	protected final List<String> modules = new LinkedList<String>();
 
 	/**
 	 * The expanded modules.
 	 */
-	protected final List expandedModules = new LinkedList();
+	protected final List<String> expandedModules = new LinkedList<String>();
 
 	/**
 	 * Gets the value of the recursive option.
@@ -116,7 +116,7 @@ public abstract class RepositoryCommand extends BuildableCommand {
 	 */
 	public String[] getModules() {
 		String[] mods = new String[modules.size()];
-		mods = (String[]) modules.toArray(mods);
+		mods = modules.toArray(mods);
 		return mods;
 	}
 
@@ -137,8 +137,8 @@ public abstract class RepositoryCommand extends BuildableCommand {
 			return;
 		}
 
-		for (Iterator it = expandedModules.iterator(); it.hasNext();) {
-			final String module = (String) it.next();
+		for (Iterator<String> it = expandedModules.iterator(); it.hasNext();) {
+			final String module = it.next();
 			addRequest(new ArgumentRequest(module));
 		}
 	}
@@ -172,8 +172,8 @@ public abstract class RepositoryCommand extends BuildableCommand {
 		if (client.isFirstCommand()) {
 			requests.add(new RootRequest(client.getRepository()));
 		}
-		for (Iterator it = modules.iterator(); it.hasNext();) {
-			String module = (String) it.next();
+		for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+			String module = it.next();
 			requests.add(new ArgumentRequest(module));
 		}
 		expandedModules.clear();
@@ -233,11 +233,11 @@ public abstract class RepositoryCommand extends BuildableCommand {
 			return;
 		}
 
-		Iterator it = expandedModules.iterator();
-		buffer.append((String) it.next());
+		Iterator<String> it = expandedModules.iterator();
+		buffer.append(it.next());
 		while (it.hasNext()) {
 			buffer.append(' ');
-			buffer.append((String) it.next());
+			buffer.append(it.next());
 		}
 	}
 }

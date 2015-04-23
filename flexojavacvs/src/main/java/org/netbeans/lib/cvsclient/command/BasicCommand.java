@@ -53,7 +53,7 @@ public abstract class BasicCommand extends BuildableCommand {
 	/**
 	 * The requests that are sent and processed.
 	 */
-	protected List requests = new LinkedList();
+	protected List<Request> requests = new LinkedList<Request>();
 
 	/**
 	 * The client services that are provided to this command.
@@ -321,17 +321,17 @@ public abstract class BasicCommand extends BuildableCommand {
 		addDirectoryRequest(directory);
 
 		File[] dirFiles = directory.listFiles();
-		List localFiles;
+		List<File> localFiles;
 		if (dirFiles == null) {
-			localFiles = new ArrayList(0);
+			localFiles = new ArrayList<File>(0);
 		} else {
-			localFiles = new ArrayList(Arrays.asList(dirFiles));
+			localFiles = new ArrayList<File>(Arrays.asList(dirFiles));
 			localFiles.remove(new File(directory, "CVS"));
 		}
 
-		List subDirectories = null;
+		List<File> subDirectories = null;
 		if (isRecursive()) {
-			subDirectories = new LinkedList();
+			subDirectories = new LinkedList<File>();
 		}
 
 		// get all the entries we know about, and process them
@@ -361,16 +361,16 @@ public abstract class BasicCommand extends BuildableCommand {
 			}
 		}
 
-		for (Iterator it = localFiles.iterator(); it.hasNext();) {
-			String localFileName = ((File) it.next()).getName();
+		for (Iterator<File> it = localFiles.iterator(); it.hasNext();) {
+			String localFileName = it.next().getName();
 			if (!clientServices.shouldBeIgnored(directory, localFileName)) {
 				addRequest(new QuestionableRequest(localFileName));
 			}
 		}
 
 		if (isRecursive()) {
-			for (Iterator it = subDirectories.iterator(); it.hasNext();) {
-				File subdirectory = (File) it.next();
+			for (Iterator<File> it = subDirectories.iterator(); it.hasNext();) {
+				File subdirectory = it.next();
 				File cvsSubDir = new File(subdirectory, "CVS"); // NOI18N
 				if (clientServices.exists(cvsSubDir)) {
 					addRequestsForDirectory(subdirectory);

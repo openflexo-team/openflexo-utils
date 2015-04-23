@@ -33,6 +33,7 @@ import org.netbeans.lib.cvsclient.event.TerminationEvent;
 import org.netbeans.lib.cvsclient.request.ArgumentRequest;
 import org.netbeans.lib.cvsclient.request.CommandRequest;
 import org.netbeans.lib.cvsclient.request.EntryRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 
 /**
  * The annotate command shows all lines of the file and annotates each line with cvs-related info.
@@ -119,8 +120,8 @@ public class AnnotateCommand extends BasicCommand {
 		}
 	}
 
-	private void excludeBinaryFiles(java.util.List requests) {
-		Iterator it = requests.iterator();
+	private void excludeBinaryFiles(java.util.List<Request> requests) {
+		Iterator<Request> it = requests.iterator();
 		while (it.hasNext()) {
 			Object obj = it.next();
 			if (obj instanceof EntryRequest) {

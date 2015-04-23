@@ -42,7 +42,7 @@ public class RlogCommand extends BasicCommand {
 	/**
 	 * The modules to rlog.
 	 */
-	private final List modules = new LinkedList();
+	private final List<String> modules = new LinkedList<String>();
 
 	/**
 	 * Holds value of property defaultBranch.
@@ -130,7 +130,7 @@ public class RlogCommand extends BasicCommand {
 
 	public String[] getModules() {
 		String[] mods = new String[modules.size()];
-		mods = (String[]) modules.toArray(mods);
+		mods = modules.toArray(mods);
 		return mods;
 	}
 
@@ -353,8 +353,8 @@ public class RlogCommand extends BasicCommand {
 			requests.add(new ArgumentRequest("-d" + dateFilter)); // NOI18N
 		}
 
-		for (Iterator it = modules.iterator(); it.hasNext();) {
-			String module = (String) it.next();
+		for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+			String module = it.next();
 			requests.add(new ArgumentRequest(module));
 		}
 
@@ -383,8 +383,8 @@ public class RlogCommand extends BasicCommand {
 		StringBuffer toReturn = new StringBuffer("rlog "); // NOI18N
 		toReturn.append(getCVSArguments());
 		if (modules != null && modules.size() > 0) {
-			for (Iterator it = modules.iterator(); it.hasNext();) {
-				String module = (String) it.next();
+			for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+				String module = it.next();
 				toReturn.append(module);
 				toReturn.append(' ');
 			}

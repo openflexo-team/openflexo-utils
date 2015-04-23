@@ -43,6 +43,7 @@ import org.netbeans.lib.cvsclient.request.ArgumentxRequest;
 import org.netbeans.lib.cvsclient.request.CommandRequest;
 import org.netbeans.lib.cvsclient.request.DirectoryRequest;
 import org.netbeans.lib.cvsclient.request.ModifiedRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.response.WrapperSendResponse;
 import org.netbeans.lib.cvsclient.util.SimpleStringPattern;
 import org.netbeans.lib.cvsclient.util.StringPattern;
@@ -53,7 +54,7 @@ import org.netbeans.lib.cvsclient.util.StringPattern;
  * @author Thomas Singer
  */
 public class ImportCommand extends BuildableCommand {
-	private Map wrapperMap = new HashMap();
+	private Map<StringPattern, KeywordSubstitutionOptions> wrapperMap = new HashMap<StringPattern, KeywordSubstitutionOptions>();
 	private String logMessage;
 	private String module;
 	private String releaseTag;
@@ -62,7 +63,7 @@ public class ImportCommand extends BuildableCommand {
 	private String importDirectory;
 	private KeywordSubstitutionOptions keywordSubstitutionOptions;
 	private boolean useFileModifTime;
-	private List ignoreList = new LinkedList();
+	private List<String> ignoreList = new LinkedList<String>();
 
 	public ImportCommand() {
 		resetCVSCommand();
@@ -88,14 +89,14 @@ public class ImportCommand extends BuildableCommand {
 	 * Compliant method to addWrapper. It replaces the whole list of cvswrappers. The Map's structure should be following: Key: instance of
 	 * StringPattern(fileName wildpattern) Value: instance of KeywordSubstitutionOptions
 	 */
-	public void setWrappers(Map wrapperMap) {
+	public void setWrappers(Map<StringPattern, KeywordSubstitutionOptions> wrapperMap) {
 		this.wrapperMap = wrapperMap;
 	}
 
 	/**
 	 * Returns a map with all wrappers. For map descriptions see setWrapper()
 	 */
-	public Map getWrappers() {
+	public Map<StringPattern, KeywordSubstitutionOptions> getWrappers() {
 		return wrapperMap;
 	}
 
@@ -222,7 +223,7 @@ public class ImportCommand extends BuildableCommand {
 	/**
 	 * Get a list of files that are ignored by import.
 	 */
-	public List getIgnoreFiles() {
+	public List<String> getIgnoreFiles() {
 		return Collections.unmodifiableList(ignoreList);
 	}
 
@@ -263,7 +264,7 @@ public class ImportCommand extends BuildableCommand {
 		client.ensureConnection();
 
 		// get the connection wrappers here
-		Map allWrappersMap = new HashMap(client.getWrappersMap());
+		Map<StringPattern, KeywordSubstitutionOptions> allWrappersMap = new HashMap<StringPattern, KeywordSubstitutionOptions>(client.getWrappersMap());
 		allWrappersMap.putAll(getWrappers());
 		setWrappers(allWrappersMap);
 
@@ -271,7 +272,7 @@ public class ImportCommand extends BuildableCommand {
 		super.execute(client, eventManager);
 		assert getLocalDirectory() != null : "local directory may not be null";
 
-		List requestList = new ArrayList();
+		List<Request> requestList = new ArrayList<Request>();
 
 		try {
 			// add requests
@@ -293,7 +294,7 @@ public class ImportCommand extends BuildableCommand {
 
 			for (int i = 0; i < ignoreList.size(); i++) {
 				requestList.add(new ArgumentRequest("-I")); // NOI18N
-				requestList.add(new ArgumentRequest((String) ignoreList.get(i)));
+				requestList.add(new ArgumentRequest(ignoreList.get(i)));
 			}
 
 			requestList.add(new ArgumentRequest(getModule()));
@@ -371,10 +372,10 @@ public class ImportCommand extends BuildableCommand {
 			toReturn.append("-d "); // NOI18N
 		}
 		if (wrapperMap.size() > 0) {
-			Iterator it = wrapperMap.keySet().iterator();
+			Iterator<StringPattern> it = wrapperMap.keySet().iterator();
 			while (it.hasNext()) {
-				StringPattern pattern = (StringPattern) it.next();
-				KeywordSubstitutionOptions keywordSubstitutionOptions = (KeywordSubstitutionOptions) wrapperMap.get(pattern);
+				StringPattern pattern = it.next();
+				KeywordSubstitutionOptions keywordSubstitutionOptions = wrapperMap.get(pattern);
 				toReturn.append("-W "); // NOI18N
 				toReturn.append(pattern.toString());
 				toReturn.append(" -k '"); // NOI18N
@@ -382,9 +383,9 @@ public class ImportCommand extends BuildableCommand {
 				toReturn.append("' "); // NOI18N
 			}
 		}
-		for (Iterator it = ignoreList.iterator(); it.hasNext();) {
+		for (Iterator<String> it = ignoreList.iterator(); it.hasNext();) {
 			toReturn.append("-I "); // NOI18N
-			toReturn.append((String) it.next());
+			toReturn.append(it.next());
 			toReturn.append(" "); // NOI18N
 		}
 		return toReturn.toString();
@@ -435,7 +436,7 @@ public class ImportCommand extends BuildableCommand {
 	/**
 	 * Adds requests for the specified logMessage to the specified requestList.
 	 */
-	private void addMessageRequests(List requestList, String logMessage) {
+	private void addMessageRequests(List<Request> requestList, String logMessage) {
 		requestList.add(new ArgumentRequest("-m")); // NOI18N
 
 		StringTokenizer token = new StringTokenizer(logMessage, "\n", false); // NOI18N
@@ -453,10 +454,10 @@ public class ImportCommand extends BuildableCommand {
 	/**
 	 * Adds requests for specified wrappers to the specified requestList.
 	 */
-	private void addWrapperRequests(List requestList, Map wrapperMap) {
-		for (Iterator it = wrapperMap.keySet().iterator(); it.hasNext();) {
-			StringPattern pattern = (StringPattern) it.next();
-			KeywordSubstitutionOptions keywordSubstitutionOptions = (KeywordSubstitutionOptions) wrapperMap.get(pattern);
+	private void addWrapperRequests(List<Request> requestList, Map<StringPattern, KeywordSubstitutionOptions> wrapperMap) {
+		for (Iterator<StringPattern> it = wrapperMap.keySet().iterator(); it.hasNext();) {
+			StringPattern pattern = it.next();
+			KeywordSubstitutionOptions keywordSubstitutionOptions = wrapperMap.get(pattern);
 
 			StringBuffer buffer = new StringBuffer();
 			buffer.append(pattern.toString());
@@ -472,7 +473,7 @@ public class ImportCommand extends BuildableCommand {
 	/**
 	 * Adds recursively all request for files and directories in the specified directory to the specified requestList.
 	 */
-	private void addFileRequests(File directory, List requestList, ClientServices clientServices) throws IOException {
+	private void addFileRequests(File directory, List<Request> requestList, ClientServices clientServices) throws IOException {
 		String relativePath = getRelativeToLocalPathInUnixStyle(directory);
 		String repository = getRepositoryRoot(clientServices);
 		if (!relativePath.equals(".")) { // NOI18N
@@ -485,7 +486,7 @@ public class ImportCommand extends BuildableCommand {
 			return;
 		}
 
-		List subdirectories = null;
+		List<File> subdirectories = null;
 
 		for (int i = 0; i < files.length; i++) {
 			File file = files[i];
@@ -497,7 +498,7 @@ public class ImportCommand extends BuildableCommand {
 
 			if (file.isDirectory()) {
 				if (subdirectories == null) {
-					subdirectories = new LinkedList();
+					subdirectories = new LinkedList<File>();
 				}
 				subdirectories.add(file);
 			} else {
@@ -507,8 +508,8 @@ public class ImportCommand extends BuildableCommand {
 		}
 
 		if (subdirectories != null) {
-			for (Iterator it = subdirectories.iterator(); it.hasNext();) {
-				File subdirectory = (File) it.next();
+			for (Iterator<File> it = subdirectories.iterator(); it.hasNext();) {
+				File subdirectory = it.next();
 				addFileRequests(subdirectory, requestList, clientServices);
 			}
 		}
@@ -530,10 +531,10 @@ public class ImportCommand extends BuildableCommand {
 	private boolean isBinary(String filename) {
 		KeywordSubstitutionOptions keywordSubstitutionOptions = getKeywordSubstitutionOptions();
 
-		for (Iterator it = wrapperMap.keySet().iterator(); it.hasNext();) {
-			StringPattern pattern = (StringPattern) it.next();
+		for (Iterator<StringPattern> it = wrapperMap.keySet().iterator(); it.hasNext();) {
+			StringPattern pattern = it.next();
 			if (pattern.doesMatch(filename)) {
-				keywordSubstitutionOptions = (KeywordSubstitutionOptions) wrapperMap.get(pattern);
+				keywordSubstitutionOptions = wrapperMap.get(pattern);
 				break;
 			}
 		}

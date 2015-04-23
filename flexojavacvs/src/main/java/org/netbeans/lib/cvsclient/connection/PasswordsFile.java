@@ -79,9 +79,9 @@ public final class PasswordsFile {
 	/**
 	 * List roots matching given prefix e.g. <tt>":pserver:"</tt>.
 	 */
-	public static Collection listRoots(String prefix) {
+	public static Collection<String> listRoots(String prefix) {
 
-		List roots = new ArrayList();
+		List<String> roots = new ArrayList<String>();
 
 		File passFile = new File(System.getProperty("cvs.passfile", System.getProperty("user.home") + "/.cvspass"));
 		BufferedReader reader = null;

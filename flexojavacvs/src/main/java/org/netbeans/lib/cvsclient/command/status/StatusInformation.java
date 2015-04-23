@@ -48,7 +48,7 @@ public class StatusInformation extends FileInfoContainer {
 	/**
 	 * Hold key pairs of existing tags.
 	 */
-	private List tags;
+	private List<SymName> tags;
 
 	private StringBuffer symNamesBuffer;
 
@@ -238,7 +238,7 @@ public class StatusInformation extends FileInfoContainer {
 	}
 
 	private void createSymNames() {
-		tags = new LinkedList();
+		tags = new LinkedList<SymName>();
 
 		if (symNamesBuffer == null) {
 			return;
@@ -267,29 +267,29 @@ public class StatusInformation extends FileInfoContainer {
 		symNamesBuffer = null;
 	}
 
-	public List getAllExistingTags() {
+	public List<SymName> getAllExistingTags() {
 		if (tags == null) {
 			createSymNames();
 		}
 		return tags;
 	}
 
-	public void setAllExistingTags(List tags) {
+	public void setAllExistingTags(List<SymName> tags) {
 		this.tags = tags;
 	}
 
 	/**
 	 * Search the symbolic names by number of revision. If not found, return null.
 	 */
-	public List getSymNamesForRevision(String revNumber) {
+	public List<SymName> getSymNamesForRevision(String revNumber) {
 		if (tags == null) {
 			createSymNames();
 		}
 
-		List list = new LinkedList();
+		List<SymName> list = new LinkedList<SymName>();
 
-		for (Iterator it = tags.iterator(); it.hasNext();) {
-			StatusInformation.SymName item = (StatusInformation.SymName) it.next();
+		for (Iterator<SymName> it = tags.iterator(); it.hasNext();) {
+			StatusInformation.SymName item = it.next();
 			if (item.getRevision().equals(revNumber)) {
 				list.add(item);
 			}
@@ -305,8 +305,8 @@ public class StatusInformation extends FileInfoContainer {
 			createSymNames();
 		}
 
-		for (Iterator it = tags.iterator(); it.hasNext();) {
-			StatusInformation.SymName item = (StatusInformation.SymName) it.next();
+		for (Iterator<SymName> it = tags.iterator(); it.hasNext();) {
+			StatusInformation.SymName item = it.next();
 			if (item.getTag().equals(tagName)) {
 				return item;
 			}
@@ -336,7 +336,7 @@ public class StatusInformation extends FileInfoContainer {
 		if (tags != null && tags.size() > 0) {
 			// we are having some tags to print
 			buf.append("\nExisting Tags:"); // NOI18N
-			for (Iterator it = tags.iterator(); it.hasNext();) {
+			for (Iterator<SymName> it = tags.iterator(); it.hasNext();) {
 				buf.append("\n  "); // NOI18N
 				buf.append(it.next().toString());
 			}

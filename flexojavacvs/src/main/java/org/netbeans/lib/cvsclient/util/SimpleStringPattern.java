@@ -31,7 +31,7 @@ public class SimpleStringPattern implements StringPattern {
 	private static final char MATCH_EACH = '*';
 	private static final char MATCH_ONE = '?';
 
-	private final List subPatterns = new LinkedList();
+	private final List<SubPattern> subPatterns = new LinkedList<SubPattern>();
 
 	/**
 	 * Creates a SimpleStringPattern for the specified definition. The definition might contain two special characters ('*' and '?').
@@ -47,8 +47,8 @@ public class SimpleStringPattern implements StringPattern {
 	public boolean doesMatch(String string) {
 		int index = 0;
 		SubPattern subPattern = null;
-		for (Iterator it = subPatterns.iterator(); it.hasNext();) {
-			subPattern = (SubPattern) it.next();
+		for (Iterator<SubPattern> it = subPatterns.iterator(); it.hasNext();) {
+			subPattern = it.next();
 			index = subPattern.doesMatch(string, index);
 			if (index < 0) {
 				return false;
@@ -112,8 +112,8 @@ public class SimpleStringPattern implements StringPattern {
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
-		for (Iterator it = subPatterns.iterator(); it.hasNext();) {
-			SubPattern subPattern = (SubPattern) it.next();
+		for (Iterator<SubPattern> it = subPatterns.iterator(); it.hasNext();) {
+			SubPattern subPattern = it.next();
 			buffer.append(subPattern.toString());
 		}
 		return buffer.toString();

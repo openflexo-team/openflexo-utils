@@ -82,7 +82,7 @@ public class LogBuilder implements Builder {
 	private boolean addingLogMessage;
 	private StringBuffer tempBuffer = null;
 
-	private List messageList;
+	private List<String> messageList;
 
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z"); // NOI18N
 
@@ -94,7 +94,7 @@ public class LogBuilder implements Builder {
 		addingLogMessage = false;
 		logInfo = null;
 		revision = null;
-		messageList = new ArrayList(500);
+		messageList = new ArrayList<String>(500);
 	}
 
 	@Override
@@ -206,13 +206,13 @@ public class LogBuilder implements Builder {
 		}
 	}
 
-	private String findUniqueString(String name, List list) {
+	private String findUniqueString(String name, List<String> list) {
 		if (name == null) {
 			return null;
 		}
 		int index = list.indexOf(name);
 		if (index >= 0) {
-			return (String) list.get(index);
+			return list.get(index);
 		} else {
 			String newName = name;
 			list.add(newName);

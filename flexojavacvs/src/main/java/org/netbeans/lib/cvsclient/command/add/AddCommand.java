@@ -48,6 +48,7 @@ import org.netbeans.lib.cvsclient.request.DirectoryRequest;
 import org.netbeans.lib.cvsclient.request.EntryRequest;
 import org.netbeans.lib.cvsclient.request.IsModifiedRequest;
 import org.netbeans.lib.cvsclient.request.KoptRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.RootRequest;
 import org.netbeans.lib.cvsclient.request.StickyRequest;
 import org.netbeans.lib.cvsclient.util.SimpleStringPattern;
@@ -67,12 +68,12 @@ public class AddCommand extends BuildableCommand {
 	/**
 	 * The requests that are sent and processed.
 	 */
-	private List requests;
+	private List<Request> requests;
 
 	/**
 	 * The argument requests that are collected and sent in the end just before the add request.
 	 */
-	private final List argumentRequests = new LinkedList();
+	private final List<ArgumentRequest> argumentRequests = new LinkedList<ArgumentRequest>();
 
 	/**
 	 * The list of new directories.
@@ -80,7 +81,7 @@ public class AddCommand extends BuildableCommand {
 	/*
 	    private HashMap newDirList;
 	*/
-	private final List newDirList = new LinkedList();
+	private final List<Paths> newDirList = new LinkedList<Paths>();
 
 	/**
 	 * The client services that are provided to this command.
@@ -111,7 +112,7 @@ public class AddCommand extends BuildableCommand {
 	/**
 	 * Holds the cvswrappers map for each directory, keyed by directory name
 	 */
-	private HashMap dir2WrapperMap = new HashMap(16);
+	private HashMap<String, Map> dir2WrapperMap = new HashMap<String, Map>(16);
 
 	private static final Map EMPTYWRAPPER = new HashMap(1);
 
@@ -316,7 +317,7 @@ public class AddCommand extends BuildableCommand {
 			requests.add(new EntryRequest(entry));
 		} else {
 
-			Map directoryLevelWrapper = (Map) dir2WrapperMap.get(dir);
+			Map directoryLevelWrapper = dir2WrapperMap.get(dir);
 			if (directoryLevelWrapper == null) {
 
 				// we have not parsed the cvs wrappers for this directory
@@ -433,7 +434,7 @@ public class AddCommand extends BuildableCommand {
 
 		super.execute(client, em);
 
-		requests = new LinkedList();
+		requests = new LinkedList<Request>();
 
 		if (client.isFirstCommand()) {
 			requests.add(new RootRequest(client.getRepository()));
@@ -575,8 +576,8 @@ public class AddCommand extends BuildableCommand {
 		}
 
 		Paths paths = null;
-		for (Iterator i = newDirList.iterator(); i.hasNext();) {
-			paths = (Paths) i.next();
+		for (Iterator<Paths> i = newDirList.iterator(); i.hasNext();) {
+			paths = i.next();
 			if (paths.getRepositoryPath().equals(newDirInRepository)) {
 				i.remove();
 				break;

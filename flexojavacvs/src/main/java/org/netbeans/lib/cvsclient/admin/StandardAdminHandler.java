@@ -341,7 +341,7 @@ public class StandardAdminHandler implements AdminHandler {
 	 * @return an array of Entry objects
 	 */
 	public Entry[] getEntriesAsArray(File directory) throws IOException {
-		List entries = new LinkedList();
+		List<Entry> entries = new LinkedList<Entry>();
 
 		final File entriesFile = seekEntries(directory);
 		// if there is no Entries file we just return the empty iterator
@@ -370,7 +370,7 @@ public class StandardAdminHandler implements AdminHandler {
 			}
 		}
 		Entry[] toReturnArray = new Entry[entries.size()];
-		toReturnArray = (Entry[]) entries.toArray(toReturnArray);
+		toReturnArray = entries.toArray(toReturnArray);
 		return toReturnArray;
 	}
 
@@ -382,8 +382,8 @@ public class StandardAdminHandler implements AdminHandler {
 	 * @return an iterator of Entry objects
 	 */
 	@Override
-	public Iterator getEntries(File directory) throws IOException {
-		List entries = new LinkedList();
+	public Iterator<Entry> getEntries(File directory) throws IOException {
+		List<Entry> entries = new LinkedList<Entry>();
 
 		final File entriesFile = seekEntries(directory);
 		// if there is no Entries file we just return the empty iterator
@@ -590,8 +590,8 @@ public class StandardAdminHandler implements AdminHandler {
 
 			// make up a list of changes to be made based on what is in
 			// the .log file. Then apply them all later
-			List additionsList = new LinkedList();
-			HashSet removalSet = new HashSet();
+			List<Entry> additionsList = new LinkedList<Entry>();
+			HashSet<String> removalSet = new HashSet<String>();
 
 			String line;
 
@@ -642,9 +642,9 @@ public class StandardAdminHandler implements AdminHandler {
 							}
 						}
 					}
-					Iterator it = additionsList.iterator();
+					Iterator<Entry> it = additionsList.iterator();
 					while (it.hasNext()) {
-						final Entry entry = (Entry) it.next();
+						final Entry entry = it.next();
 						if (entry.isDirectory()) {
 							directoryCount++;
 						}
@@ -680,8 +680,8 @@ public class StandardAdminHandler implements AdminHandler {
 	 * @return a set of all files.
 	 */
 	@Override
-	public Set getAllFiles(File directory) throws IOException {
-		TreeSet fileSet = new TreeSet();
+	public Set<File> getAllFiles(File directory) throws IOException {
+		TreeSet<File> fileSet = new TreeSet<File>();
 		BufferedReader reader = null;
 		try {
 			final File entriesFile = seekEntries(directory); // NOI18N
