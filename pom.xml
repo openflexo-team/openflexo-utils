@@ -26,6 +26,7 @@
 		<module>flexojavacvs</module>
 		<module>flexojavaparser</module>
 		<module>jiraclient</module>
+		<module>docx4all</module>
     </modules>
 	<dependencyManagement>
 		<dependencies>
