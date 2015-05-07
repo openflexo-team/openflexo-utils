@@ -44,6 +44,8 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 
+import net.sf.vfsjfilechooser.utils.VFSUtils;
+
 import org.docx4all.datatransfer.WordMLTransferable;
 import org.docx4all.swing.WordMLTextPane;
 import org.docx4all.swing.event.InputAttributeEvent;
@@ -59,13 +61,11 @@ import org.plutext.client.Mediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.sf.vfsjfilechooser.utils.VFSUtils;
-
 /**
  * @author Jojada Tirtowidjojo - 30/11/2007
  */
-public class ToolBarStates extends InternalFrameAdapter
-		implements FocusListener, DocumentListener, InputAttributeListener, FlavorListener, CaretListener {
+public class ToolBarStates extends InternalFrameAdapter implements FocusListener, DocumentListener, InputAttributeListener, FlavorListener,
+		CaretListener {
 
 	private static Logger log = LoggerFactory.getLogger(ToolBarStates.class);
 
@@ -580,18 +580,12 @@ public class ToolBarStates extends InternalFrameAdapter
 		System.out.println("Hop, l'editeur devient " + editor + " _currentEditor=" + _currentEditor);
 
 		if (editor == _currentEditor) {
-			System.out.println("Je retourne !!!");
 			return;
 		}
-
-		System.out.println("Prout");
-
 		// a kind of reseting first
 		setFormatInfo(null, null, SimpleAttributeSet.EMPTY);
 
 		JInternalFrame iframe = getInternalFrame(editor);
-
-		System.out.println("iframe=" + iframe);
 
 		Boolean newDirty = (iframe != null ? _dirtyTable.get(iframe) : null);
 		if (newDirty == null) {
@@ -608,8 +602,6 @@ public class ToolBarStates extends InternalFrameAdapter
 		// have to be current and valid.
 		JEditorPane oldEditor = _currentEditor;
 		_currentEditor = editor;
-
-		System.out.println("Nouvel editor _currentEditor=" + _currentEditor);
 
 		firePropertyChange(CURRENT_EDITOR_PROPERTY_NAME, oldEditor, editor);
 
@@ -936,8 +928,6 @@ public class ToolBarStates extends InternalFrameAdapter
 	 */
 	@Override
 	public void insertUpdate(DocumentEvent e) {
-		System.out.println("Hopala, _currentEditor = " + _currentEditor + " e.getDocument()=" + e.getDocument());
-
 		if (log.isDebugEnabled()) {
 			log.debug("insertUpdate():");
 		}
@@ -948,7 +938,6 @@ public class ToolBarStates extends InternalFrameAdapter
 			if (_currentEditor instanceof WordMLTextPane) {
 				WordMLTextPane editorView = (WordMLTextPane) _currentEditor;
 				if (editorView.isInContentControlEdit()) {
-					System.out.println("M'en fout completement moi");
 					// Ignore this changedUpdate event.
 				} else {
 					boolean isShared = (editorView.getWordMLEditorKit().getPlutextClient() != null);
