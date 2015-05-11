@@ -19,6 +19,7 @@
 
 package org.docx4all.swing.text;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -82,6 +83,10 @@ public class RunView extends CompositeView {
 	@Override
 	public void paint(Graphics g, Shape allocation) {
 		;// do nothing
+		if (prout) {
+			g.setColor(Color.RED);
+			g.fillRect(0, 0, 100, 100);
+		}
 	}
 
 	@Override
@@ -108,7 +113,10 @@ public class RunView extends CompositeView {
 	public void insertUpdate(DocumentEvent e, Shape a, ViewFactory f) {
 		System.out.println("hop, insertUpdate with " + e + " shape=" + a + " element=" + getElement());
 		super.insertUpdate(e, a, f);
+		prout = true;
 	}
+
+	private boolean prout = false;
 
 	@Override
 	public void removeUpdate(DocumentEvent e, Shape a, ViewFactory f) {
