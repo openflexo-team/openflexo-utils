@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.docx4all.swing.text;
@@ -23,9 +23,11 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
 
+import javax.swing.event.DocumentEvent;
 import javax.swing.text.CompositeView;
 import javax.swing.text.Element;
 import javax.swing.text.View;
+import javax.swing.text.ViewFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,31 +38,32 @@ public class RunView extends CompositeView {
 	public RunView(Element elem) {
 		super(elem);
 	}
-	
+
 	public View getTextView(int pos) {
 		return super.getViewAtPosition(pos, null);
 	}
-	
-    public void setParent(View parent) {
-    	super.setParent(parent);
-    	
-    	//Because javax.swing.text.View.setParent()
-    	//resets the parent field of all children
-    	//when 'parent' is null we passes on
-    	//the new parent to all children.
-    	//This behaviour is specifically needed when 
-    	//'parent' is javax.swing.text.FlowView$LogicalView;
-    	//ie: parent.getParent() instanceof ImpliedParagraphView.
-    	if (parent != null
-    		&& parent.getParent() instanceof ImpliedParagraphView) {
-    		for (int i=0; i < getViewCount(); i++) {
-    			View v = getView(i);
-    			v.setParent(this);
-    		}
-    	}
-    }
-    
-    public float getPreferredSpan(int axis) {
+
+	@Override
+	public void setParent(View parent) {
+		super.setParent(parent);
+
+		// Because javax.swing.text.View.setParent()
+		// resets the parent field of all children
+		// when 'parent' is null we passes on
+		// the new parent to all children.
+		// This behaviour is specifically needed when
+		// 'parent' is javax.swing.text.FlowView$LogicalView;
+		// ie: parent.getParent() instanceof ImpliedParagraphView.
+		if (parent != null && parent.getParent() instanceof ImpliedParagraphView) {
+			for (int i = 0; i < getViewCount(); i++) {
+				View v = getView(i);
+				v.setParent(this);
+			}
+		}
+	}
+
+	@Override
+	public float getPreferredSpan(int axis) {
 		float maxpref = 0;
 		float pref = 0;
 		int n = getViewCount();
@@ -76,52 +79,47 @@ public class RunView extends CompositeView {
 		return maxpref;
 	}
 
-    public void paint(Graphics g, Shape allocation) {
-    	;//do nothing
+	@Override
+	public void paint(Graphics g, Shape allocation) {
+		;// do nothing
 	}
 
-    protected void childAllocation(int index, Rectangle a) {
-    	;//do nothing
-    }
-	
-    protected boolean isBefore(int x, int y, Rectangle alloc) {
-    	return false;
-    }
+	@Override
+	protected void childAllocation(int index, Rectangle a) {
+		;// do nothing
+	}
 
-    protected boolean isAfter(int x, int y, Rectangle alloc) {
-    	return false;
-    }
+	@Override
+	protected boolean isBefore(int x, int y, Rectangle alloc) {
+		return false;
+	}
 
-    protected View getViewAtPoint(int x, int y, Rectangle alloc) {
-    	return null;
-    }
+	@Override
+	protected boolean isAfter(int x, int y, Rectangle alloc) {
+		return false;
+	}
+
+	@Override
+	protected View getViewAtPoint(int x, int y, Rectangle alloc) {
+		return null;
+	}
+
+	@Override
+	public void insertUpdate(DocumentEvent e, Shape a, ViewFactory f) {
+		System.out.println("hop, insertUpdate with " + e + " shape=" + a + " element=" + getElement());
+		super.insertUpdate(e, a, f);
+	}
+
+	@Override
+	public void removeUpdate(DocumentEvent e, Shape a, ViewFactory f) {
+		System.out.println("hop, removeUpdate with " + e + " shape=" + a + " element=" + getElement());
+		super.removeUpdate(e, a, f);
+	}
+
+	@Override
+	public void changedUpdate(DocumentEvent e, Shape a, ViewFactory f) {
+		System.out.println("hop, changedUpdate with " + e + " shape=" + a + " element=" + getElement());
+		super.changedUpdate(e, a, f);
+	}
 
 }// RunView class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
