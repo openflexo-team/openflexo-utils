@@ -19,6 +19,8 @@
 
 package org.docx4all.swing;
 
+import java.awt.Rectangle;
+
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
@@ -28,243 +30,239 @@ import javax.swing.text.Document;
 import javax.swing.text.EditorKit;
 import javax.swing.text.MutableAttributeSet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.docx4all.swing.text.DocumentElement;
 import org.docx4all.swing.text.WordMLDocument;
 import org.docx4all.swing.text.WordMLEditorKit;
 import org.docx4all.swing.text.WordMLFragment;
 import org.docx4all.ui.main.WordMLEditor;
 import org.docx4all.util.DocUtil;
 import org.jdesktop.application.ResourceMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 22/01/2008
+ * @author Jojada Tirtowidjojo - 22/01/2008
  */
 public class WordMLTextPane extends JEditorPane {
 	private static Logger log = LoggerFactory.getLogger(WordMLTextPane.class);
 
 	private boolean _filterApplied;
-	
+
 	public WordMLTextPane() {
 		super();
 		getEditorKit().install(this);
-		//setUI(new BasicEditorPaneUI());
+		// setUI(new BasicEditorPaneUI());
 		_filterApplied = false;
 	}
-	
+
 	public void applyFilter() {
 		if (isFilterApplied()) {
 			return;
 		}
-		
-		WordMLDocument doc = (WordMLDocument) getDocument();
+
+		WordMLDocument doc = getDocument();
 		doc.applyFilter();
-		
-   		_filterApplied = true;
+
+		_filterApplied = true;
 	}
-	
+
 	public boolean isFilterApplied() {
 		return _filterApplied;
 	}
-	
+
 	public void beginContentControlEdit() {
 		getWordMLEditorKit().beginContentControlEdit(this);
 	}
-	
+
 	public void endContentControlEdit() {
 		getWordMLEditorKit().endContentControlEdit(this);
 	}
-	
+
 	public boolean isInContentControlEdit() {
 		return getWordMLEditorKit().isInContentControlEdit();
 	}
-	
-    public void setDocument(Document doc) {
-        if (doc instanceof WordMLDocument) {
-            super.setDocument(doc);
-        } else {
-            throw new IllegalArgumentException("Model must be WordMLDocument");
-        }
-    }
 
-    /**
-     * Sets the currently installed kit for handling
-     * content.  This is the bound property that
-     * establishes the content type of the editor.
-     * 
-     * @param kit the desired editor behavior
-     * @exception IllegalArgumentException if kit is not a
-     *		<code>WordMLEditorKit</code>
-     */
-    public void setEditorKit(EditorKit kit) {
-        if (kit instanceof WordMLEditorKit) {
-            super.setEditorKit(kit);
-        } else {
-            throw new IllegalArgumentException("Must be WordMLEditorKit");
-        }
-    }
+	@Override
+	public WordMLDocument getDocument() {
+		return (WordMLDocument) super.getDocument();
+	}
 
-    public void replaceSelection(String content) {
-        if (!isEditable()) {
-        	UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
-            return;
-        }
-        
-    	int start = getSelectionStart();
-    	int end = getSelectionEnd();  
-    	
-        WordMLDocument doc = (WordMLDocument) getDocument();
-        if (doc != null 
-        	&& (start < end || (content != null && content.length() > 0))) {
-        	
-            try {
-            	AttributeSet inputAttrs = getInputAttributesML();
-            	MutableAttributeSet attrs = 
-            		(MutableAttributeSet) inputAttrs.copyAttributes();
-            	if (inputAttrs.getResolveParent() != null) {
-            		attrs.setResolveParent(inputAttrs.getResolveParent().copyAttributes());
-            	}
-            	
-                doc.replace(start, (end - start), content, attrs);
-                
-                if (log.isDebugEnabled()) {
-                	log.debug("replaceSelection(String): selection start=" + start
-                		+ " end=" + end
-                		+ " text=" + content);
-                	DocUtil.displayStructure(doc);
-                }
-                
+	@Override
+	public void setDocument(Document doc) {
+		if (doc instanceof WordMLDocument) {
+			super.setDocument(doc);
+		} else {
+			throw new IllegalArgumentException("Model must be WordMLDocument");
+		}
+	}
+
+	/**
+	 * Sets the currently installed kit for handling content. This is the bound property that establishes the content type of the editor.
+	 * 
+	 * @param kit
+	 *            the desired editor behavior
+	 * @exception IllegalArgumentException
+	 *                if kit is not a <code>WordMLEditorKit</code>
+	 */
+	@Override
+	public void setEditorKit(EditorKit kit) {
+		if (kit instanceof WordMLEditorKit) {
+			super.setEditorKit(kit);
+		} else {
+			throw new IllegalArgumentException("Must be WordMLEditorKit");
+		}
+	}
+
+	@Override
+	public void replaceSelection(String content) {
+		if (!isEditable()) {
+			UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
+			return;
+		}
+
+		int start = getSelectionStart();
+		int end = getSelectionEnd();
+
+		WordMLDocument doc = getDocument();
+		if (doc != null && (start < end || (content != null && content.length() > 0))) {
+
+			try {
+				AttributeSet inputAttrs = getInputAttributesML();
+				MutableAttributeSet attrs = (MutableAttributeSet) inputAttrs.copyAttributes();
+				if (inputAttrs.getResolveParent() != null) {
+					attrs.setResolveParent(inputAttrs.getResolveParent().copyAttributes());
+				}
+
+				doc.replace(start, (end - start), content, attrs);
+
+				if (log.isDebugEnabled()) {
+					log.debug("replaceSelection(String): selection start=" + start + " end=" + end + " text=" + content);
+					DocUtil.displayStructure(doc);
+				}
+
 				end = start + ((content != null) ? content.length() : 0);
-                setCaretPosition(end);
-                
-            } catch (BadLocationException e) {
-            	UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
-            	
-		        WordMLEditor wmlEditor = 
-		        	WordMLEditor.getInstance(WordMLEditor.class);
-		        ResourceMap rm = wmlEditor.getContext().getResourceMap();
-		        String title = 
-		        	rm.getString("Application.edit.info.dialog.title");
-		        String message =
-		        	rm.getString("Application.edit.info.cannotEditMessage");
-		        wmlEditor.showMessageDialog(
-		        	title, message, JOptionPane.INFORMATION_MESSAGE);
-		        
-                if (log.isDebugEnabled()) {
-                	log.debug("replaceSelection(String): selection start=" + start
-                		+ " end=" + end
-                		+ " text=" + content);
-                	DocUtil.displayStructure(doc);
-                }
-            }
-            
-        }
-    } //replaceSelection(String)
+				setCaretPosition(end);
 
-    public void replaceSelection(WordMLFragment fragment) {
-        if (!isEditable()) {
-        	UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
-            return;
-        }
-    	
-        if (fragment == null) {
-        	replaceSelection((String) null);
-        	return;
-        }
-        
-    	int start = getSelectionStart();
-    	int end = getSelectionEnd();
-    	
-        WordMLDocument doc = (WordMLDocument) getDocument();
-        
-        if (doc != null) {
+			} catch (BadLocationException e) {
+				UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
+
+				WordMLEditor wmlEditor = WordMLEditor.getInstance(WordMLEditor.class);
+				ResourceMap rm = wmlEditor.getContext().getResourceMap();
+				String title = rm.getString("Application.edit.info.dialog.title");
+				String message = rm.getString("Application.edit.info.cannotEditMessage");
+				wmlEditor.showMessageDialog(title, message, JOptionPane.INFORMATION_MESSAGE);
+
+				if (log.isDebugEnabled()) {
+					log.debug("replaceSelection(String): selection start=" + start + " end=" + end + " text=" + content);
+					DocUtil.displayStructure(doc);
+				}
+			}
+
+		}
+	} // replaceSelection(String)
+
+	public void replaceSelection(WordMLFragment fragment) {
+		if (!isEditable()) {
+			UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
+			return;
+		}
+
+		if (fragment == null) {
+			replaceSelection((String) null);
+			return;
+		}
+
+		int start = getSelectionStart();
+		int end = getSelectionEnd();
+
+		WordMLDocument doc = getDocument();
+
+		if (doc != null) {
 			try {
 				saveCaretText();
-				
-            	AttributeSet inputAttrs = getInputAttributesML();
-            	MutableAttributeSet attrs = 
-            		(MutableAttributeSet) inputAttrs.copyAttributes();
-            	if (inputAttrs.getResolveParent() != null) {
-            		attrs.setResolveParent(inputAttrs.getResolveParent().copyAttributes());
-            	}
-            	
-				doc.replace(start, (end-start), fragment, attrs);
 
-	            if (log.isDebugEnabled()) {
-	            	log.debug("replaceSelection(WordMLFragment): selection start=" + start
-	            		+ " end=" + end
-	            		+ " fragment=" + fragment
-	            		+ " Resulting structure...");
-	            	DocUtil.displayStructure(doc);
-	            }
-	            
+				AttributeSet inputAttrs = getInputAttributesML();
+				MutableAttributeSet attrs = (MutableAttributeSet) inputAttrs.copyAttributes();
+				if (inputAttrs.getResolveParent() != null) {
+					attrs.setResolveParent(inputAttrs.getResolveParent().copyAttributes());
+				}
+
+				doc.replace(start, (end - start), fragment, attrs);
+
+				if (log.isDebugEnabled()) {
+					log.debug("replaceSelection(WordMLFragment): selection start=" + start + " end=" + end + " fragment=" + fragment
+							+ " Resulting structure...");
+					DocUtil.displayStructure(doc);
+				}
+
 				end = start + ((fragment != null) ? fragment.getText().length() : 0);
 				setCaretPosition(end);
-				
+
 			} catch (BadLocationException e) {
 				e.printStackTrace();
-				
-            	UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
-            	
-		        WordMLEditor wmlEditor = WordMLEditor.getInstance(WordMLEditor.class);            
-		    	ResourceMap rm = wmlEditor.getContext().getResourceMap(getClass());
 
-		        String title = 
-		        	rm.getString("Application.edit.info.dialog.title");
-				String message = 
-					rm.getString("Application.edit.info.cannotPasteMessage");
+				UIManager.getLookAndFeel().provideErrorFeedback(WordMLTextPane.this);
+
+				WordMLEditor wmlEditor = WordMLEditor.getInstance(WordMLEditor.class);
+				ResourceMap rm = wmlEditor.getContext().getResourceMap(getClass());
+
+				String title = rm.getString("Application.edit.info.dialog.title");
+				String message = rm.getString("Application.edit.info.cannotPasteMessage");
 				wmlEditor.showMessageDialog(title, message, JOptionPane.INFORMATION_MESSAGE);
-				
-	            if (log.isDebugEnabled()) {
-	            	log.debug("replaceSelection(WordMLFragment): selection start=" + start
-	            		+ " end=" + end
-	            		+ " fragment=" + fragment);
-	            	DocUtil.displayStructure(doc);
-	            }
+
+				if (log.isDebugEnabled()) {
+					log.debug("replaceSelection(WordMLFragment): selection start=" + start + " end=" + end + " fragment=" + fragment);
+					DocUtil.displayStructure(doc);
+				}
 			}
-			
-        } //if (doc != null)
-    } //replaceSelection(WordMLFragment)
-    
-    /**
-     * Gets the input attributes for the pane.
-     *
-     * @return the attributes
-     */
-    public MutableAttributeSet getInputAttributesML() {
-        return getWordMLEditorKit().getInputAttributesML();
-    }
 
-    public void saveCaretText() {
-    	getWordMLEditorKit().saveCaretText();
-    }
-    
-    public WordMLEditorKit getWordMLEditorKit() {
-    	return (WordMLEditorKit) getEditorKit();
-    }
-    
-    protected EditorKit createDefaultEditorKit() {
-        return new WordMLEditorKit();
-    }
+		} // if (doc != null)
+	} // replaceSelection(WordMLFragment)
 
+	/**
+	 * Gets the input attributes for the pane.
+	 *
+	 * @return the attributes
+	 */
+	public MutableAttributeSet getInputAttributesML() {
+		return getWordMLEditorKit().getInputAttributesML();
+	}
+
+	public void saveCaretText() {
+		getWordMLEditorKit().saveCaretText();
+	}
+
+	public WordMLEditorKit getWordMLEditorKit() {
+		return (WordMLEditorKit) getEditorKit();
+	}
+
+	@Override
+	protected EditorKit createDefaultEditorKit() {
+		return new WordMLEditorKit();
+	}
+
+	@Override
+	public void scrollToReference(String reference) {
+		// TODO Auto-generated method stub
+		super.scrollToReference(reference);
+	}
+
+	public void scrollToElement(DocumentElement element) {
+		try {
+			int pos = element.getStartOffset();
+			Rectangle r = modelToView(pos);
+			if (r != null) {
+				// the view is visible, scroll it to the
+				// center of the current visible area.
+				Rectangle vis = getVisibleRect();
+				// r.y -= (vis.height / 2);
+				r.height = vis.height;
+				scrollRectToVisible(r);
+				setCaretPosition(pos);
+			}
+		} catch (BadLocationException ble) {
+			ble.printStackTrace();
+		}
+	}
 
 }// WordMLTextPane class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

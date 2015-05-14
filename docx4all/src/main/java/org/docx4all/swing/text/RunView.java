@@ -19,7 +19,6 @@
 
 package org.docx4all.swing.text;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -30,6 +29,7 @@ import javax.swing.text.Element;
 import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
 
+import org.docx4all.swing.text.WordMLDocument.BlockElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,10 +83,6 @@ public class RunView extends CompositeView {
 	@Override
 	public void paint(Graphics g, Shape allocation) {
 		;// do nothing
-		if (prout) {
-			g.setColor(Color.RED);
-			g.fillRect(0, 0, 100, 100);
-		}
 	}
 
 	@Override
@@ -112,6 +108,11 @@ public class RunView extends CompositeView {
 	@Override
 	public void insertUpdate(DocumentEvent e, Shape a, ViewFactory f) {
 		System.out.println("hop, insertUpdate with " + e + " shape=" + a + " element=" + getElement());
+		System.out.println("element=" + getElement());
+		if (getElement() instanceof BlockElement) {
+			BlockElement blockElement = (BlockElement) getElement();
+			System.out.println("blockElement elementML=" + blockElement.getElementML());
+		}
 		super.insertUpdate(e, a, f);
 		prout = true;
 	}

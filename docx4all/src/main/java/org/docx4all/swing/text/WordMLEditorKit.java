@@ -70,8 +70,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.vfsjfilechooser.utils.VFSUtils;
-
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.docx4all.swing.WordMLTextPane;
@@ -97,6 +95,8 @@ import org.plutext.client.Mediator;
 import org.plutext.client.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.sf.vfsjfilechooser.utils.VFSUtils;
 
 public class WordMLEditorKit extends DefaultEditorKit {
 	private static Logger log = LoggerFactory.getLogger(WordMLEditorKit.class);
@@ -935,7 +935,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								}
 								sdt.delete();
 							}
-						}// for (id) loop
+						} // for (id) loop
 
 						if (refreshStart < refreshEnd) {
 							caretPos = doc.getLength() - refreshEnd;
@@ -1019,7 +1019,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								}
 								sdt.delete();
 							}
-						}// for (id) loop
+						} // for (id) loop
 
 						if (refreshStart < refreshEnd) {
 							caretPos = doc.getLength() - refreshEnd;
@@ -1931,7 +1931,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					;// ignore
 				}
 
-			}// if (editor != null)
+			} // if (editor != null)
 
 		}// actionPerformed()
 
@@ -2029,7 +2029,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				} catch (BadLocationException exc) {
 					;// ignore
 				}
-			}// if (editor != null)
+			} // if (editor != null)
 		}// actionPerformed()
 
 		private void selectLater(final JEditorPane editor, final int start, final int end) {
@@ -2259,8 +2259,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						doc.refreshParagraphs(offset, 1);
 						success = true;
 
-					} else if (elem.getElementML() instanceof ParagraphML
-							&& DocUtil.canSplitElementML(elem, offset - elem.getStartOffset())) {
+					} else
+						if (elem.getElementML() instanceof ParagraphML && DocUtil.canSplitElementML(elem, offset - elem.getStartOffset())) {
 						DocUtil.splitElementML(elem, (offset - elem.getStartOffset()));
 						elem.getElementML().addSibling(sdt, true);
 
@@ -2338,7 +2338,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								lastChild.addSibling(ml, true);
 							}
 							endIdx--;
-						}// while (startIdx <= endIdx)
+						} // while (startIdx <= endIdx)
 
 						doc.refreshParagraphs(start, (end - start));
 					}
@@ -2474,7 +2474,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 							}
 							parent.addChild(idx, ml);
 						}
-					}// for (i)
+					} // for (i)
 
 					if (refresh) {
 						doc.refreshParagraphs(0, doc.getLength());
@@ -2603,4 +2603,3 @@ public class WordMLEditorKit extends DefaultEditorKit {
 	} // CreateSdtOnSignedParagraphAction()
 
 }// WordMLEditorKit class
-

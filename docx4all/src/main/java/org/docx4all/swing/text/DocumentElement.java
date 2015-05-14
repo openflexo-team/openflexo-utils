@@ -19,37 +19,30 @@
 
 package org.docx4all.swing.text;
 
+import java.beans.PropertyChangeSupport;
+
 import javax.swing.text.AttributeSet;
-import javax.swing.text.Style;
 
 import org.docx4all.xml.ElementML;
 
 /**
- *	@author Jojada Tirtowidjojo - 19/12/2007
+ * @author Jojada Tirtowidjojo - 19/12/2007
  */
 public interface DocumentElement extends javax.swing.text.Element {
+
 	public ElementML getElementML();
+
 	public boolean isEditable();
+
 	public void setResolveParent(AttributeSet parent);
+
 	public String getStyleNameInAction();
+
 	public boolean isTheOnlyChild();
+
+	public boolean getSelected();
+
+	public void setSelected(boolean selected);
+
+	public PropertyChangeSupport getPropertyChangeSupport();
 }// DocumentElement class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

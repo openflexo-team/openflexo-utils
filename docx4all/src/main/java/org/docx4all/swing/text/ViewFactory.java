@@ -19,13 +19,14 @@
 
 package org.docx4all.swing.text;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BoxView;
 import javax.swing.text.Element;
 import javax.swing.text.View;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.xml.ElementML;
 import org.docx4all.xml.InlineDrawingML;
 import org.docx4all.xml.ParagraphML;
@@ -35,27 +36,46 @@ import org.docx4all.xml.SdtBlockML;
 import org.docx4all.xml.TableCellML;
 import org.docx4all.xml.TableML;
 import org.docx4all.xml.TableRowML;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ViewFactory implements javax.swing.text.ViewFactory {
 	private static Logger log = LoggerFactory.getLogger(ViewFactory.class);
-	
+
 	private TableView tableView;
-	
-    /**
-     * Creates a view from the given structural element of a
-     * document.
-     *
-     * @param elem  the piece of the document to build a view of
-     * @return the view
-     * @see View
-     */
-    public View create(Element elem) {
+
+	private final Map<ElementML, View> viewsForElements = new HashMap<ElementML, View>();
+	private final Map<Object, View> viewsForDocObjects = new HashMap<Object, View>();
+
+	private void register(ElementML e, View v) {
+		viewsForElements.put(e, v);
+		viewsForDocObjects.put(e.getDocxObject(), v);
+	}
+
+	public View getViewForElementML(ElementML e) {
+		return viewsForElements.get(e);
+	}
+
+	public View getViewForDocObject(Object o) {
+		return viewsForDocObjects.get(o);
+	}
+
+	/**
+	 * Creates a view from the given structural element of a document.
+	 *
+	 * @param elem
+	 *            the piece of the document to build a view of
+	 * @return the view
+	 * @see View
+	 */
+	@Override
+	public View create(Element elem) {
 		View theView = null;
 
 		AttributeSet attrs = elem.getAttributes();
 		ElementML elementML = WordMLStyleConstants.getElementML(attrs);
 
-		//TODO: Don't quite like this temporary solution
+		// TODO: Don't quite like this temporary solution
 		if (elementML instanceof InlineDrawingML) {
 			theView = new InlineImageView(elem);
 		} else if (elementML instanceof RunContentML) {
@@ -78,32 +98,10 @@ public class ViewFactory implements javax.swing.text.ViewFactory {
 		} else {
 			theView = new BoxView(elem, View.Y_AXIS);
 		}
-		
+
+		register(elementML, theView);
+
 		return theView;
 	}
 
-
 }// ViewFactory class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
