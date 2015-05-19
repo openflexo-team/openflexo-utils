@@ -91,6 +91,8 @@ public class WordMLTextPane extends JEditorPane {
 	public void setDocument(Document doc) {
 		if (doc instanceof WordMLDocument) {
 			super.setDocument(doc);
+			// setSelectionColor(((WordMLDocument) doc).SELECTION_COLOR);
+			setSelectionColor(WordMLDocument.SELECTION_COLOR);
 		} else {
 			throw new IllegalArgumentException("Model must be WordMLDocument");
 		}

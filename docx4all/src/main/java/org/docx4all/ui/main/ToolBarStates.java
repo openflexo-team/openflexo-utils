@@ -577,8 +577,6 @@ public class ToolBarStates extends InternalFrameAdapter implements FocusListener
 
 	private void setCurrentEditor(JEditorPane editor) {
 
-		System.out.println("Hop, l'editeur devient " + editor + " _currentEditor=" + _currentEditor);
-
 		if (editor == _currentEditor) {
 			return;
 		}
@@ -845,7 +843,7 @@ public class ToolBarStates extends InternalFrameAdapter implements FocusListener
 	}
 
 	private void setRemoteRevision(WordMLTextPane editor) {
-		WordMLDocument doc = (WordMLDocument) editor.getDocument();
+		WordMLDocument doc = editor.getDocument();
 		DocumentElement elem = (DocumentElement) doc.getParagraphMLElement(editor.getCaretPosition(), false);
 		boolean hasRemoteRevision = XmlUtil.containsTrackedChanges(elem.getElementML().getDocxObject());
 		setRemoteRevisionInPara(hasRemoteRevision);
@@ -864,9 +862,6 @@ public class ToolBarStates extends InternalFrameAdapter implements FocusListener
 	@Override
 	public void focusGained(FocusEvent e) {
 
-		System.out.println("OK, je choppe le focus !!!");
-		// Thread.dumpStack();
-
 		if (log.isDebugEnabled()) {
 			log.debug("focusGained(): evt.getSource = " + e.getSource());
 			log.debug("focusGained(): _currentEditor = " + _currentEditor);
@@ -879,7 +874,7 @@ public class ToolBarStates extends InternalFrameAdapter implements FocusListener
 			boolean isShared = false;
 			if (e.getSource() instanceof WordMLTextPane) {
 				WordMLTextPane textpane = (WordMLTextPane) e.getSource();
-				WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				WordMLDocument doc = textpane.getDocument();
 				isShared = DocUtil.isSharedDocument(doc);
 			}
 			setDocumentShared(isShared);

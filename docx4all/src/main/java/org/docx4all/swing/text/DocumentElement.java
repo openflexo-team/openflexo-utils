@@ -45,4 +45,7 @@ public interface DocumentElement extends javax.swing.text.Element {
 	public void setSelected(boolean selected);
 
 	public PropertyChangeSupport getPropertyChangeSupport();
+
+	public WordMLDocument getWordMLDocument();
+
 }// DocumentElement class
