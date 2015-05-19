@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.netbeans.lib.cvsclient.request.GlobalOptionRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.SetRequest;
 
 /**
@@ -45,7 +46,7 @@ import org.netbeans.lib.cvsclient.request.SetRequest;
  */
 public class GlobalOptions implements Cloneable {
 
-	private List variables;
+	private List<String> variables;
 	/**
 	 * Determines whether no changes should be done to the local files. This is useful to request files, that would be updated.
 	 */
@@ -125,7 +126,7 @@ public class GlobalOptions implements Cloneable {
 	private File[] exclusions;
 
 	public GlobalOptions() {
-		variables = new ArrayList();
+		variables = new ArrayList<String>();
 		useGzip = true;
 		compressionLevel = 5;
 	}
@@ -191,10 +192,10 @@ public class GlobalOptions implements Cloneable {
 	 * Creates a list of requests. Only those global options are included that can be sent to server (-q, -Q, -l, -t, -r, -n). To be added
 	 * to the request list sent to the server.
 	 */
-	public List createRequestList() {
-		List requestList = new LinkedList();
+	public List<Request> createRequestList() {
+		List<Request> requestList = new LinkedList<Request>();
 		if (variables.size() > 0) {
-			Iterator it = variables.iterator();
+			Iterator<String> it = variables.iterator();
 			while (it.hasNext()) {
 				String keyValue = it.next().toString();
 				requestList.add(new SetRequest(keyValue));
@@ -317,7 +318,7 @@ public class GlobalOptions implements Cloneable {
 			switches.append("-r "); // NOI18N
 		}
 		if (variables.size() > 0) {
-			Iterator it = variables.iterator();
+			Iterator<String> it = variables.iterator();
 			while (it.hasNext()) {
 				String keyValue = it.next().toString();
 				switches.append("-s " + keyValue + " "); // NOI18N
@@ -378,7 +379,7 @@ public class GlobalOptions implements Cloneable {
 
 	public String[] getCvsVariables() {
 		String[] vars = new String[variables.size()];
-		vars = (String[]) variables.toArray(vars);
+		vars = variables.toArray(vars);
 		return vars;
 	}
 

@@ -47,9 +47,9 @@ public class AnnotateInformation extends FileInfoContainer {
 	/**
 	 * List of lines stored here.
 	 */
-	private List linesList;
+	private List<AnnotateLine> linesList;
 
-	private Iterator iterator;
+	private Iterator<AnnotateLine> iterator;
 
 	private File tempFile;
 
@@ -118,7 +118,7 @@ public class AnnotateInformation extends FileInfoContainer {
 		if (!iterator.hasNext()) {
 			return null;
 		}
-		return (AnnotateLine) iterator.next();
+		return iterator.next();
 	}
 
 	/**
@@ -153,8 +153,8 @@ public class AnnotateInformation extends FileInfoContainer {
 		return tempFile;
 	}
 
-	private List createLinesList() {
-		List toReturn = new LinkedList();
+	private List<AnnotateLine> createLinesList() {
+		List<AnnotateLine> toReturn = new LinkedList<AnnotateLine>();
 		BufferedReader reader = null;
 		if (tempFile == null) {
 			return toReturn;

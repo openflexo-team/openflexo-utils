@@ -47,9 +47,9 @@ public class DiffInformation extends FileInfoContainer {
 	/**
 	 * List of changes stored here
 	 */
-	private final List changesList = new ArrayList();
+	private final List<DiffChange> changesList = new ArrayList<DiffChange>();
 
-	private Iterator iterator;
+	private Iterator<DiffChange> iterator;
 
 	public DiffInformation() {
 	}
@@ -176,7 +176,7 @@ public class DiffInformation extends FileInfoContainer {
 		if (!iterator.hasNext()) {
 			return null;
 		}
-		return (DiffChange) iterator.next();
+		return iterator.next();
 	}
 
 	public class DiffChange {
@@ -187,10 +187,10 @@ public class DiffInformation extends FileInfoContainer {
 		protected int type;
 		private int leftBeginning = -1;
 		private int leftEnd = -1;
-		private final List leftDiff = new ArrayList();
+		private final List<String> leftDiff = new ArrayList<String>();
 		private int rightBeginning = -1;
 		private int rightEnd = -1;
-		private final List rightDiff = new ArrayList();
+		private final List<String> rightDiff = new ArrayList<String>();
 
 		public DiffChange() {
 		}
@@ -250,14 +250,14 @@ public class DiffInformation extends FileInfoContainer {
 				if (index < 0 || index >= leftDiff.size()) {
 					return null;
 				}
-				String line = (String) leftDiff.get(index);
+				String line = leftDiff.get(index);
 				return line;
 			} else {
 				int index = number - rightBeginning;
 				if (index < 0 || index >= rightDiff.size()) {
 					return null;
 				}
-				String line = (String) rightDiff.get(index);
+				String line = rightDiff.get(index);
 				return line;
 			}
 		}

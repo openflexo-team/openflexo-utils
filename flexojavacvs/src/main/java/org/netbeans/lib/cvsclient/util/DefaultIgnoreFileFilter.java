@@ -33,9 +33,9 @@ import java.util.StringTokenizer;
  * @author Milos Kleint, Thomas Singer
  */
 public class DefaultIgnoreFileFilter implements IgnoreFileFilter {
-	private final List patterns = new LinkedList();
+	private final List<StringPattern> patterns = new LinkedList<StringPattern>();
 
-	private final List localPatterns = new LinkedList();
+	private final List<SimpleStringPattern> localPatterns = new LinkedList<SimpleStringPattern>();
 	private boolean processGlobalPatterns = true;
 	private boolean processLocalPatterns = false;
 	private File lastDirectory = null;
@@ -112,8 +112,8 @@ public class DefaultIgnoreFileFilter implements IgnoreFileFilter {
 			File cvsIgnoreFile = new File(filename);
 			if (cvsIgnoreFile.exists()) {
 				try {
-					List list = parseCvsIgnoreFile(cvsIgnoreFile);
-					for (Iterator it = list.iterator(); it.hasNext();) {
+					List<String> list = parseCvsIgnoreFile(cvsIgnoreFile);
+					for (Iterator<String> it = list.iterator(); it.hasNext();) {
 						String s = it.next().toString();
 						if (s.equals("!")) { // NOI18N
 							processGlobalPatterns = false;
@@ -131,16 +131,16 @@ public class DefaultIgnoreFileFilter implements IgnoreFileFilter {
 			processLocalPatterns = localPatterns.size() > 0;
 		}
 		if (processGlobalPatterns) {
-			for (Iterator it = patterns.iterator(); it.hasNext();) {
-				StringPattern pattern = (StringPattern) it.next();
+			for (Iterator<StringPattern> it = patterns.iterator(); it.hasNext();) {
+				StringPattern pattern = it.next();
 				if (pattern.doesMatch(noneCvsFile)) {
 					return true;
 				}
 			}
 		}
 		if (processLocalPatterns) {
-			for (Iterator it = localPatterns.iterator(); it.hasNext();) {
-				StringPattern pattern = (StringPattern) it.next();
+			for (Iterator<SimpleStringPattern> it = localPatterns.iterator(); it.hasNext();) {
+				StringPattern pattern = it.next();
 				if (pattern.doesMatch(noneCvsFile)) {
 					return true;
 				}
@@ -152,9 +152,9 @@ public class DefaultIgnoreFileFilter implements IgnoreFileFilter {
 	/**
 	 * Utility method that reads the .cvsignore file and returns a list of Strings. These strings represent the patterns read from the file.
 	 */
-	public static List parseCvsIgnoreFile(File cvsIgnoreFile) throws IOException, FileNotFoundException {
+	public static List<String> parseCvsIgnoreFile(File cvsIgnoreFile) throws IOException, FileNotFoundException {
 		BufferedReader reader = null;
-		List toReturn = new LinkedList();
+		List<String> toReturn = new LinkedList<String>();
 		try {
 			reader = new BufferedReader(new FileReader(cvsIgnoreFile));
 			String line;

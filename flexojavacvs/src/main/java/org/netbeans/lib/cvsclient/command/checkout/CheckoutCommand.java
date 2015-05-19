@@ -45,6 +45,7 @@ import org.netbeans.lib.cvsclient.request.ArgumentRequest;
 import org.netbeans.lib.cvsclient.request.CommandRequest;
 import org.netbeans.lib.cvsclient.request.DirectoryRequest;
 import org.netbeans.lib.cvsclient.request.ExpandModulesRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.RootRequest;
 
 /**
@@ -59,17 +60,17 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 	 * A store of potentially empty directories. When a directory has a file in it, it is removed from this set. This set allows the prune
 	 * option to be implemented.
 	 */
-	private final Set emptyDirectories = new HashSet();
+	private final Set<File> emptyDirectories = new HashSet<File>();
 
 	/**
 	 * The modules to checkout. These names are unexpanded and will be passed to a module-expansion request.
 	 */
-	private final List modules = new LinkedList();
+	private final List<String> modules = new LinkedList<String>();
 
 	/**
 	 * The expanded modules.
 	 */
-	private final List expandedModules = new LinkedList();
+	private final List<String> expandedModules = new LinkedList<String>();
 
 	/**
 	 * Will force the checkout command to display only a list of modules.
@@ -209,7 +210,7 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 
 	public String[] getModules() {
 		String[] mods = new String[modules.size()];
-		mods = (String[]) modules.toArray(mods);
+		mods = modules.toArray(mods);
 		return mods;
 	}
 
@@ -222,9 +223,9 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 			return;
 		}
 
-		List list = new ArrayList(expandedModules.size());
-		for (Iterator it = expandedModules.iterator(); it.hasNext();) {
-			String moduleName = (String) it.next();
+		List<File> list = new ArrayList<File>(expandedModules.size());
+		for (Iterator<String> it = expandedModules.iterator(); it.hasNext();) {
+			String moduleName = it.next();
 			if (moduleName.equals(".")) { // NOI18N
 				list.add(new File(localPath));
 				break;
@@ -242,7 +243,7 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 			}
 		}
 		File[] directories = new File[list.size()];
-		directories = (File[]) list.toArray(directories);
+		directories = list.toArray(directories);
 		setFiles(directories);
 	}
 
@@ -260,7 +261,7 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 		this.client = client;
 
 		try {
-			requests = new LinkedList();
+			requests = new LinkedList<Request>();
 			if (client.isFirstCommand()) {
 				requests.add(new RootRequest(client.getRepository()));
 			}
@@ -294,8 +295,8 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 				return;
 			}
 
-			for (Iterator it = modules.iterator(); it.hasNext();) {
-				String module = (String) it.next();
+			for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+				String module = it.next();
 				requests.add(new ArgumentRequest(module));
 			}
 
@@ -402,8 +403,8 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 		// You might also think that we should pass in expandedModules here
 		// but according to the spec that would be wrong because of the -d
 		// flag.
-		for (Iterator it = modules.iterator(); it.hasNext();) {
-			String module = (String) it.next();
+		for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+			String module = it.next();
 			requests.add(index++, new ArgumentRequest(module));
 		}
 
@@ -678,8 +679,8 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 		StringBuffer toReturn = new StringBuffer("checkout "); // NOI18N
 		toReturn.append(getCVSArguments());
 		if (!isShowModules() && !isShowModulesWithStatus()) {
-			for (Iterator it = modules.iterator(); it.hasNext();) {
-				String module = (String) it.next();
+			for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+				String module = it.next();
 				toReturn.append(module);
 				toReturn.append(' ');
 			}
@@ -885,9 +886,9 @@ public class CheckoutCommand extends BasicCommand implements TemporaryFileCreato
 	 * Remove any directories that don't contain any files
 	 */
 	private void pruneEmptyDirectories() throws IOException {
-		final Iterator it = emptyDirectories.iterator();
+		final Iterator<File> it = emptyDirectories.iterator();
 		while (it.hasNext()) {
-			final File dir = (File) it.next();
+			final File dir = it.next();
 			// we might have deleted it already (due to recursive delete)
 			// so we need to check existence
 			if (dir.exists()) {

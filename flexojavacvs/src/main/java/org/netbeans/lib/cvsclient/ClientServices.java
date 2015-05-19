@@ -32,6 +32,7 @@ import org.netbeans.lib.cvsclient.command.CommandException;
 import org.netbeans.lib.cvsclient.command.GlobalOptions;
 import org.netbeans.lib.cvsclient.connection.AuthenticationException;
 import org.netbeans.lib.cvsclient.file.FileHandler;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.UnconfiguredRequestException;
 import org.netbeans.lib.cvsclient.response.ResponseException;
 import org.netbeans.lib.cvsclient.util.IgnoreFileFilter;
@@ -49,7 +50,7 @@ public interface ClientServices {
 	 * @param requests
 	 *            the requets to process
 	 */
-	void processRequests(List requests) throws IOException, UnconfiguredRequestException, ResponseException, CommandAbortedException;
+	void processRequests(List<Request> requests) throws IOException, UnconfiguredRequestException, ResponseException, CommandAbortedException;
 
 	/**
 	 * Get the repository used for this connection.
@@ -135,7 +136,7 @@ public interface ClientServices {
 	 * 
 	 * @return a set of all files.
 	 */
-	Set getAllFiles(File directory) throws IOException;
+	Set<File> getAllFiles(File directory) throws IOException;
 
 	/**
 	 * Returns true if no command was sent before. This is used, because the server rejects some doubled commands.

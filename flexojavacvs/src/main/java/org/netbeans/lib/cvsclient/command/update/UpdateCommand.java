@@ -44,6 +44,7 @@ import org.netbeans.lib.cvsclient.file.FileUtils;
 import org.netbeans.lib.cvsclient.request.ArgumentRequest;
 import org.netbeans.lib.cvsclient.request.CommandRequest;
 import org.netbeans.lib.cvsclient.request.EntryRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.UnchangedRequest;
 
 /**
@@ -62,7 +63,7 @@ public class UpdateCommand extends BasicCommand implements TemporaryFileCreator 
 	 * A store of potentially empty directories. When a directory has a file in it, it is removed from this set. This set allows the prune
 	 * option to be implemented.
 	 */
-	private final Set emptyDirectories = new HashSet();
+	private final Set<File> emptyDirectories = new HashSet<File>();
 	/**
 	 * Whether to build directories, like checkout does (this is the -d option in command-line CVS).
 	 */
@@ -276,7 +277,7 @@ public class UpdateCommand extends BasicCommand implements TemporaryFileCreator 
 			// hack - now check for the entry request for removed files
 			// only when p with -r or -D is on
 			if (isPipeToOutput() && (getUpdateByRevision() != null || getUpdateByDate() != null)) {
-				ListIterator it = requests.listIterator();
+				ListIterator<Request> it = requests.listIterator();
 				while (it.hasNext()) {
 					Object req = it.next();
 					if (req instanceof EntryRequest) {
@@ -672,8 +673,8 @@ public class UpdateCommand extends BasicCommand implements TemporaryFileCreator 
 	 * Remove any directories that don't contain any files
 	 */
 	private void pruneEmptyDirectories(ClientServices client) throws IOException {
-		for (Iterator it = emptyDirectories.iterator(); it.hasNext();) {
-			final File dir = (File) it.next();
+		for (Iterator<File> it = emptyDirectories.iterator(); it.hasNext();) {
+			final File dir = it.next();
 			// we might have deleted it already (due to recursive delete)
 			// so we need to check existence
 			if (dir.exists()) {

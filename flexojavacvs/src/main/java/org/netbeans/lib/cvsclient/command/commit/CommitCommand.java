@@ -42,6 +42,7 @@ import org.netbeans.lib.cvsclient.request.ArgumentRequest;
 import org.netbeans.lib.cvsclient.request.ArgumentxRequest;
 import org.netbeans.lib.cvsclient.request.CommandRequest;
 import org.netbeans.lib.cvsclient.request.DirectoryRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.StickyRequest;
 
 /**
@@ -53,7 +54,7 @@ public class CommitCommand extends BasicCommand {
 	/**
 	 * The argument requests that must be added at the end. These argument requests indicate the files to be committed
 	 */
-	private final List argumentRequests = new LinkedList();
+	private final List<Request> argumentRequests = new LinkedList<Request>();
 
 	/**
 	 * The log message used for the commit.
@@ -147,7 +148,7 @@ public class CommitCommand extends BasicCommand {
 		// Obtain a set of all files known to CVS. We union
 		// this set with the set of files in the actual filesystem directory
 		// to obtain a set of files to commit (or at least attempt to commit).
-		Set set = clientServices.getAllFiles(directory);
+		Set<File> set = clientServices.getAllFiles(directory);
 
 		// We must add the local files (and directories) because the above
 		// command does *not* return cvs controlled directories
@@ -157,13 +158,13 @@ public class CommitCommand extends BasicCommand {
 		// from the Entries file.
 		set.addAll(Arrays.asList(files));
 
-		List subdirectories = null;
+		List<File> subdirectories = null;
 		if (isRecursive()) {
-			subdirectories = new LinkedList();
+			subdirectories = new LinkedList<File>();
 		}
 
-		for (Iterator it = set.iterator(); it.hasNext();) {
-			File file = (File) it.next();
+		for (Iterator<File> it = set.iterator(); it.hasNext();) {
+			File file = it.next();
 			if (file.getName().equals("CVS")) { // NOI18N
 				continue;
 			}
@@ -193,8 +194,8 @@ public class CommitCommand extends BasicCommand {
 		}
 
 		if (isRecursive()) {
-			for (Iterator it = subdirectories.iterator(); it.hasNext();) {
-				File subdirectory = (File) it.next();
+			for (Iterator<File> it = subdirectories.iterator(); it.hasNext();) {
+				File subdirectory = it.next();
 				addRequestsForDirectory(subdirectory);
 			}
 		}
@@ -310,9 +311,9 @@ public class CommitCommand extends BasicCommand {
 	@Override
 	protected void addArgumentRequests() {
 		if (isForceCommit()) {
-			Iterator it = requests.iterator();
+			Iterator<Request> it = requests.iterator();
 			String directory = "";
-			List args = new LinkedList();
+			List<Request> args = new LinkedList<Request>();
 			while (it.hasNext()) {
 				Object req = it.next();
 				if (req instanceof org.netbeans.lib.cvsclient.request.DirectoryRequest) {

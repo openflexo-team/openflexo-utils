@@ -3,23 +3,23 @@
 	<parent>
 		<groupId>org.openflexo</groupId>
 		<artifactId>openflexo-component</artifactId>
-        <version>0.2</version>
+        <version>0.3</version>
 	</parent>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.2-SNAPSHOT</version>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>openflexo-utils</artifactId>
 	<name>Openflexo-Utils</name>
 	<packaging>pom</packaging>
 	<properties>
-		<gina.version>1.1</gina.version>
-		<connie.version>1.1</connie.version>
-		<pamela.version>1.1</pamela.version>
-		<diana.version>1.1</diana.version>
+		<gina.version>1.2</gina.version>
+		<connie.version>1.2</connie.version>
+		<pamela.version>1.2</pamela.version>
+		<diana.version>1.2</diana.version>
 	</properties>
 	<scm>
 		<connection>scm:git:ssh://git@github.com/openflexo-team/openflexo-utils.git</connection>
 		<url>https://github.com/openflexo-team/openflexo-utils</url>
-	  <tag>1.1</tag>
+	  <tag>1.2</tag>
   </scm>
 	<modules>
 		<module>flexohelp</module>

@@ -143,12 +143,12 @@ public class Client implements ClientServices, ResponseServices {
 	 * The valid list of requests that is valid for the CVS server
 	 * corresponding to this client
 	 */
-	private Map validRequests = new HashMap();
+	private Map<String, Client> validRequests = new HashMap<String, Client>();
 
 	/**
 	 * A map of file patterns and keyword substitution options
 	 */
-	private Map wrappersMap = null;
+	private Map<StringPattern, KeywordSubstitutionOptions> wrappersMap = null;
 
 	/**
 	 * This will be set to true after initialization requests are sent to the server. The initialization requests setup valid requests and
@@ -158,7 +158,7 @@ public class Client implements ClientServices, ResponseServices {
 
 	private boolean printConnectionReuseWarning = false;
 
-	private static final Set ALLOWED_CONNECTION_REUSE_REQUESTS = new HashSet(Arrays.asList(new Class[] { ExpandModulesRequest.class,
+	private static final Set<Class[]> ALLOWED_CONNECTION_REUSE_REQUESTS = new HashSet(Arrays.asList(new Class[] { ExpandModulesRequest.class,
 			WrapperSendRequest.class }));
 
 	// processRequests & getCounter
@@ -408,7 +408,7 @@ public class Client implements ClientServices, ResponseServices {
 	 *            the requets to process
 	 */
 	@Override
-	public void processRequests(List requests) throws IOException, UnconfiguredRequestException, ResponseException, CommandAbortedException {
+	public void processRequests(List<Request> requests) throws IOException, UnconfiguredRequestException, ResponseException, CommandAbortedException {
 
 		if (requests == null || requests.size() == 0) {
 			throw new IllegalArgumentException("[processRequests] requests " + // NOI18N
@@ -465,8 +465,8 @@ public class Client implements ClientServices, ResponseServices {
 		int fileDetailRequestCount = 0;
 
 		if (fireEnhancedEvents) {
-			for (Iterator it = requests.iterator(); it.hasNext();) {
-				Request request = (Request) it.next();
+			for (Iterator<Request> it = requests.iterator(); it.hasNext();) {
+				Request request = it.next();
 
 				FileDetails fileDetails = request.getFileForTransmission();
 				if (fileDetails != null && fileDetails.getFile().exists()) {
@@ -483,18 +483,18 @@ public class Client implements ClientServices, ResponseServices {
 		// this list stores stream modification requests, each to be called
 		// to modify the input stream the next time we need to process a
 		// response
-		List streamModifierRequests = new LinkedList();
+		List<Request> streamModifierRequests = new LinkedList<Request>();
 
 		// sending files does not seem to allow compression
 		transmitFileHandler = getUncompressedFileHandler();
 
-		for (Iterator it = requests.iterator(); it.hasNext();) {
+		for (Iterator<Request> it = requests.iterator(); it.hasNext();) {
 			if (abort) {
 				throw new CommandAbortedException("Aborted during request processing", // NOI18N
 						CommandException.getLocalMessage("Client.commandAborted", null)); // NOI18N
 			}
 
-			final Request request = (Request) it.next();
+			final Request request = it.next();
 
 			if (request instanceof GzipFileContentsRequest) {
 				if (dontUseGzipFileHandler) {
@@ -558,10 +558,10 @@ public class Client implements ClientServices, ResponseServices {
 				dos.flush();
 
 				// now perform the deferred modification of the input stream
-				Iterator modifiers = streamModifierRequests.iterator();
+				Iterator<Request> modifiers = streamModifierRequests.iterator();
 				while (modifiers.hasNext()) {
 					System.err.println("Modifying the inputstream..."); // NOI18N
-					final Request smRequest = (Request) modifiers.next();
+					final Request smRequest = modifiers.next();
 					System.err.println("Request is a: " + // NOI18N
 							smRequest.getClass().getName());
 					smRequest.modifyInputStream(connection);
@@ -994,7 +994,7 @@ public class Client implements ClientServices, ResponseServices {
 	 * @return a set of all files.
 	 */
 	@Override
-	public Set getAllFiles(File directory) throws IOException {
+	public Set<File> getAllFiles(File directory) throws IOException {
 		return adminHandler.getAllFiles(directory);
 	}
 
@@ -1047,7 +1047,7 @@ public class Client implements ClientServices, ResponseServices {
 
 	}
 
-	private int fillInitialRequests(List requests) {
+	private int fillInitialRequests(List<Request> requests) {
 		int pos = 0;
 		requests.add(pos++, new RootRequest(getRepository()));
 		requests.add(pos++, new UseUnchangedRequest());
@@ -1076,10 +1076,10 @@ public class Client implements ClientServices, ResponseServices {
 	 * Returns the wrappers map associated with the CVS server The map is valid only after the connection is established
 	 */
 	@Override
-	public Map getWrappersMap() throws CommandException {
+	public Map<StringPattern, KeywordSubstitutionOptions> getWrappersMap() throws CommandException {
 		if (wrappersMap == null) {
-			wrappersMap = new HashMap();
-			ArrayList requests = new ArrayList();
+			wrappersMap = new HashMap<StringPattern, KeywordSubstitutionOptions>();
+			ArrayList<Request> requests = new ArrayList<Request>();
 			requests.add(new WrapperSendRequest());
 			boolean isFirst = isFirstCommand();
 			try {

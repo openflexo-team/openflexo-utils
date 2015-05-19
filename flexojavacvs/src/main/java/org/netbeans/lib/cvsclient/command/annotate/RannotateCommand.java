@@ -35,6 +35,7 @@ import org.netbeans.lib.cvsclient.request.ArgumentRequest;
 import org.netbeans.lib.cvsclient.request.CommandRequest;
 import org.netbeans.lib.cvsclient.request.DirectoryRequest;
 import org.netbeans.lib.cvsclient.request.ExpandModulesRequest;
+import org.netbeans.lib.cvsclient.request.Request;
 import org.netbeans.lib.cvsclient.request.RootRequest;
 
 /**
@@ -48,12 +49,12 @@ public class RannotateCommand extends BasicCommand {
 	/**
 	 * The modules to checkout. These names are unexpanded and will be passed to a module-expansion request.
 	 */
-	private final List modules = new LinkedList();
+	private final List<String> modules = new LinkedList<String>();
 
 	/**
 	 * The expanded modules.
 	 */
-	private final List expandedModules = new LinkedList();
+	private final List<String> expandedModules = new LinkedList<String>();
 
 	/**
 	 * Use head revision if a revision meeting criteria set by switches -r/-D (tag/date) is not found.
@@ -116,7 +117,7 @@ public class RannotateCommand extends BasicCommand {
 
 	public String[] getModules() {
 		String[] mods = new String[modules.size()];
-		mods = (String[]) modules.toArray(mods);
+		mods = modules.toArray(mods);
 		return mods;
 	}
 
@@ -126,7 +127,7 @@ public class RannotateCommand extends BasicCommand {
 		}
 
 		String[] directories = new String[expandedModules.size()];
-		directories = (String[]) expandedModules.toArray(directories);
+		directories = expandedModules.toArray(directories);
 		setModules(directories);
 	}
 
@@ -142,12 +143,12 @@ public class RannotateCommand extends BasicCommand {
 
 		client.ensureConnection();
 
-		requests = new LinkedList();
+		requests = new LinkedList<Request>();
 		if (client.isFirstCommand()) {
 			requests.add(new RootRequest(client.getRepository()));
 		}
-		for (Iterator it = modules.iterator(); it.hasNext();) {
-			String module = (String) it.next();
+		for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+			String module = it.next();
 			requests.add(new ArgumentRequest(module));
 		}
 		expandedModules.clear();
@@ -202,8 +203,8 @@ public class RannotateCommand extends BasicCommand {
 			requests.add(2, new ArgumentRequest(getAnnotateByRevision()));
 		}
 
-		for (Iterator it = modules.iterator(); it.hasNext();) {
-			String module = (String) it.next();
+		for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+			String module = it.next();
 			requests.add(new ArgumentRequest(module));
 		}
 
@@ -225,8 +226,8 @@ public class RannotateCommand extends BasicCommand {
 		StringBuffer toReturn = new StringBuffer("rannotate "); // NOI18N
 		toReturn.append(getCVSArguments());
 		if (modules != null && modules.size() > 0) {
-			for (Iterator it = modules.iterator(); it.hasNext();) {
-				String module = (String) it.next();
+			for (Iterator<String> it = modules.iterator(); it.hasNext();) {
+				String module = it.next();
 				toReturn.append(module);
 				toReturn.append(' ');
 			}

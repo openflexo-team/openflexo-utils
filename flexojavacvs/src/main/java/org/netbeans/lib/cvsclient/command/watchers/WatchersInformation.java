@@ -52,7 +52,7 @@ public class WatchersInformation extends FileInfoContainer {
 	/**
 	 * List of users (Watchers instances) that are listening on events for this file.
 	 */
-	private final List userList = new LinkedList();
+	private final List<Watcher> userList = new LinkedList<Watcher>();
 
 	/**
 	 * Creates new istance of the WatchersInformation class.
@@ -91,7 +91,7 @@ public class WatchersInformation extends FileInfoContainer {
 	/**
 	 * Returns the Iterator with WatchersInformation.Watcher instances. Never returns null.
 	 */
-	public Iterator getWatchersIterator() {
+	public Iterator<Watcher> getWatchersIterator() {
 		return this.userList.iterator();
 	}
 

@@ -48,8 +48,8 @@ public class LogInformation extends FileInfoContainer {
 	private String selectedRevisions;
 	private String description;
 	private String locks;
-	private final List revisions = new ArrayList();
-	private final List symbolicNames = new ArrayList();
+	private final List<Revision> revisions = new ArrayList<Revision>();
+	private final List<SymName> symbolicNames = new ArrayList<SymName>();
 
 	public LogInformation() {
 	}
@@ -256,7 +256,7 @@ public class LogInformation extends FileInfoContainer {
 	/**
 	 * return the all revisions attached to this log (if more sophisticated method are supplied, this might get obsolete)
 	 */
-	public List getRevisionList() {
+	public List<Revision> getRevisionList() {
 		return revisions;
 	}
 
@@ -264,10 +264,10 @@ public class LogInformation extends FileInfoContainer {
 	 * Search the revisions by number of revision. If not found, return null.
 	 */
 	public LogInformation.Revision getRevision(String number) {
-		Iterator it = revisions.iterator();
+		Iterator<Revision> it = revisions.iterator();
 		LogInformation.Revision item;
 		while (it.hasNext()) {
-			item = (LogInformation.Revision) it.next();
+			item = it.next();
 			if (item.getNumber().equals(number)) {
 				return item;
 			}
@@ -285,19 +285,19 @@ public class LogInformation extends FileInfoContainer {
 		symbolicNames.add(newName);
 	}
 
-	public List getAllSymbolicNames() {
+	public List<SymName> getAllSymbolicNames() {
 		return symbolicNames;
 	}
 
 	/**
 	 * Search the symbolic names by number of revision. If not found, return null.
 	 */
-	public List getSymNamesForRevision(String revNumber) {
-		Iterator it = symbolicNames.iterator();
+	public List<SymName> getSymNamesForRevision(String revNumber) {
+		Iterator<SymName> it = symbolicNames.iterator();
 		LogInformation.SymName item;
-		List list = new LinkedList();
+		List<SymName> list = new LinkedList<SymName>();
 		while (it.hasNext()) {
-			item = (LogInformation.SymName) it.next();
+			item = it.next();
 			if (item.getRevision().equals(revNumber)) {
 				list.add(item);
 			}
@@ -309,10 +309,10 @@ public class LogInformation extends FileInfoContainer {
 	 * Search the symbolic names by name of tag (symbolic name). If not found, return null.
 	 */
 	public LogInformation.SymName getSymName(String symName) {
-		Iterator it = symbolicNames.iterator();
+		Iterator<SymName> it = symbolicNames.iterator();
 		LogInformation.SymName item;
 		while (it.hasNext()) {
-			item = (LogInformation.SymName) it.next();
+			item = it.next();
 			if (item.getName().equals(symName)) {
 				return item;
 			}
