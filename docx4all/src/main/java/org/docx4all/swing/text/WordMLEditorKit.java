@@ -70,6 +70,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import net.sf.vfsjfilechooser.utils.VFSUtils;
+
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.docx4all.swing.WordMLTextPane;
@@ -84,6 +86,8 @@ import org.docx4all.xml.DocumentML;
 import org.docx4all.xml.ElementML;
 import org.docx4all.xml.ElementMLFactory;
 import org.docx4all.xml.HyperlinkML;
+import org.docx4all.xml.IObjectFactory;
+import org.docx4all.xml.ObjectFactory;
 import org.docx4all.xml.ParagraphML;
 import org.docx4all.xml.RunContentML;
 import org.docx4all.xml.RunDelML;
@@ -95,8 +99,6 @@ import org.plutext.client.Mediator;
 import org.plutext.client.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.sf.vfsjfilechooser.utils.VFSUtils;
 
 public class WordMLEditorKit extends DefaultEditorKit {
 	private static Logger log = LoggerFactory.getLogger(WordMLEditorKit.class);
@@ -208,13 +210,13 @@ public class WordMLEditorKit extends DefaultEditorKit {
 	public final synchronized void beginContentControlEdit(WordMLTextPane editor) {
 		inContentControlEdit = true;
 
-		WordMLDocument doc = (WordMLDocument) editor.getDocument();
+		WordMLDocument doc = editor.getDocument();
 		doc.lockWrite();
 		doc.setSnapshotFireBan(true);
 	}
 
 	public final synchronized void endContentControlEdit(WordMLTextPane editor) {
-		WordMLDocument doc = (WordMLDocument) editor.getDocument();
+		WordMLDocument doc = editor.getDocument();
 		doc.setSnapshotFireBan(false);
 		doc.unlockWrite();
 
@@ -253,14 +255,16 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		return defaultFactory;
 	}
 
-	public WordMLDocument openDocument(WordprocessingMLPackage document) {
+	public WordMLDocument openDocument(WordprocessingMLPackage document, IObjectFactory objectFactory) {
+
+		elementMLFactory = makeElementMLFactory(objectFactory);
 
 		// Default WordMLDocument has to be created prior to
 		// unmarshalling docx4j Document so that StyleDefinitionsPart's
 		// liveStyles property will be populated correctly.
 		// See: StyleDefinitionsPart.unmarshall(java.io.InputStream)
-		WordMLDocument doc = (WordMLDocument) createDefaultDocument();
-		List<ElementSpec> specs = DocUtil.getElementSpecs(new DocumentML(document));
+		WordMLDocument doc = createDefaultDocument(elementMLFactory);
+		List<ElementSpec> specs = DocUtil.getElementSpecs(new DocumentML(document, elementMLFactory));
 		doc.createElementStructure(specs);
 
 		if (log.isDebugEnabled()) {
@@ -278,8 +282,18 @@ public class WordMLEditorKit extends DefaultEditorKit {
 	 * @return the model
 	 */
 	@Override
-	public Document createDefaultDocument() {
-		Document doc = new WordMLDocument();
+	public WordMLDocument createDefaultDocument() {
+		elementMLFactory = makeElementMLFactory(new ObjectFactory());
+		return createDefaultDocument(elementMLFactory);
+	}
+
+	/**
+	 * Create an uninitialized text storage model that is appropriate for this type of editor.
+	 * 
+	 * @return the model
+	 */
+	public WordMLDocument createDefaultDocument(ElementMLFactory elementMLFactory) {
+		WordMLDocument doc = new WordMLDocument(elementMLFactory);
 		if (log.isDebugEnabled()) {
 			log.debug("createDefaultDocument():");
 			DocUtil.displayStructure(doc);
@@ -292,6 +306,12 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		throw new UnsupportedOperationException();
 	}
 
+	private ElementMLFactory elementMLFactory = null;
+
+	private ElementMLFactory makeElementMLFactory(IObjectFactory objectFactory) {
+		return new ElementMLFactory(objectFactory);
+	}
+
 	/**
 	 * Creates a WordMLDocument from the given .docx file
 	 * 
@@ -300,17 +320,19 @@ public class WordMLEditorKit extends DefaultEditorKit {
 	 * @exception IOException
 	 *                on any I/O error
 	 */
-	public WordMLDocument read(FileObject f) throws IOException {
+	public WordMLDocument read(FileObject f, IObjectFactory factory) throws IOException {
 		if (log.isDebugEnabled()) {
 			log.debug("read(): File = " + VFSUtils.getFriendlyName(f.getName().getURI()));
 		}
+
+		elementMLFactory = new ElementMLFactory(factory);
 
 		// Default WordMLDocument has to be created prior to
 		// unmarshalling docx4j Document so that StyleDefinitionsPart's
 		// liveStyles property will be populated correctly.
 		// See: StyleDefinitionsPart.unmarshall(java.io.InputStream)
-		WordMLDocument doc = (WordMLDocument) createDefaultDocument();
-		List<ElementSpec> specs = DocUtil.getElementSpecs(ElementMLFactory.createDocumentML(f));
+		WordMLDocument doc = createDefaultDocument(elementMLFactory);
+		List<ElementSpec> specs = DocUtil.getElementSpecs(elementMLFactory.createDocumentML(f));
 		doc.createElementStructure(specs);
 
 		if (log.isDebugEnabled()) {
@@ -386,7 +408,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 	}
 
 	public void initPlutextClient(WordMLTextPane editor) {
-		WordMLDocument doc = (WordMLDocument) editor.getDocument();
+		WordMLDocument doc = editor.getDocument();
 		try {
 			doc.readLock();
 			this.plutextClient = new Mediator(editor);
@@ -516,12 +538,12 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			clearLastHighlight(editor);
 
 			if (e.isControlDown()) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				int pos = getOffsetPosition(e);
 				HyperlinkML ml = getHyperlinkML(doc, pos);
 				if (ml != null) {
 					String path = (String) doc.getProperty(WordMLDocument.FILE_PATH_PROPERTY);
-					openLinkedDocument(ml, path);
+					openLinkedDocument(ml, path, doc.getElementMLFactory().getObjectFactory());
 				}
 			}
 		}
@@ -529,7 +551,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		@Override
 		public void mouseMoved(MouseEvent e) {
 			WordMLTextPane editor = (WordMLTextPane) e.getSource();
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 			int pos = getOffsetPosition(e);
 
 			highlight(editor, pos);
@@ -553,7 +575,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		}
 
 		private void trackTooltip(WordMLTextPane editor, int pos) {
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 			DocumentElement elem = (DocumentElement) doc.getRunMLElement(pos);
 			ElementML parent = elem.getElementML().getParent();
 			StringBuilder tipText = null;
@@ -618,7 +640,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		}
 
 		private void highlight(WordMLTextPane editor, int pos) {
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 			if (lastHighlightedE != null && lastHighlightedE.getStartOffset() == lastHighlightedE.getEndOffset()) {
 				// invalid Element. This may happen when the Element
 				// has been removed from the document structure.
@@ -650,7 +672,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			lastHighlightedE = null;
 		}
 
-		private void openLinkedDocument(HyperlinkML linkML, String currentDocFilePath) {
+		private void openLinkedDocument(HyperlinkML linkML, String currentDocFilePath, IObjectFactory objectFactory) {
 
 			FileObject srcFile = null;
 			try {
@@ -659,7 +681,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				;// ignore
 			}
 
-			HyperlinkMenu.getInstance().openLinkedDocument(srcFile, linkML);
+			HyperlinkMenu.getInstance().openLinkedDocument(srcFile, linkML, objectFactory);
 		}
 
 		private HyperlinkML getHyperlinkML(WordMLDocument doc, int pos) {
@@ -757,7 +779,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			int start = Math.min(evt.getDot(), evt.getMark());
 			int end = Math.max(evt.getDot(), evt.getMark());
 
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 			try {
 				doc.readLock();
 
@@ -898,7 +920,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				Mediator plutextClient = editor.getWordMLEditorKit().getPlutextClient();
 				if (plutextClient != null && plutextClient.hasNonConflictingChanges()) {
 					log.debug("AcceptNonConflictingRevisionsAction.actionPerformed():" + " plutextClient HAS non-conflicting changes");
@@ -928,7 +950,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								javax.xml.bind.util.JAXBResult result = new javax.xml.bind.util.JAXBResult(org.docx4j.jaxb.Context.jc);
 								XmlUtil.applyRemoteRevisions(src, result);
 
-								ElementML newSdt = new SdtBlockML(result.getResult());
+								ElementML newSdt = new SdtBlockML(result.getResult(), doc.getElementMLFactory());
 								boolean notEmpty = (XmlUtil.getLastRunContentML(newSdt) != null);
 								if (notEmpty) {
 									sdt.addSibling(newSdt, true);
@@ -982,7 +1004,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				Mediator plutextClient = editor.getWordMLEditorKit().getPlutextClient();
 				if (plutextClient != null && plutextClient.hasNonConflictingChanges()) {
 					log.debug("RejectNonConflictingRevisionsAction.actionPerformed():" + " plutextClient HAS non-conflicting changes");
@@ -1012,7 +1034,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								javax.xml.bind.util.JAXBResult result = new javax.xml.bind.util.JAXBResult(org.docx4j.jaxb.Context.jc);
 								XmlUtil.discardRemoteRevisions(src, result);
 
-								ElementML newSdt = new SdtBlockML(result.getResult());
+								ElementML newSdt = new SdtBlockML(result.getResult(), doc.getElementMLFactory());
 								boolean notEmpty = (XmlUtil.getLastRunContentML(newSdt) != null);
 								if (notEmpty) {
 									sdt.addSibling(newSdt, true);
@@ -1063,7 +1085,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		public void actionPerformed(ActionEvent e) {
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				try {
 					doc.lockWrite();
 
@@ -1138,7 +1160,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		public void actionPerformed(ActionEvent e) {
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				try {
 					doc.lockWrite();
 
@@ -1213,7 +1235,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		public void actionPerformed(ActionEvent e) {
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				try {
 					doc.lockWrite();
 
@@ -1241,7 +1263,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 						ElementML newPara = null;
 						try {
-							newPara = new ParagraphML(org.docx4j.XmlUtils.unmarshalString(temp));
+							newPara = new ParagraphML(org.docx4j.XmlUtils.unmarshalString(temp), doc.getElementMLFactory());
 						} catch (JAXBException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
@@ -1297,7 +1319,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		public void actionPerformed(ActionEvent e) {
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				try {
 					doc.lockWrite();
 
@@ -1325,7 +1347,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 						ElementML newPara = null;
 						try {
-							newPara = new ParagraphML(org.docx4j.XmlUtils.unmarshalString(temp));
+							newPara = new ParagraphML(org.docx4j.XmlUtils.unmarshalString(temp), doc.getElementMLFactory());
 						} catch (JAXBException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
@@ -1378,7 +1400,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		public void actionPerformed(ActionEvent e) {
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				try {
 					doc.readLock();
 
@@ -1412,7 +1434,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		public void actionPerformed(ActionEvent e) {
 			WordMLTextPane editor = (WordMLTextPane) getTextComponent(e);
 			if (editor != null) {
-				WordMLDocument doc = (WordMLDocument) editor.getDocument();
+				WordMLDocument doc = editor.getDocument();
 				try {
 					doc.readLock();
 
@@ -1448,7 +1470,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			WordMLEditorKit kit = (WordMLEditorKit) editor.getEditorKit();
 			kit.saveCaretText();
 
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 
 			int p0 = editor.getSelectionStart();
 			int p1 = editor.getSelectionEnd();
@@ -1500,7 +1522,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			int p0 = editor.getSelectionStart();
 			int p1 = editor.getSelectionEnd();
 
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 			try {
 				doc.setParagraphMLAttributes(p0, (p1 - p0), attr, replace);
 
@@ -1523,7 +1545,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			WordMLEditorKit kit = (WordMLEditorKit) editor.getEditorKit();
 			kit.saveCaretText();
 
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 
 			int p0 = editor.getSelectionStart();
 			int p1 = editor.getSelectionEnd();
@@ -1570,7 +1592,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 			int p0 = editor.getSelectionStart();
 			int p1 = editor.getSelectionEnd();
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 			doc.setParagraphStyle(p0, (p1 - p0), styleId);
 
 			editor.setCaretPosition(mark);
@@ -1819,6 +1841,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					return;
 				}
 
+				WordMLDocument doc = ((WordMLTextPane) editor).getDocument();
+
 				WordMLEditorKit kit = (WordMLEditorKit) editor.getEditorKit();
 				kit.saveCaretText();
 
@@ -1829,7 +1853,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					ElementML runML = elem.getElementML();
 					if (runML.getParent() instanceof HyperlinkML) {
 						String path = (String) elem.getDocument().getProperty(WordMLDocument.FILE_PATH_PROPERTY);
-						openLinkedDocument((HyperlinkML) runML.getParent(), path);
+						openLinkedDocument((HyperlinkML) runML.getParent(), path, doc.getElementMLFactory().getObjectFactory());
 					} else {
 						editor.replaceSelection(Constants.NEWLINE);
 					}
@@ -1839,7 +1863,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			}
 		}
 
-		private void openLinkedDocument(HyperlinkML linkML, final String currentDocFilePath) {
+		private void openLinkedDocument(HyperlinkML linkML, final String currentDocFilePath, IObjectFactory objectFactory) {
 
 			FileObject srcFile = null;
 			try {
@@ -1848,7 +1872,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				;// ignore
 			}
 
-			HyperlinkMenu.getInstance().openLinkedDocument(srcFile, linkML);
+			HyperlinkMenu.getInstance().openLinkedDocument(srcFile, linkML, objectFactory);
 		}
 
 	}// EnterKeyTypedAction inner class
@@ -2069,7 +2093,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				int start = textpane.getSelectionStart();
 				int end = textpane.getSelectionEnd();
 
-				final WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				final WordMLDocument doc = textpane.getDocument();
 				int pos = doc.getLength() - textpane.getCaretPosition();
 
 				try {
@@ -2080,7 +2104,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					// NOTE: Make sure that this Action is enabled after passing
 					// DocUtil.canChangeIntoSdt() method.
 					if (elem == null) {
-						SdtBlockML sdt = ElementMLFactory.createSdtBlockML();
+						SdtBlockML sdt = doc.getElementMLFactory().createSdtBlockML();
 						elem = (DocumentElement) doc.getParagraphMLElement(offs, false);
 						if (offs == doc.getLength()) {
 							;// do not change the last paragraph in the document
@@ -2126,7 +2150,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								while (idx <= endIdx) {
 									DocumentElement temp = (DocumentElement) parent.getElement(idx);
 									ElementML ml = temp.getElementML();
-									sdt = ElementMLFactory.createSdtBlockML();
+									sdt = doc.getElementMLFactory().createSdtBlockML();
 									ml.addSibling(sdt, true);
 									ml.delete();
 									sdt.addChild(ml);
@@ -2171,7 +2195,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				int start = textpane.getSelectionStart();
 				int end = textpane.getSelectionEnd();
 
-				final WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				final WordMLDocument doc = textpane.getDocument();
 				int pos = doc.getLength() - textpane.getCaretPosition();
 
 				try {
@@ -2231,15 +2255,15 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				WordMLEditorKit kit = (WordMLEditorKit) textpane.getEditorKit();
 				kit.saveCaretText();
 
-				final WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				final WordMLDocument doc = textpane.getDocument();
 				int offset = textpane.getCaretPosition();
 				int pos = doc.getLength() - offset;
 
 				try {
 					doc.lockWrite();
 
-					SdtBlockML sdt = ElementMLFactory.createSdtBlockML();
-					sdt.addChild(ElementMLFactory.createEmptyParagraphML());
+					SdtBlockML sdt = doc.getElementMLFactory().createSdtBlockML();
+					sdt.addChild(doc.getElementMLFactory().createEmptyParagraphML());
 
 					DocumentElement elem = DocUtil.getElementToPasteAsSibling(doc, offset, sdt);
 					if (elem == null) {
@@ -2259,8 +2283,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						doc.refreshParagraphs(offset, 1);
 						success = true;
 
-					} else
-						if (elem.getElementML() instanceof ParagraphML && DocUtil.canSplitElementML(elem, offset - elem.getStartOffset())) {
+					} else if (elem.getElementML() instanceof ParagraphML
+							&& DocUtil.canSplitElementML(elem, offset - elem.getStartOffset())) {
 						DocUtil.splitElementML(elem, (offset - elem.getStartOffset()));
 						elem.getElementML().addSibling(sdt, true);
 
@@ -2305,7 +2329,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				WordMLEditorKit kit = (WordMLEditorKit) textpane.getEditorKit();
 				kit.saveCaretText();
 
-				final WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				final WordMLDocument doc = textpane.getDocument();
 
 				try {
 					doc.lockWrite();
@@ -2377,7 +2401,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				WordMLEditorKit kit = (WordMLEditorKit) textpane.getEditorKit();
 				kit.saveCaretText();
 
-				final WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				final WordMLDocument doc = textpane.getDocument();
 				try {
 					doc.lockWrite();
 
@@ -2387,7 +2411,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						DocumentElement sdtBlockE = (DocumentElement) doc.getSdtBlockMLElement(pos);
 						ElementML sdt = sdtBlockE.getElementML();
 
-						SdtBlockML newSdt = ElementMLFactory.createSdtBlockML();
+						SdtBlockML newSdt = doc.getElementMLFactory().createSdtBlockML();
 
 						// Get the paragraph where the cursor is
 						int idx = sdtBlockE.getElementIndex(pos);
@@ -2399,7 +2423,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						pos = temp.getStartOffset();
 
 						if (idx == 0) {
-							newSdt.addChild(ElementMLFactory.createEmptyParagraphML());
+							newSdt.addChild(doc.getElementMLFactory().createEmptyParagraphML());
 							sdt.addSibling(newSdt, false);
 
 						} else {
@@ -2445,13 +2469,13 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				WordMLTextPane textpane = (WordMLTextPane) editor;
 				((WordMLEditorKit) textpane.getEditorKit()).saveCaretText();
 
-				final WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				final WordMLDocument doc = textpane.getDocument();
 
 				try {
 					doc.lockWrite();
 
 					boolean refresh = false;
-					SdtBlockML sdt = ElementMLFactory.createSdtBlockML();
+					SdtBlockML sdt = doc.getElementMLFactory().createSdtBlockML();
 
 					DocumentElement root = (DocumentElement) doc.getDefaultRootElement();
 					DocumentML docML = (DocumentML) root.getElementML();
@@ -2470,7 +2494,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								sdt.addChild(ml);
 								ml = sdt;
 								refresh = true;
-								sdt = ElementMLFactory.createSdtBlockML();
+								sdt = doc.getElementMLFactory().createSdtBlockML();
 							}
 							parent.addChild(idx, ml);
 						}
@@ -2530,7 +2554,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				WordMLEditorKit kit = (WordMLEditorKit) textpane.getEditorKit();
 				kit.saveCaretText();
 
-				final WordMLDocument doc = (WordMLDocument) textpane.getDocument();
+				final WordMLDocument doc = textpane.getDocument();
 				try {
 					doc.lockWrite();
 
@@ -2558,7 +2582,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								sdt.addChild(ml);
 							} else {
 								// create a new sdt
-								sdt = ElementMLFactory.createSdtBlockML();
+								sdt = doc.getElementMLFactory().createSdtBlockML();
 								ml.addSibling(sdt, false);
 								ml.delete();
 								sdt.addChild(ml);

@@ -82,21 +82,25 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 	public static final Color SELECTION_COLOR = Color.YELLOW;
 
-	private ObjectFactory documentFactory;
+	private final ElementMLFactory elementMLFactory;
 
-	public WordMLDocument() {
+	public WordMLDocument(ElementMLFactory elementMLFactory) {
 		super();
+		this.elementMLFactory = elementMLFactory;
 		this.snapshotFireBan = false;
 		selectedElements = new ArrayList<DocumentElement>();
-		documentFactory = new ObjectFactory(this);
 	}
 
-	public ObjectFactory getDocumentFactory() {
-		return documentFactory;
+	public ElementMLFactory getElementMLFactory() {
+		return elementMLFactory;
 	}
 
-	public void setDocumentFactory(ObjectFactory documentFactory) {
-		this.documentFactory = documentFactory;
+	/*public void setElementMLFactory(ElementMLFactory elementMLFactory) {
+		this.elementMLFactory = elementMLFactory;
+	}*/
+
+	public boolean isEditable() {
+		return getElementMLFactory() != null;
 	}
 
 	public synchronized final void lockWrite() {
@@ -269,8 +273,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
-						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
+						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -339,8 +343,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
-						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
+						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -418,8 +422,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
-						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
+						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -538,8 +542,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			} // if (StyleSheet.CHARACTER_ATTR_VALUE.equals(type))
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
-						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
+						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -656,7 +660,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 							if (rPr != null) {
 								rPr = (RunPropertiesML) rPr.clone();
 							}
-							RunML newSibling = ElementMLFactory.createRunML(runContents, rPr);
+							RunML newSibling = getElementMLFactory().createRunML(runContents, rPr);
 							runML.addSibling(newSibling, true);
 
 							pasteRecordsAfter(softBreak, paraContentRecords);
@@ -712,13 +716,13 @@ public class WordMLDocument extends DefaultStyledDocument {
 					for (ElementMLRecord temp : paraContentRecords) {
 						contents.add(temp.getElementML());
 					}
-					ElementML newParaML = ElementMLFactory.createParagraphML(contents, pPr, null);
+					ElementML newParaML = getElementMLFactory().createParagraphML(contents, pPr, null);
 
 					ElementML targetML = targetE.getElementML();
 					if (targetML instanceof ParagraphML) {
 						targetML.addSibling(newParaML, false);
 					} else if (targetML instanceof SdtBlockML) {
-						SdtBlockML newSdtBlockML = ElementMLFactory.createSdtBlockML();
+						SdtBlockML newSdtBlockML = getElementMLFactory().createSdtBlockML();
 						newSdtBlockML.addChild(newParaML, true);
 						targetML.addSibling(newSdtBlockML, false);
 					} else {
@@ -778,8 +782,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
-						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
+						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -807,7 +811,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 			for (ElementMLRecord rec : paraContentRecords) {
 				contents.add(rec.getElementML());
 			}
-			ElementML newParaML = ElementMLFactory.createParagraphML(contents, null, null);
+			ElementML newParaML = getElementMLFactory().createParagraphML(contents, null, null);
 
 			if (rootE.getElementCount() > 1) {
 				// lastParaE has an older sibling.
@@ -993,7 +997,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 				if (tempRunML == null) {
 					// tempRunML is created once and used to
 					// host all leading paraContentRecords that hold RunContentML
-					tempRunML = new RunML(ObjectFactory.createR(null));
+					tempRunML = new RunML(getElementMLFactory().getObjectFactory().createR(null), getElementMLFactory());
 					target.addSibling(tempRunML, false);
 					target = tempRunML;
 				}
@@ -1079,7 +1083,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 				endOffset = bottomParaE.getStartOffset();
 			}
 
-			ElementML tempContainerML = new ImpliedContainerML();
+			ElementML tempContainerML = new ImpliedContainerML(getElementMLFactory());
 			for (idx = topIdx + 1; idx < bottomIdx; idx++) {
 				ElementML childML = bodyML.getChild(idx);
 				tempContainerML.addChild(childML, false);
@@ -1268,8 +1272,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			setSnapshotFireBan(origFireBanState);
 
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
-						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
+						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -1326,7 +1330,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 			bodyML.addChild(paraML);
 
 			org.docx4j.wml.Document wmlDoc = wmlPackage.getMainDocumentPart().getJaxbElement();
-			replaceBodyML(new BodyML(wmlDoc.getBody()));
+			replaceBodyML(new BodyML(wmlDoc.getBody(), getElementMLFactory()));
 
 		} finally {
 			writeUnlock();
@@ -1532,8 +1536,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			super.create(specs);
 
 			DocumentElement root = (DocumentElement) getDefaultRootElement();
-			StyleConstants.setFontFamily((MutableAttributeSet) root.getAttributes(),
-					FontManager.getInstance().getDocx4AllDefaultFontFamilyName());
+			StyleConstants.setFontFamily((MutableAttributeSet) root.getAttributes(), FontManager.getInstance()
+					.getDocx4AllDefaultFontFamilyName());
 
 			StyleConstants.setFontSize((MutableAttributeSet) root.getAttributes(), FontManager.getInstance().getDocx4AllDefaultFontSize());
 
@@ -1557,7 +1561,14 @@ public class WordMLDocument extends DefaultStyledDocument {
 	 */
 	@Override
 	protected AbstractElement createDefaultRoot() {
-		DocumentML docML = ElementMLFactory.createEmptyDocumentML();
+
+		ElementMLFactory factory = getElementMLFactory();
+		if (factory == null) {
+			// Happens when WordMLDocument is beeing initialized
+			factory = new ElementMLFactory(new ObjectFactory());
+		}
+
+		DocumentML docML = factory.createEmptyDocumentML();
 
 		ElementML bodyML = docML.getChild(0);
 		ElementML paraML = bodyML.getChild(0);

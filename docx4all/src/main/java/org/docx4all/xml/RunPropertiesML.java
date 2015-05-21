@@ -27,8 +27,6 @@ import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.swing.text.StyleSheet;
 import org.docx4all.swing.text.WordMLStyleConstants;
 import org.docx4j.XmlUtils;
@@ -36,75 +34,82 @@ import org.docx4j.wml.BooleanDefaultTrue;
 import org.docx4j.wml.HpsMeasure;
 import org.docx4j.wml.RFonts;
 import org.docx4j.wml.RPr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 30/11/2007
+ * @author Jojada Tirtowidjojo - 30/11/2007
  */
 public class RunPropertiesML extends ElementML implements PropertiesContainerML {
 	private static Logger log = LoggerFactory.getLogger(RunPropertiesML.class);
-	
+
 	private MutableAttributeSet attrs;
-	
-	public RunPropertiesML(RPr rPr) {
-		super(rPr, false);
+
+	public RunPropertiesML(RPr rPr, ElementMLFactory elementMLFactory) {
+		super(rPr, elementMLFactory, false);
 	}
-	
-    public void addAttribute(Object name, Object value) {
-    	this.attrs.addAttribute(name, value);
-    }
-    
+
+	@Override
+	public void addAttribute(Object name, Object value) {
+		this.attrs.addAttribute(name, value);
+	}
+
+	@Override
 	public void addAttributes(AttributeSet attrs) {
 		this.attrs.addAttributes(attrs);
 	}
-	
+
+	@Override
 	public MutableAttributeSet getAttributeSet() {
 		return new SimpleAttributeSet(this.attrs);
 	}
-	
-    public void removeAttributes(AttributeSet attributes) {
-    	attrs.removeAttributes(attributes);
+
+	@Override
+	public void removeAttributes(AttributeSet attributes) {
+		attrs.removeAttributes(attributes);
 	}
 
-    public void removeAttribute(Object name) {
-    	attrs.removeAttribute(name);
-    }
+	@Override
+	public void removeAttribute(Object name) {
+		attrs.removeAttribute(name);
+	}
 
+	@Override
 	public void save() {
 		if (this.docxObject == null) {
 			return;
 		}
-		
+
 		RPr rPr = (RPr) this.docxObject;
-		
-		//BOLD Attribute
+
+		// BOLD Attribute
 		if (this.attrs.isDefined(StyleConstants.Bold)) {
 			Boolean bvalue = (Boolean) this.attrs.getAttribute(StyleConstants.Bold);
-			BooleanDefaultTrue bdt = ObjectFactory.createBooleanDefaultTrue(bvalue);
-			rPr.setB(bdt);			
+			BooleanDefaultTrue bdt = getObjectFactory().createBooleanDefaultTrue(bvalue);
+			rPr.setB(bdt);
 		} else {
 			rPr.setB(null);
 		}
-		
-		//ITALIC Attribute
+
+		// ITALIC Attribute
 		if (this.attrs.isDefined(StyleConstants.Italic)) {
 			Boolean bvalue = (Boolean) this.attrs.getAttribute(StyleConstants.Italic);
-			BooleanDefaultTrue bdt = ObjectFactory.createBooleanDefaultTrue(bvalue);
+			BooleanDefaultTrue bdt = getObjectFactory().createBooleanDefaultTrue(bvalue);
 			rPr.setI(bdt);
 		} else {
 			rPr.setI(null);
 		}
-		
-		//UNDERLINE Attribute
+
+		// UNDERLINE Attribute
 		if (this.attrs.isDefined(StyleConstants.Underline)) {
 			Boolean bvalue = (Boolean) this.attrs.getAttribute(StyleConstants.Underline);
 			if (bvalue.booleanValue()) {
 				if (StyleSheet.hasUnderlineSet(rPr)) {
-					//As we do not support underline style
-					//and color yet we do not touch the 
-					//original setting of rPr underline
+					// As we do not support underline style
+					// and color yet we do not touch the
+					// original setting of rPr underline
 				} else {
-					org.docx4j.wml.U u = 
-						ObjectFactory.createUnderline("single", "auto");
+					org.docx4j.wml.U u = getObjectFactory().createUnderline("single", "auto");
 					rPr.setU(u);
 				}
 			} else {
@@ -113,27 +118,22 @@ public class RunPropertiesML extends ElementML implements PropertiesContainerML 
 		} else {
 			rPr.setU(null);
 		}
-		
-		//FONT FAMILY Attribute
-		String strValue =
-			this.attrs.isDefined(StyleConstants.FontFamily)
-				? StyleConstants.getFontFamily(this.attrs)
-				: null;
+
+		// FONT FAMILY Attribute
+		String strValue = this.attrs.isDefined(StyleConstants.FontFamily) ? StyleConstants.getFontFamily(this.attrs) : null;
 		RFonts rfonts = rPr.getRFonts();
 		if (rfonts != null) {
-			//Just set the asscii value.
-			//Do not touch other attributes.
+			// Just set the asscii value.
+			// Do not touch other attributes.
 			rfonts.setAscii(strValue);
 		} else if (strValue != null) {
-			rfonts = ObjectFactory.createRPrRFonts(strValue);
+			rfonts = getObjectFactory().createRPrRFonts(strValue);
 			rfonts.setParent(rPr);
 			rPr.setRFonts(rfonts);
 		}
-		
-		//FONT SIZE Attribute
-		Integer intValue = 
-			this.attrs.isDefined(StyleConstants.FontSize)
-				? (Integer) this.attrs.getAttribute(StyleConstants.FontSize)
+
+		// FONT SIZE Attribute
+		Integer intValue = this.attrs.isDefined(StyleConstants.FontSize) ? (Integer) this.attrs.getAttribute(StyleConstants.FontSize)
 				: null;
 		HpsMeasure sz = rPr.getSz();
 		if (sz != null) {
@@ -144,85 +144,65 @@ public class RunPropertiesML extends ElementML implements PropertiesContainerML 
 				sz.setVal(val);
 			}
 		} else if (intValue != null) {
-			sz = ObjectFactory.createHpsMeasure(intValue);
+			sz = getObjectFactory().createHpsMeasure(intValue);
 			sz.setParent(rPr);
 			rPr.setSz(sz);
 		}
-		
-    	//RStyle
-    	if (this.attrs.isDefined(WordMLStyleConstants.RStyleAttribute)) {
-    		String rStyle =
-    			(String) this.attrs.getAttribute(WordMLStyleConstants.RStyleAttribute);
-    		if (rPr.getRStyle() == null) {
-    			rPr.setRStyle(ObjectFactory.createRStyle(rStyle));
-    		} else {
-    			rPr.getRStyle().setVal(rStyle);
-    		}
-    	} else {
-    		rPr.setRStyle(null);
-    	}
-    	
-	} //save()
-	
+
+		// RStyle
+		if (this.attrs.isDefined(WordMLStyleConstants.RStyleAttribute)) {
+			String rStyle = (String) this.attrs.getAttribute(WordMLStyleConstants.RStyleAttribute);
+			if (rPr.getRStyle() == null) {
+				rPr.setRStyle(getObjectFactory().createRStyle(rStyle));
+			} else {
+				rPr.getRStyle().setVal(rStyle);
+			}
+		} else {
+			rPr.setRStyle(null);
+		}
+
+	} // save()
+
+	@Override
 	public Object clone() {
 		RPr obj = null;
 		if (this.docxObject != null) {
 			obj = (RPr) XmlUtils.deepCopy(this.docxObject);
 		}
-		return new RunPropertiesML(obj);
+		return new RunPropertiesML(obj, getElementMLFactory());
 	}
-	
+
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		return false;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		throw new UnsupportedOperationException("Cannot have a child.");
 	}
-		
+
+	@Override
 	public void setParent(ElementML parent) {
 		if (parent != null && !(parent instanceof RunML)) {
 			throw new IllegalArgumentException("NOT a RunML.");
 		}
 		this.parent = parent;
 	}
-	
+
+	@Override
 	public List<Object> getDocxChildren() {
-		return null;//do not have children
+		return null;// do not have children
 	}
-		
+
+	@Override
 	protected void init(Object docxObject) {
 		this.attrs = new SimpleAttributeSet();
-		
+
 		if (docxObject != null) {
 			StyleSheet.addAttributes(this.attrs, (RPr) docxObject);
 		}
 	}
-	
+
 }// RunPropertiesML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

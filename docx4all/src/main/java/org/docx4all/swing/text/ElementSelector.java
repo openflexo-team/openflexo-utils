@@ -27,92 +27,81 @@ import javax.swing.text.BadLocationException;
 import org.docx4all.swing.text.WordMLFragment.ElementMLRecord;
 import org.docx4all.util.XmlUtil;
 import org.docx4all.xml.ElementML;
-import org.docx4all.xml.ElementMLFactory;
 import org.docx4all.xml.ElementMLIterator;
-import org.docx4all.xml.ObjectFactory;
 import org.docx4all.xml.ParagraphML;
 import org.docx4all.xml.RunContentML;
 import org.docx4all.xml.RunML;
 import org.docx4all.xml.RunPropertiesML;
 
 /**
- *	@author Jojada Tirtowidjojo - 17/04/2008
+ * @author Jojada Tirtowidjojo - 17/04/2008
  */
 public class ElementSelector {
 	private DocumentElement _elem;
 	private int _startOffset, _endOffset;
-	
+
 	public ElementSelector(DocumentElement elem, int startOffset, int endOffset) {
-		if (elem.getStartOffset() <= startOffset
-			&& endOffset <= elem.getEndOffset()) {
+		if (elem.getStartOffset() <= startOffset && endOffset <= elem.getEndOffset()) {
 			this._elem = elem;
 			this._startOffset = startOffset;
 			this._endOffset = endOffset;
 		} else {
-			throw new IllegalArgumentException(
-				"[startOffset, endOffset]=[" + startOffset + "," + endOffset + "]");
+			throw new IllegalArgumentException("[startOffset, endOffset]=[" + startOffset + "," + endOffset + "]");
 		}
 	}
-	
+
 	/**
-	 * Returns a list of DocumentElements that lie within this instance's selection area; 
-	 * ie: [_startOffset, _endOffset].
+	 * Returns a list of DocumentElements that lie within this instance's selection area; ie: [_startOffset, _endOffset].
 	 * 
-	 * In general DocumentElements that fully lie within the selection area will be 
-	 * included in the returned list. An exception is given to DocumentElement that
-	 * holds an implied ParagraphML.
-	 *  
-	 * A DocumentElement that holds an implied ParagraphML is replaced with 
-	 * the list of DocumentElements obtained from processing each of its children
-	 * regardless whether it fully or partially lies within the selection area.
+	 * In general DocumentElements that fully lie within the selection area will be included in the returned list. An exception is given to
+	 * DocumentElement that holds an implied ParagraphML.
 	 * 
-	 * A block/non-leaf DocumentElement that partially lies within the selection area
-	 * will be replaced with the list of DocumentElements obtained from processing 
-	 * each of its children.
+	 * A DocumentElement that holds an implied ParagraphML is replaced with the list of DocumentElements obtained from processing each of
+	 * its children regardless whether it fully or partially lies within the selection area.
 	 * 
-	 * A leaf DocumentElement that partially lies within the selection area is treated
-	 * as if it did not. This means it will be included in the returned list.
+	 * A block/non-leaf DocumentElement that partially lies within the selection area will be replaced with the list of DocumentElements
+	 * obtained from processing each of its children.
 	 * 
-	 * @return a List<DocumentElement> whose members lie within instance's selection area.  
+	 * A leaf DocumentElement that partially lies within the selection area is treated as if it did not. This means it will be included in
+	 * the returned list.
+	 * 
+	 * @return a List<DocumentElement> whose members lie within instance's selection area.
 	 */
 	public List<DocumentElement> getDocumentElements() {
 		List<DocumentElement> theList = selectElements(_elem, _startOffset, _endOffset);
 		return theList;
 	}
-	
-	
+
 	/**
-	 * Returns a list of DocumentElements that lie within the selection area as defined by
-	 * 'start' and 'end' arguments.
+	 * Returns a list of DocumentElements that lie within the selection area as defined by 'start' and 'end' arguments.
 	 * 
-	 * In general DocumentElements that fully lie within the selection area will be 
-	 * included in the returned list. An exception is given to DocumentElement that
-	 * holds an implied ParagraphML.
-	 *  
-	 * A DocumentElement that holds an implied ParagraphML is replaced with 
-	 * the list of DocumentElements obtained from processing each of its children
-	 * regardless whether it fully or partially lies within the selection area.
+	 * In general DocumentElements that fully lie within the selection area will be included in the returned list. An exception is given to
+	 * DocumentElement that holds an implied ParagraphML.
 	 * 
-	 * A block/non-leaf DocumentElement that partially lies within the selection area
-	 * will be replaced with the list of DocumentElements obtained from processing 
-	 * each of its children.
+	 * A DocumentElement that holds an implied ParagraphML is replaced with the list of DocumentElements obtained from processing each of
+	 * its children regardless whether it fully or partially lies within the selection area.
 	 * 
-	 * A leaf DocumentElement that partially lies within the selection area is treated
-	 * as if it did not. This means it will be included in the returned list.
+	 * A block/non-leaf DocumentElement that partially lies within the selection area will be replaced with the list of DocumentElements
+	 * obtained from processing each of its children.
 	 * 
-	 * @param start the start offset position in the document.
-	 * @param end the end offset position in the document.
+	 * A leaf DocumentElement that partially lies within the selection area is treated as if it did not. This means it will be included in
+	 * the returned list.
 	 * 
-	 * @return a List<DocumentElement> whose members lie within instance's selection area.  
+	 * @param start
+	 *            the start offset position in the document.
+	 * @param end
+	 *            the end offset position in the document.
+	 * 
+	 * @return a List<DocumentElement> whose members lie within instance's selection area.
 	 */
 	private List<DocumentElement> selectElements(DocumentElement elem, int start, int end) {
 		List<DocumentElement> theElements = null;
-		
+
 		start = Math.max(start, elem.getStartOffset());
 		end = Math.min(end, elem.getEndOffset());
-		
+
 		if (start <= elem.getStartOffset() && elem.getEndOffset() <= end) {
-			//elem is fully selected
+			// elem is fully selected
 			ElementML ml = elem.getElementML();
 			if (ml instanceof ParagraphML && ml.isImplied()) {
 				theElements = selectElementsFromChildren(elem, start, end);
@@ -121,96 +110,92 @@ public class ElementSelector {
 				theElements.add(elem);
 			}
 		} else if (!elem.isLeaf()) {
-			//partially selected block
+			// partially selected block
 			theElements = selectElementsFromChildren(elem, start, end);
-			
+
 		} else {
-			//partially selected leaf
+			// partially selected leaf
 			theElements = new ArrayList<DocumentElement>(1);
 			theElements.add(elem);
 		}
-		
+
 		return theElements;
 	}
-	
+
 	private List<DocumentElement> selectElementsFromChildren(DocumentElement elem, int start, int end) {
 		List<DocumentElement> theChildren = new ArrayList<DocumentElement>();
-		
+
 		start = Math.max(start, elem.getStartOffset());
 		end = Math.min(end, elem.getEndOffset());
-		
+
 		int startIdx = elem.getElementIndex(start);
 		int endIdx = elem.getElementIndex(end - 1);
-		
+
 		while (startIdx <= endIdx) {
 			DocumentElement child = (DocumentElement) elem.getElement(startIdx++);
 			theChildren.addAll(selectElements(child, start, end));
 		}
-		
+
 		return theChildren;
 	}
-	
 
 	public List<ElementMLRecord> getElementMLRecords() {
 		return selectType(ElementMLRecord.class);
 	}
-	
+
 	/**
-	 * This method is used internally for creating copies of ElementML or 
-	 * generating ElementMLRecord objects out of DocumentElements that lie
-	 * within this instance's selection area; ie: [_startOffset, _endOffset]. 
+	 * This method is used internally for creating copies of ElementML or generating ElementMLRecord objects out of DocumentElements that
+	 * lie within this instance's selection area; ie: [_startOffset, _endOffset].
 	 * 
-	 * @param returnedType This is either ElementML.class or ElementMLRecord.class.
+	 * @param returnedType
+	 *            This is either ElementML.class or ElementMLRecord.class.
 	 * 
-	 * @return a list of Objects whose class is determined by 'returnedType' argument. 
+	 * @return a list of Objects whose class is determined by 'returnedType' argument.
 	 */
 	private <T> List<T> selectType(Class<T> returnedType) {
 		List<T> theList = new ArrayList<T>();
-		
+
 		ElementML elemML = _elem.getElementML();
-		
+
 		if (elemML.isImplied()) {
 			if (elemML instanceof ParagraphML) {
 				int startIdx = _elem.getElementIndex(_startOffset);
 				int endIdx = _elem.getElementIndex(_endOffset - 1);
-				for (int i=startIdx; i <= endIdx; i++) {
-					DocumentElement child = 
-						(DocumentElement) _elem.getElement(i);
+				for (int i = startIdx; i <= endIdx; i++) {
+					DocumentElement child = (DocumentElement) _elem.getElement(i);
 					int x = Math.max(child.getStartOffset(), _startOffset);
 					int y = Math.min(child.getEndOffset(), _endOffset);
 					ElementSelector es = new ElementSelector(child, x, y);
 					theList.addAll(es.selectType(returnedType));
-				}				
+				}
 			} else {
-				;//Exclude all implied ElementML(s) except for implied ParagraphML
+				;// Exclude all implied ElementML(s) except for implied ParagraphML
 			}
-			
-		} else if (_startOffset == _elem.getStartOffset()
-					&& _elem.getEndOffset() == _endOffset) {
-			// _elem is fully selected 
+
+		} else if (_startOffset == _elem.getStartOffset() && _elem.getEndOffset() == _endOffset) {
+			// _elem is fully selected
 			theList.add(copyFully(_elem, returnedType));
-		
+
 		} else if (_startOffset == _elem.getStartOffset()) {
 			// _elem is partially selected; ie: _endOffset < _elem.getEndOffset()
 			theList.add(copyPartially(_elem, _endOffset, returnedType));
-			
+
 		} else {
 			// _elem is partially selected and
 			// _elem is hosting selection range (_startOffset, _endOffset]
 			if (elemML instanceof RunContentML) {
 				ElementML ml = copyRunContentML(_elem, _startOffset, _endOffset);
 				theList.add(createReturnedObject(ml, true, returnedType));
-				
+
 			} else if (elemML instanceof RunML) {
 				ElementML ml = copyRunML(_elem, _startOffset, _endOffset);
 				theList.add(createReturnedObject(ml, true, returnedType));
-				
+
 			} else {
 				int startIdx = _elem.getElementIndex(_startOffset);
 				int endIdx = _elem.getElementIndex(_endOffset - 1);
 				for (int i = startIdx; i <= endIdx; i++) {
-					DocumentElement child = 
-						(DocumentElement) _elem.getElement(i);
+					DocumentElement child = (DocumentElement) _elem.getElement(i);
 					int x = Math.max(child.getStartOffset(), _startOffset);
 					int y = Math.min(child.getEndOffset(), _endOffset);
 					ElementSelector es = new ElementSelector(child, x, y);
@@ -220,34 +205,30 @@ public class ElementSelector {
 		}
 		return theList;
 	}
-	
+
 	private <T> T createReturnedObject(ElementML elem, boolean isFragmented, Class<T> returnedType) {
 		T obj = null;
 		if (elem != null && returnedType == ElementMLRecord.class) {
 			obj = (T) new ElementMLRecord(elem, isFragmented);
-		} else if (elem != null && returnedType == ElementML.class){
+		} else if (elem != null && returnedType == ElementML.class) {
 			obj = (T) elem;
 		} else {
 			throw new IllegalArgumentException("elem=" + elem + " returnedType=" + returnedType.getSimpleName());
 		}
-		return obj;		
+		return obj;
 	}
-	
+
 	private <T> T copyFully(DocumentElement elem, Class<T> returnedType) {
 		ElementML copyML = (ElementML) elem.getElementML().clone();
 		return createReturnedObject(copyML, false, returnedType);
 	}
-	
-	private <T> T copyPartially(
-		DocumentElement elem, 
-		int endOffset, 
-		Class<T> returnedType) {
-		
+
+	private <T> T copyPartially(DocumentElement elem, int endOffset, Class<T> returnedType) {
+
 		WordMLDocument doc = (WordMLDocument) elem.getDocument();
 		ElementML elemML = elem.getElementML();
-		
-		DocumentElement runContentE = 
-			(DocumentElement) doc.getCharacterElement(endOffset - 1);
+
+		DocumentElement runContentE = (DocumentElement) doc.getCharacterElement(endOffset - 1);
 		RunContentML rcml = (RunContentML) runContentE.getElementML();
 		String text = rcml.getTextContent();
 		try {
@@ -283,63 +264,44 @@ public class ElementSelector {
 
 		return createReturnedObject(copyML, true, returnedType);
 	}
-	
+
 	private RunML copyRunML(DocumentElement runE, int start, int end) {
 		RunML runML = (RunML) runE.getElementML();
-		
-    	RunPropertiesML rPr = (RunPropertiesML) runML.getRunProperties();
-    	if (rPr != null) {
-    		rPr = (RunPropertiesML) rPr.clone();
-    	}
-    	
+
+		RunPropertiesML rPr = (RunPropertiesML) runML.getRunProperties();
+		if (rPr != null) {
+			rPr = (RunPropertiesML) rPr.clone();
+		}
+
 		int startIdx = _elem.getElementIndex(_startOffset);
 		int endIdx = _elem.getElementIndex(_endOffset - 1);
-    	List<ElementML> children = 
-    		new ArrayList<ElementML>(endIdx - startIdx + 1);
+		List<ElementML> children = new ArrayList<ElementML>(endIdx - startIdx + 1);
 		for (int i = startIdx; i <= endIdx; i++) {
-			DocumentElement child = 
-				(DocumentElement) _elem.getElement(i);
+			DocumentElement child = (DocumentElement) _elem.getElement(i);
 			int x = Math.max(child.getStartOffset(), _startOffset);
 			int y = Math.min(child.getEndOffset(), _endOffset);
 			ElementSelector es = new ElementSelector(child, x, y);
 			children.addAll(es.selectType(ElementML.class));
 		}
 
-		runML = ElementMLFactory.createRunML(children, rPr);
+		runML = _elem.getWordMLDocument().getElementMLFactory().createRunML(children, rPr);
 		return runML;
 	}
-	
+
 	private RunContentML copyRunContentML(DocumentElement runContentE, int start, int end) {
 		RunContentML runContentML = null;
-		
+
 		try {
 			WordMLDocument doc = (WordMLDocument) runContentE.getDocument();
 			String text = doc.getText(_startOffset, _endOffset - _startOffset);
-			runContentML = new RunContentML(ObjectFactory.createT(text));
+			runContentML = new RunContentML(_elem.getWordMLDocument().getElementMLFactory().getObjectFactory().createT(text), _elem
+					.getWordMLDocument().getElementMLFactory());
 		} catch (BadLocationException exc) {
 			;// ignore
 		}
-		
+
 		return runContentML;
 	}
-	
+
 }// ElementSelector class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

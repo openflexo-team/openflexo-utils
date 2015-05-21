@@ -45,14 +45,12 @@ import javax.xml.xpath.XPathFactory;
 import org.alfresco.webservice.authentication.AuthenticationFault;
 import org.alfresco.webservice.util.AuthenticationDetails;
 import org.alfresco.webservice.util.AuthenticationUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.swing.CheckinCommentDialog;
 import org.docx4all.swing.FetchRemoteEditsWorker;
-import org.docx4all.swing.TransmitLocalEditsWorker;
-import org.docx4all.swing.WordMLTextPane;
 import org.docx4all.swing.FetchRemoteEditsWorker.FetchProgress;
+import org.docx4all.swing.TransmitLocalEditsWorker;
 import org.docx4all.swing.TransmitLocalEditsWorker.TransmitProgress;
+import org.docx4all.swing.WordMLTextPane;
 import org.docx4all.swing.text.DocumentElement;
 import org.docx4all.swing.text.WordMLDocument;
 import org.docx4all.util.DocUtil;
@@ -100,9 +98,11 @@ import org.plutext.client.wrappedTransforms.TransformInsert;
 import org.plutext.client.wrappedTransforms.TransformMove;
 import org.plutext.client.wrappedTransforms.TransformStyle;
 import org.plutext.client.wrappedTransforms.TransformUpdate;
-import org.plutext.transforms.Transforms;
 import org.plutext.transforms.Changesets.Changeset;
+import org.plutext.transforms.Transforms;
 import org.plutext.transforms.Transforms.T;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -151,125 +151,116 @@ public class Mediator {
 
 	private static final Long CANT_OVERWRITE = Long.valueOf(0);
 
-	private StateDocx stateDocx;
+	private final StateDocx stateDocx;
 
 	public StateDocx getStateDocx() {
 		return stateDocx;
 	}
 
-	private WordMLTextPane textPane;
+	private final WordMLTextPane textPane;
 
 	public WordMLTextPane getWordMLTextPane() {
 		return textPane;
 	}
 
 	private WordMLDocument getWordMLDocument() {
-		return (WordMLDocument) textPane.getDocument();
+		return textPane.getDocument();
 	}
-	
+
 	public Mediator(WordMLTextPane textPane) {
-		WordMLDocument doc = (WordMLDocument) textPane.getDocument();
+		WordMLDocument doc = textPane.getDocument();
 		if (!DocUtil.isSharedDocument(doc)) {
 			throw new IllegalArgumentException("Not a shared WordMLDocument");
 		}
 
 		this.textPane = textPane;
 		this.stateDocx = new StateDocx(doc);
-		
-		
+
 	}
 
 	private PlutextWebService ws = null;
 
 	private Skeleton currentClientSkeleleton = null;
 
-	private static XPathExpression[] xpaths; 
-	private static XPathExpression xpathRelTest; 
-	
+	private static XPathExpression[] xpaths;
+	private static XPathExpression xpathRelTest;
+
 	static {
-		
+
 		XPathFactory factory = XPathFactory.newInstance();
 		XPath xPath = factory.newXPath();
-		
+
 		xPath.setNamespaceContext(new NamespacePrefixMappings());
-				
-		
+
 		xpaths = new XPathExpression[4];
-	    try {
-			xpaths[0] =  xPath.compile(".//@r:embed | .//@r:link | .//@r:id | ./descendant::w:commentReference[1]");
-			xpaths[1] =  xPath.compile(".//w:commentReference/@w:id | .//w:commentRangeStart/@w:id | .//w:commentRangeEnd/@w:id");
-			xpaths[2] =  xPath.compile(".//w:footnoteReference/@w:id");
-			xpaths[3] =  xPath.compile(".//w:endnoteReference/@w:id");
-			
-            // linked images, hyperlinks (and w:object/v:imagedata, w:object/o:OLEObject)			
+		try {
+			xpaths[0] = xPath.compile(".//@r:embed | .//@r:link | .//@r:id | ./descendant::w:commentReference[1]");
+			xpaths[1] = xPath.compile(".//w:commentReference/@w:id | .//w:commentRangeStart/@w:id | .//w:commentRangeEnd/@w:id");
+			xpaths[2] = xPath.compile(".//w:footnoteReference/@w:id");
+			xpaths[3] = xPath.compile(".//w:endnoteReference/@w:id");
+
+			// linked images, hyperlinks (and w:object/v:imagedata, w:object/o:OLEObject)
 			xpathRelTest = xPath.compile(" .//@r:link | .//@r:id ");
 		} catch (XPathExpressionException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	/***************************************************************************
-	 * SESSION MANAGEMENT 
+	 * SESSION MANAGEMENT
 	 ******************************************************
 	 */
-	
-    AuthenticationDetails authDetails; 
-	
+
+	AuthenticationDetails authDetails;
+
 	public void startSession() throws ServiceException {
-		
+
 		log.info("starting session");
-		
-        try {
+
+		try {
 			WordMLDocument doc = getWordMLDocument();
-			WebdavUri uri =
-				new WebdavUri(
-				(String) doc.getProperty(WordMLDocument.FILE_PATH_PROPERTY));
-			
-		    StringBuilder endPointAddress = new StringBuilder("http://");
-		    endPointAddress.append(uri.getHost());
-		    if (uri.getPort() != null) {
-		    	endPointAddress.append(":");
-		    	endPointAddress.append(uri.getPort());
-		    }
-		    endPointAddress.append("/alfresco/api");
-		    			
-            org.alfresco.webservice.util.WebServiceFactory.setEndpointAddress(
-            		endPointAddress.toString());
+			WebdavUri uri = new WebdavUri((String) doc.getProperty(WordMLDocument.FILE_PATH_PROPERTY));
 
-            log.debug(uri.getUsername() );
-            log.debug( java.net.URLDecoder.decode(uri.getUsername(), "UTF-8") );
-            
-            // Ensure a tenant user name appears as eg tester@public
-            // rather than tester%40public
-            
-            AuthenticationUtils.startSession(java.net.URLDecoder.decode(uri.getUsername(),"UTF-8"), uri.getPassword());
-            /*
-             * NB - that stores the session in ThreadLocal<AuthenticationDetails> authenticationDetails.
-             * 
-             * The practical effect of this is that all web service calls must be from the
-             * same thread! ie you can't do some in a background thread, and others in
-             * the event dispatching thread.
-             * 
-             * A workaround for this is to store the AuthenticationDetails here, so that
-             * they can be set on other threads as necessary.
-             */
-            authDetails = AuthenticationUtils.getAuthenticationDetails();
-		      
-            PlutextService_ServiceLocator locator = 
-            	new PlutextService_ServiceLocator(
-            			AuthenticationUtils.getEngineConfiguration());
-            
-            locator.setPlutextServiceEndpointAddress(
-            	endPointAddress + "/" + locator.getPlutextServiceWSDDServiceName());
+			StringBuilder endPointAddress = new StringBuilder("http://");
+			endPointAddress.append(uri.getHost());
+			if (uri.getPort() != null) {
+				endPointAddress.append(":");
+				endPointAddress.append(uri.getPort());
+			}
+			endPointAddress.append("/alfresco/api");
 
-            ws = locator.getPlutextService();
+			org.alfresco.webservice.util.WebServiceFactory.setEndpointAddress(endPointAddress.toString());
+
+			log.debug(uri.getUsername());
+			log.debug(java.net.URLDecoder.decode(uri.getUsername(), "UTF-8"));
+
+			// Ensure a tenant user name appears as eg tester@public
+			// rather than tester%40public
+
+			AuthenticationUtils.startSession(java.net.URLDecoder.decode(uri.getUsername(), "UTF-8"), uri.getPassword());
+			/*
+			 * NB - that stores the session in ThreadLocal<AuthenticationDetails> authenticationDetails.
+			 * 
+			 * The practical effect of this is that all web service calls must be from the
+			 * same thread! ie you can't do some in a background thread, and others in
+			 * the event dispatching thread.
+			 * 
+			 * A workaround for this is to store the AuthenticationDetails here, so that
+			 * they can be set on other threads as necessary.
+			 */
+			authDetails = AuthenticationUtils.getAuthenticationDetails();
+
+			PlutextService_ServiceLocator locator = new PlutextService_ServiceLocator(AuthenticationUtils.getEngineConfiguration());
+
+			locator.setPlutextServiceEndpointAddress(endPointAddress + "/" + locator.getPlutextServiceWSDDServiceName());
+
+			ws = locator.getPlutextService();
 
 			this.updateStartOffset = doc.getLength();
 			this.updateEndOffset = 0;
 
-			DocumentElement root = (DocumentElement) doc
-					.getDefaultRootElement();
+			DocumentElement root = (DocumentElement) doc.getDefaultRootElement();
 			currentClientSkeleleton = new Skeleton();
 			for (int idx = 0; idx < root.getElementCount(); idx++) {
 				DocumentElement elem = (DocumentElement) root.getElement(idx);
@@ -285,15 +276,15 @@ public class Mediator {
 		} catch (AuthenticationFault exc) {
 			log.error(exc.getMessage(), exc);
 			throw new ServiceException("Service Connection failure.", exc);
-		} catch ( Exception e) {
+		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-        	throw new ServiceException("Service Connection failure.", e);			
+			throw new ServiceException("Service Connection failure.", e);
 		}
 	}
 
 	public void endSession() {
-		log.info("Ending session.");		
-		
+		log.info("Ending session.");
+
 		AuthenticationUtils.endSession();
 		currentClientSkeleleton = null;
 		ws = null;
@@ -301,8 +292,7 @@ public class Mediator {
 	}
 
 	/***************************************************************************
-	 * FETCH REMOTE UPDATES
-	 * ****************************************************************************************
+	 * FETCH REMOTE UPDATES ****************************************************************************************
 	 */
 
 	private Skeleton oldServer;
@@ -314,31 +304,29 @@ public class Mediator {
 	 * @throws RemoteException
 	 */
 	public void fetchUpdates(FetchRemoteEditsWorker worker) throws RemoteException {
-		
+
 		worker.setProgress(FetchProgress.START_FETCHING, "Fetch updates");
-		
-		log.debug(".. .. fetchUpdates, from "
-				+ stateDocx.getTransforms().getTSequenceNumberHighestFetched());
+
+		log.debug(".. .. fetchUpdates, from " + stateDocx.getTransforms().getTSequenceNumberHighestFetched());
 
 		// ws = ChunkServiceOverride.getWebService();
-		String[] updates = ws.getTransforms(stateDocx.getDocID(), stateDocx
-				.getTransforms().getTSequenceNumberHighestFetched());
+		String[] updates = ws.getTransforms(stateDocx.getDocID(), stateDocx.getTransforms().getTSequenceNumberHighestFetched());
 
-        /* Returns an array containing the current sequence number, and an XML document:
-         * 
-         * <ns6:updates >
-         *      <ns6:transforms>
-         *          <ns6:t ns6:op="update" ns6:changeset="1" ns6:snum="1" ns6:tstamp="1218269730469">
-         *              <w:sdt><w:sdtPr><w:id w:val="759551861"/><w:tag w:val="1"/></w:sdtPr><w:sdtContent><w:p><w:r><w:t>So now .. </w:t></w:r></w:p></w:sdtContent></w:sdt>
-         *          </ns6:t>
-         *      </ns6:transforms>
-         *      <ns6:changesets>
-         *          <ns6:changeset ns6:modifier="jharrop" ns6:number="1">edited</ns6:changeset>
-         *      </ns6:changesets>
-         * </ns6:updates> 
-         * 
-         */ 
-		
+		/* Returns an array containing the current sequence number, and an XML document:
+		 * 
+		 * <ns6:updates >
+		 *      <ns6:transforms>
+		 *          <ns6:t ns6:op="update" ns6:changeset="1" ns6:snum="1" ns6:tstamp="1218269730469">
+		 *              <w:sdt><w:sdtPr><w:id w:val="759551861"/><w:tag w:val="1"/></w:sdtPr><w:sdtContent><w:p><w:r><w:t>So now .. </w:t></w:r></w:p></w:sdtContent></w:sdt>
+		 *          </ns6:t>
+		 *      </ns6:transforms>
+		 *      <ns6:changesets>
+		 *          <ns6:changeset ns6:modifier="jharrop" ns6:number="1">edited</ns6:changeset>
+		 *      </ns6:changesets>
+		 * </ns6:updates> 
+		 * 
+		 */
+
 		log.debug(" sequence = " + updates[0]);
 		if (updates.length < 2) {
 			log.error(stateDocx.getDocID() + " ERROR!!!");
@@ -346,175 +334,134 @@ public class Mediator {
 		} else {
 			log.debug(stateDocx.getDocID() + " transforms = " + updates[1]);
 
-			
-            Boolean needToFetchSkel = false;
-            
-			if (Integer.parseInt(updates[0]) > stateDocx.getTransforms()
-					.getTSequenceNumberHighestFetched()) {
-                worker.setProgress(FetchProgress.REGISTERING_UPDATES, "Registering updates");
-                
-				stateDocx.getTransforms().setTSequenceNumberHighestFetched(
-						Integer.parseInt(updates[0]));
+			Boolean needToFetchSkel = false;
+
+			if (Integer.parseInt(updates[0]) > stateDocx.getTransforms().getTSequenceNumberHighestFetched()) {
+				worker.setProgress(FetchProgress.REGISTERING_UPDATES, "Registering updates");
+
+				stateDocx.getTransforms().setTSequenceNumberHighestFetched(Integer.parseInt(updates[0]));
 				Boolean appliedFalse = false;
 				Boolean localFalse = false;
 				Boolean updateHighestFetchedTrue = true;
-				needToFetchSkel = 
-					registerUpdates(
-						updates[1], 
-						appliedFalse, 
-						localFalse, 
-						updateHighestFetchedTrue);
-				
-				if (needToFetchSkel || oldServer == null) {
-                    worker.setProgress(
-                    	FetchProgress.FETCHING_REMOTE_DOC_STRUCTURE, 
-                    	"Fetching remote document structure");
+				needToFetchSkel = registerUpdates(updates[1], appliedFalse, localFalse, updateHighestFetchedTrue);
 
-					String serverSkeletonStr = ws.getSkeletonDocument(stateDocx
-							.getDocID());
+				if (needToFetchSkel || oldServer == null) {
+					worker.setProgress(FetchProgress.FETCHING_REMOTE_DOC_STRUCTURE, "Fetching remote document structure");
+
+					String serverSkeletonStr = ws.getSkeletonDocument(stateDocx.getDocID());
 					oldServer = new Skeleton(serverSkeletonStr);
-					
+
 				}
 				worker.setProgress(FetchProgress.FETCHING_DONE, "About to apply remote edits to local document");
 			} else {
 				worker.setProgress(FetchProgress.FETCHING_DONE, "No remote updates");
-			}	
+			}
 		}
 	}
-	
-    /**
-     * Put transforms received from server into the transforms collection.
-     * 
-     * @return true if there is a structural change due to TransformInsert, 
-     *              TransformDelete, or TransformMove;
-     *         false, otherwise.
-     */
-    public boolean registerUpdates(
-    	String updates, 
-    	Boolean setApplied, 
-    	Boolean setLocal, 
-    	Boolean updateHighestFetched)
-    {
-        log.debug(stateDocx.getDocID() + ".. .. registerTransforms");
 
-        // Parse the XML document, and put each transform into the transforms
+	/**
+	 * Put transforms received from server into the transforms collection.
+	 * 
+	 * @return true if there is a structural change due to TransformInsert, TransformDelete, or TransformMove; false, otherwise.
+	 */
+	public boolean registerUpdates(String updates, Boolean setApplied, Boolean setLocal, Boolean updateHighestFetched) {
+		log.debug(stateDocx.getDocID() + ".. .. registerTransforms");
+
+		// Parse the XML document, and put each transform into the transforms
 		// collection
-        org.plutext.transforms.Updates updatesObj = null;
+		org.plutext.transforms.Updates updatesObj = null;
 		try {
-//			ClassLoader cl = org.plutext.transforms.ObjectFactory.class.getClassLoader();
-//			log.info("Classloader: " + cl.toString() );			
-//    		jcTransforms = JAXBContext.newInstance("org.plutext.transforms", cl);
-//			jcTransforms = JAXBContext.newInstance(org.plutext.transforms.Updates.class);
-//    		Unmarshaller u = jcTransforms.createUnmarshaller();
-			
+			// ClassLoader cl = org.plutext.transforms.ObjectFactory.class.getClassLoader();
+			// log.info("Classloader: " + cl.toString() );
+			// jcTransforms = JAXBContext.newInstance("org.plutext.transforms", cl);
+			// jcTransforms = JAXBContext.newInstance(org.plutext.transforms.Updates.class);
+			// Unmarshaller u = jcTransforms.createUnmarshaller();
+
 			Unmarshaller u = Context.jcTransforms.createUnmarshaller();
-				// HELP!  If it looks like org.docx4j.jaxb.Context.jc is being reused here,
-				// its because package-info is missing, which may be because of Ant 1.7.1,
-				// although our build works around that ...
-			
+			// HELP! If it looks like org.docx4j.jaxb.Context.jc is being reused here,
+			// its because package-info is missing, which may be because of Ant 1.7.1,
+			// although our build works around that ...
+
 			u.setEventHandler(new org.docx4j.jaxb.JaxbValidationEventHandler());
-			updatesObj = (org.plutext.transforms.Updates) u
-					.unmarshal(new java.io.StringReader(updates));
+			updatesObj = (org.plutext.transforms.Updates) u.unmarshal(new java.io.StringReader(updates));
 		} catch (JAXBException e) {
 			// Shouldn't happen!!
 			e.printStackTrace();
 		}
-		
-		boolean result = 
-			registerTransforms(
-				updatesObj.getTransforms(), 
-				setApplied, 
-				setLocal, 
-				updateHighestFetched);
-		
-        // Changesets
+
+		boolean result = registerTransforms(updatesObj.getTransforms(), setApplied, setLocal, updateHighestFetched);
+
+		// Changesets
 		List<Changeset> changesetlist = updatesObj.getChangesets().getChangeset();
 		this.changeSets = new HashMap<String, Changeset>(changesetlist.size());
-		for (Changeset c: changesetlist) {
+		for (Changeset c : changesetlist) {
 			this.changeSets.put(Long.toString(c.getNumber()), c);
 		}
-		
-        log.debug("Changesets = " 
-        	+ XmlUtils.marshaltoString(
-        			updatesObj.getChangesets(), 
-        			true, 
-        			false, 
-        			Context.jcTransforms));
 
-        /* eg <ns6:changesets xmlns:ns6="http://www.plutext.org/transforms">
-         *          <ns6:changeset ns6:date="2008-08-09T19:45:10.666+10:00" 
-         *                         ns6:modifier="jharrop" 
-         *                         ns6:number="1">
-         *                          edited
-         *          </ns6:changeset>
-         *  </ns6:changesets> 
-         */ 
-        return result;
-    }
+		log.debug("Changesets = " + XmlUtils.marshaltoString(updatesObj.getChangesets(), true, false, Context.jcTransforms));
 
-    /**
-     * Put transforms received from server into the transforms collection.
-     * 
-     * @param transforms
-     * @param setApplied
-     * @param setLocal
-     * @param updateHighestFetched
-     * @return
-     */
-    public boolean registerTransforms(
-        String transforms, 
-        Boolean setApplied, 
-        Boolean setLocal, 
-        Boolean updateHighestFetched) {
-    	
-        log.debug(stateDocx.getDocID() + ".. .. registerTransforms");
+		/* eg <ns6:changesets xmlns:ns6="http://www.plutext.org/transforms">
+		 *          <ns6:changeset ns6:date="2008-08-09T19:45:10.666+10:00" 
+		 *                         ns6:modifier="jharrop" 
+		 *                         ns6:number="1">
+		 *                          edited
+		 *          </ns6:changeset>
+		 *  </ns6:changesets> 
+		 */
+		return result;
+	}
 
-        // Parse the XML document, and put each transform into the transforms
-    	// collection
-    	org.plutext.transforms.Transforms transformsObj = null;
-    	try {
-//    		JAXBContext jcTransforms = JAXBContext.newInstance("org.plutext.transforms");
-//    		Unmarshaller u = jcTransforms.createUnmarshaller();
-    		Unmarshaller u = Context.jcTransforms.createUnmarshaller();
-    		u.setEventHandler(new org.docx4j.jaxb.JaxbValidationEventHandler());
-    		transformsObj = (org.plutext.transforms.Transforms) u
-    					.unmarshal(new java.io.StringReader(transforms));
-    	} catch (JAXBException e) {
-    		e.printStackTrace();
-    	}
+	/**
+	 * Put transforms received from server into the transforms collection.
+	 * 
+	 * @param transforms
+	 * @param setApplied
+	 * @param setLocal
+	 * @param updateHighestFetched
+	 * @return
+	 */
+	public boolean registerTransforms(String transforms, Boolean setApplied, Boolean setLocal, Boolean updateHighestFetched) {
 
-    	return registerTransforms(transformsObj, setApplied, setLocal, updateHighestFetched);
-    }
+		log.debug(stateDocx.getDocID() + ".. .. registerTransforms");
 
-    /**
-     * Returns true if there is a structural change due to TransformInsert, 
-     *              TransformDelete, or TransformMove;
-     *         false, otherwise.
-     */
-	public boolean registerTransforms(
-			org.plutext.transforms.Transforms transformsObj,
-			Boolean setApplied, Boolean setLocal, Boolean updateHighestFetched) {
+		// Parse the XML document, and put each transform into the transforms
+		// collection
+		org.plutext.transforms.Transforms transformsObj = null;
+		try {
+			// JAXBContext jcTransforms = JAXBContext.newInstance("org.plutext.transforms");
+			// Unmarshaller u = jcTransforms.createUnmarshaller();
+			Unmarshaller u = Context.jcTransforms.createUnmarshaller();
+			u.setEventHandler(new org.docx4j.jaxb.JaxbValidationEventHandler());
+			transformsObj = (org.plutext.transforms.Transforms) u.unmarshal(new java.io.StringReader(transforms));
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
+
+		return registerTransforms(transformsObj, setApplied, setLocal, updateHighestFetched);
+	}
+
+	/**
+	 * Returns true if there is a structural change due to TransformInsert, TransformDelete, or TransformMove; false, otherwise.
+	 */
+	public boolean registerTransforms(org.plutext.transforms.Transforms transformsObj, Boolean setApplied, Boolean setLocal,
+			Boolean updateHighestFetched) {
 		log.debug(stateDocx.getDocID() + ".. .. registerTransforms");
 
 		boolean result = false;
 		for (T t : transformsObj.getT()) {
-			TransformAbstract ta = TransformHelper.construct(t);
-			if (
-				ta instanceof TransformInsert
-				|| ta instanceof TransformDelete
-				|| ta instanceof TransformMove ) {
-	            // Check for structural change, which will mean we
-	            // need to refresh our copy of the server skeleton
+			TransformAbstract ta = TransformHelper.construct(t, getWordMLDocument().getElementMLFactory());
+			if (ta instanceof TransformInsert || ta instanceof TransformDelete || ta instanceof TransformMove) {
+				// Check for structural change, which will mean we
+				// need to refresh our copy of the server skeleton
 				result = true;
 			}
 			registerTransform(ta, setApplied, setLocal, updateHighestFetched);
-			
+
 		}
 		return result;
 	}
 
-	public void registerTransform(TransformAbstract t, Boolean setApplied,
-			Boolean setLocal, Boolean updateHighestFetched) {
+	public void registerTransform(TransformAbstract t, Boolean setApplied, Boolean setLocal, Boolean updateHighestFetched) {
 		if (setApplied) {
 			t.setApplied(true);
 		}
@@ -522,8 +469,7 @@ public class Mediator {
 			t.setLocal(true);
 		}
 
-		log.debug("Instance " + stateDocx.getDocID() + " -- Registering "
-				+ t.getSequenceNumber() + ": " + t.getClass().getSimpleName());
+		log.debug("Instance " + stateDocx.getDocID() + " -- Registering " + t.getSequenceNumber() + ": " + t.getClass().getSimpleName());
 		try {
 			stateDocx.getTransforms().add(t, updateHighestFetched);
 			log.debug(".. done.");
@@ -535,14 +481,13 @@ public class Mediator {
 	}
 
 	private Map<String, Changeset> changeSets = null;
-	
+
 	public Map<String, Changeset> getChangeSets() {
 		return changeSets;
 	}
-	
+
 	/***************************************************************************
-	 * APPLY REMOTE UPDATES
-	 * ****************************************************************************************
+	 * APPLY REMOTE UPDATES ****************************************************************************************
 	 */
 
 	Divergences divergences = null;
@@ -554,40 +499,36 @@ public class Mediator {
 
 	// Record the names of styles we have to update in the stylemap,
 	// to match changes made by transforms
-	List<String> stylemapUpdates = null;	
-	
+	List<String> stylemapUpdates = null;
+
 	public void applyRemoteChanges(FetchRemoteEditsWorker worker) {
 		// TODO: grey out if there are no remote updates to apply
 
-		//Too close to the next message. Therefore, comment this.
-		//worker.setProgress(FetchProgress.START_APPLYING_UPDATES, "Start to apply remote edits");
+		// Too close to the next message. Therefore, comment this.
+		// worker.setProgress(FetchProgress.START_APPLYING_UPDATES, "Start to apply remote edits");
 
-//		if (this.oldServer == null 
-//			|| this.changeSets == null
-//			|| this.changeSets.isEmpty()) {
-//			//applyRemoteChanges() is preceded with fetchUpdates().
-//			//If fetchUpdates() ends up with error or does not
-//			//fetch any new transform then nothing to be applied
-//			//in this method.
-//			worker.setProgress(FetchProgress.APPLYING_DONE, "No remote updates");
-//			return;
-//		}
-		
-	    String msg = "";
-	    changedChunks = new HashMap<String, String>();		
-	    stylemapUpdates = new ArrayList<String>();
-	    //if (stateDocx.getTransforms().getTransformsBySeqNum().size() > 0)
-	    	// we don't delete those after applying?!
-	    if (this.oldServer != null 
-				&& this.changeSets != null
-				&& !this.changeSets.isEmpty()) 	    
-	    {
-	        // Use that test, rather than just the result of fetchUpdates,
-	        // since there might be some transforms left over from before,
-	        // which couldn't be applied until the user had resolved
-	        // pre-existing conflicts.
-	        
-		
+		// if (this.oldServer == null
+		// || this.changeSets == null
+		// || this.changeSets.isEmpty()) {
+		// //applyRemoteChanges() is preceded with fetchUpdates().
+		// //If fetchUpdates() ends up with error or does not
+		// //fetch any new transform then nothing to be applied
+		// //in this method.
+		// worker.setProgress(FetchProgress.APPLYING_DONE, "No remote updates");
+		// return;
+		// }
+
+		String msg = "";
+		changedChunks = new HashMap<String, String>();
+		stylemapUpdates = new ArrayList<String>();
+		// if (stateDocx.getTransforms().getTransformsBySeqNum().size() > 0)
+		// we don't delete those after applying?!
+		if (this.oldServer != null && this.changeSets != null && !this.changeSets.isEmpty()) {
+			// Use that test, rather than just the result of fetchUpdates,
+			// since there might be some transforms left over from before,
+			// which couldn't be applied until the user had resolved
+			// pre-existing conflicts.
+
 			/*
 			 * Create a DiffReport object, which tells us the difference between
 			 * what Sdts are actually in the document, and what its state should be,
@@ -604,19 +545,17 @@ public class Mediator {
 			 * be able to see where the insertion has occurred, since it will be
 			 * (TODO) marked up.
 			 */
-	
+
 			// TODO - this is a bit expensive, and it is only necessary
 			// if the updates include insertions, so look at them first
 			// if (updatesIncludeInsertions)
 			// {
-			
-			worker.setProgress(
-				FetchProgress.COMPARING_DOC_STRUCTURES, 
-				"Making allowances for local differences");
+
+			worker.setProgress(FetchProgress.COMPARING_DOC_STRUCTURES, "Making allowances for local differences");
 			DiffEngine drift = new DiffEngine();
 			drift.processDiff(this.oldServer, this.currentClientSkeleleton);
 			divergences = new Divergences(drift);
-	
+
 			/*
 			 * For example
 			 * 
@@ -625,370 +564,315 @@ public class Mediator {
 			 * ---        293467343   not at this location in source <---- if user deletes
 			 * 884169107  884169107  (no change) 528989532 528989532 (no change)
 			 */
-	
+
 			// }
-	
+
 			worker.setProgress(FetchProgress.APPLYING_UPDATES, "Applying updates");
-				
-	        docSectPrUpdated = false;			
+
+			docSectPrUpdated = false;
 			applyUpdates(worker);
-		
-	    }
-		
-	    // Update references to other parts - these might have changed,
-	    // even if no content control changed.
-        try {
-        	updateRelatedParts(worker);
+
+		}
+
+		// Update references to other parts - these might have changed,
+		// even if no content control changed.
+		try {
+			updateRelatedParts(worker);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		this.oldServer = null;
 	}
-	
-	static Templates xsltReferenceMap;		
-	
-	/// <summary>
-	/// If any of the transforms we just applied insert/update another part, then we need to do
-	/// two things:
-	/// 1. update that part (ie re-create it, out of the local version and the one on the server)
-	/// 2. renumber the id's in the document (in document order) and the composite part, so they match
-	/// </summary>
-	/// <param name="pkg"></param>
-	/// <param name="currentStateChunks"></param>
-	/// <param name="bw"></param>
-	public void updateRelatedParts(FetchRemoteEditsWorker bw) throws Exception
-	{
-	    bw.setProgress(FetchProgress.LINKS, "Links");
 
-	    // Get PartVersionsList
-	    String[] partNamePVL = new String[1];
-	    partNamePVL[0] = "/part-versions.xml";
-	    
-	    startSession(); // TODO, wouldn't be necessary if we deferred endSession til we've done getParts
-	    String[][] pvlArray = ws.getParts(stateDocx.getDocID(), partNamePVL);
-	    String[] itemFieldz = pvlArray[0];
-	    log.debug(itemFieldz[0]); //what is this?
-	    log.debug(itemFieldz[1]);
-	    PartVersionList serverPVL = new PartVersionList(itemFieldz[1]);
-	    serverPVL.setVersions();
+	static Templates xsltReferenceMap;
 
-	    // See what has been updated - sequenced, third, or lower caste parts
-	    List<String> relevantParts = serverPVL.partsNewerOnServer(stateDocx.getPartVersionList());
+	// / <summary>
+	// / If any of the transforms we just applied insert/update another part, then we need to do
+	// / two things:
+	// / 1. update that part (ie re-create it, out of the local version and the one on the server)
+	// / 2. renumber the id's in the document (in document order) and the composite part, so they match
+	// / </summary>
+	// / <param name="pkg"></param>
+	// / <param name="currentStateChunks"></param>
+	// / <param name="bw"></param>
+	public void updateRelatedParts(FetchRemoteEditsWorker bw) throws Exception {
+		bw.setProgress(FetchProgress.LINKS, "Links");
 
-	    if (relevantParts.isEmpty())
-	    {
-	        log.debug("No second or third class parts need updating.");
-	        return;
-	    }
-	    
-	    // Need to convert List<String> to an array.
-	    // but (String[])relevantParts.toArray() gives ClassCastException.
-	    // So ... 
-	    String[] partsWeNeed = new String[ relevantParts.size() ];
-	    for (int ip = 0 ; ip < relevantParts.size() ; ip++) {	    	
-	    	partsWeNeed[ip] = relevantParts.get(ip);	    	
-	    }
+		// Get PartVersionsList
+		String[] partNamePVL = new String[1];
+		partNamePVL[0] = "/part-versions.xml";
 
-	    // Fetch those
-	    // invoke web service - returns the part and its version number.
-	    String[][] weirdParts = ws.getParts(stateDocx.getDocID(), partsWeNeed);
-	    log.debug("number of weird parts: " + weirdParts.length);
+		startSession(); // TODO, wouldn't be necessary if we deferred endSession til we've done getParts
+		String[][] pvlArray = ws.getParts(stateDocx.getDocID(), partNamePVL);
+		String[] itemFieldz = pvlArray[0];
+		log.debug(itemFieldz[0]); // what is this?
+		log.debug(itemFieldz[1]);
+		PartVersionList serverPVL = new PartVersionList(itemFieldz[1]);
+		serverPVL.setVersions();
 
-	    // First handle our second class citizens .. 
-	    // These are the Sequenced Parts;
-	    // we compose a new part out of what is on the server,
-	    // and what the user has locally.
-	    updateSequencedParts(bw,
-	        relevantParts, weirdParts, serverPVL);
+		// See what has been updated - sequenced, third, or lower caste parts
+		List<String> relevantParts = serverPVL.partsNewerOnServer(stateDocx.getPartVersionList());
 
-	    updateThirdClassParts(bw,
-	        relevantParts, weirdParts, serverPVL);
+		if (relevantParts.isEmpty()) {
+			log.debug("No second or third class parts need updating.");
+			return;
+		}
+
+		// Need to convert List<String> to an array.
+		// but (String[])relevantParts.toArray() gives ClassCastException.
+		// So ...
+		String[] partsWeNeed = new String[relevantParts.size()];
+		for (int ip = 0; ip < relevantParts.size(); ip++) {
+			partsWeNeed[ip] = relevantParts.get(ip);
+		}
+
+		// Fetch those
+		// invoke web service - returns the part and its version number.
+		String[][] weirdParts = ws.getParts(stateDocx.getDocID(), partsWeNeed);
+		log.debug("number of weird parts: " + weirdParts.length);
+
+		// First handle our second class citizens ..
+		// These are the Sequenced Parts;
+		// we compose a new part out of what is on the server,
+		// and what the user has locally.
+		updateSequencedParts(bw, relevantParts, weirdParts, serverPVL);
+
+		updateThirdClassParts(bw, relevantParts, weirdParts, serverPVL);
 
 	}
 
-	/// <summary>
-	/// Replace headers/footers etc with anything newer on server,
-	/// overwriting local changes, if any.
-	/// </summary>
-	/// <param name="pkg"></param>
-	/// <param name="currentStateChunks"></param>
-	/// <param name="bw"></param>
-	/// <param name="relevantParts"></param>
-	/// <param name="weirdParts"></param>
-	/// <param name="serverPVL"></param>
-	private void updateThirdClassParts(
-			FetchRemoteEditsWorker bw,
-		    List<String> relevantParts,
-		    String[][] weirdParts,
-		    PartVersionList serverPVL
-	    ) throws Exception
-	{
-		
-	    WordMLDocument doc = getWordMLDocument();
- 		DocumentElement root = (DocumentElement) doc.getDefaultRootElement();    	
- 		WordprocessingMLPackage wmlp = 
-    		((DocumentML) root.getElementML()).getWordprocessingMLPackage();
-		
+	// / <summary>
+	// / Replace headers/footers etc with anything newer on server,
+	// / overwriting local changes, if any.
+	// / </summary>
+	// / <param name="pkg"></param>
+	// / <param name="currentStateChunks"></param>
+	// / <param name="bw"></param>
+	// / <param name="relevantParts"></param>
+	// / <param name="weirdParts"></param>
+	// / <param name="serverPVL"></param>
+	private void updateThirdClassParts(FetchRemoteEditsWorker bw, List<String> relevantParts, String[][] weirdParts,
+			PartVersionList serverPVL) throws Exception {
 
-	    for (int i = 0; i < weirdParts.length; i++) 
-	    {
-	        if (PartVersionList.getSequenceableParts().contains(
-	               relevantParts.get(i)))
-	        {
-	            // SequenceableParts are handled elsewhere
-	            continue;
-	        }
+		WordMLDocument doc = getWordMLDocument();
+		DocumentElement root = (DocumentElement) doc.getDefaultRootElement();
+		WordprocessingMLPackage wmlp = ((DocumentML) root.getElementML()).getWordprocessingMLPackage();
 
-	        // We've got something to do
-	        String[] itemField = weirdParts[i];
+		for (int i = 0; i < weirdParts.length; i++) {
+			if (PartVersionList.getSequenceableParts().contains(relevantParts.get(i))) {
+				// SequenceableParts are handled elsewhere
+				continue;
+			}
 
-	        if (itemField[1].equals(""))
-	        {
-	            // Part doesn't exist on server
-	            // This should not happen.
-	            log.error(i + " : doesn't exist on server!  INVESTIGATE");
-	        }
-	        else
-	        {
-	            // 1. Attach this to our pkg
-	            // We need an XmlNode; this is an easy way to get it
-	            Part part = Part.factory(itemField[1]);
-	            log.debug("Attaching third class part: " + part.getName() );
-	            //pkgB.attachPart(part.Name, part.XmlNode);
-	            Node jaxbNode = part.getXmlNode().getFirstChild().getFirstChild(); 
-	            /* eg
-	             * <pkg:part pkg:name="/word/styles.xml" ..>
+			// We've got something to do
+			String[] itemField = weirdParts[i];
+
+			if (itemField[1].equals("")) {
+				// Part doesn't exist on server
+				// This should not happen.
+				log.error(i + " : doesn't exist on server!  INVESTIGATE");
+			} else {
+				// 1. Attach this to our pkg
+				// We need an XmlNode; this is an easy way to get it
+				Part part = Part.factory(itemField[1]);
+				log.debug("Attaching third class part: " + part.getName());
+				// pkgB.attachPart(part.Name, part.XmlNode);
+				Node jaxbNode = part.getXmlNode().getFirstChild().getFirstChild();
+				/* eg
+				 * <pkg:part pkg:name="/word/styles.xml" ..>
 						<pkg:xmlData>
 							<w:styles 
-	             */
-	            updateDocx4jPart(
-	            		wmlp.getParts().getParts(),
-	            		part.getName(), jaxbNode );
-	
-	            // 2. Update PVL
-	            // In anticipation of success in what follows, 
-	            // set the version of this part in StateDocx 
-	            stateDocx.getPartVersionList().setVersion(part.getName(), itemField[0]);
-	
-	            // 3. update our record of the part in StateDocx
-	            // (since any change from this is something we want to transmit)
-	                stateDocx.getParts().put(part.getName(), part);
-            }
-        }
-    }
+				 */
+				updateDocx4jPart(wmlp.getParts().getParts(), part.getName(), jaxbNode);
 
+				// 2. Update PVL
+				// In anticipation of success in what follows,
+				// set the version of this part in StateDocx
+				stateDocx.getPartVersionList().setVersion(part.getName(), itemField[0]);
 
+				// 3. update our record of the part in StateDocx
+				// (since any change from this is something we want to transmit)
+				stateDocx.getParts().put(part.getName(), part);
+			}
+		}
+	}
 
-int parseIdref(String idref)
-{
+	int parseIdref(String idref) {
 
-    log.debug("Attempting to parse: " + idref);
+		log.debug("Attempting to parse: " + idref);
 
-    if (idref.startsWith("rId"))
-    {
-        idref = idref.substring(3);
-        log.debug(".. now .. " + idref);
-    }
-    
-    try
-    {
-        return Integer.parseInt(idref);
-    }
-    catch (NumberFormatException fe)
-    {
-        log.error("Couldn't parse " + idref);
-        throw fe;
-    }
+		if (idref.startsWith("rId")) {
+			idref = idref.substring(3);
+			log.debug(".. now .. " + idref);
+		}
 
-}
+		try {
+			return Integer.parseInt(idref);
+		} catch (NumberFormatException fe) {
+			log.error("Couldn't parse " + idref);
+			throw fe;
+		}
 
-/**
- * Flag to tell us whether one of the transforms we applied
- * replaced the doc level sectPr.  We need this so that when
- * we are renumbering in the document, we know whether references
- * in the sectPr are to the local rels part, or the server
- * rels part.
- */
-boolean docSectPrUpdated = false;
+	}
 
+	/**
+	 * Flag to tell us whether one of the transforms we applied replaced the doc level sectPr. We need this so that when we are renumbering
+	 * in the document, we know whether references in the sectPr are to the local rels part, or the server rels part.
+	 */
+	boolean docSectPrUpdated = false;
 
-/// <summary>
-/// Update document rels, comments, footnotes/endnotes, by composing
-/// a new part.
-/// </summary>
-/// <param name="pkg"></param>
-/// <param name="currentStateChunks"></param>
-/// <param name="bw"></param>
-/// <param name="relevantParts"></param>
-/// <param name="weirdParts"></param>
-/// <param name="serverPVL"></param>
-private void updateSequencedParts(//Pkg pkg, Map<String, StateChunk> currentStateChunks, 
-		FetchRemoteEditsWorker bw,
-    List<String> relevantParts,
-    String[][] weirdParts,
-    PartVersionList serverPVL
-    ) throws Exception
-{
+	// / <summary>
+	// / Update document rels, comments, footnotes/endnotes, by composing
+	// / a new part.
+	// / </summary>
+	// / <param name="pkg"></param>
+	// / <param name="currentStateChunks"></param>
+	// / <param name="bw"></param>
+	// / <param name="relevantParts"></param>
+	// / <param name="weirdParts"></param>
+	// / <param name="serverPVL"></param>
+	private void updateSequencedParts(// Pkg pkg, Map<String, StateChunk> currentStateChunks,
+			FetchRemoteEditsWorker bw, List<String> relevantParts, String[][] weirdParts, PartVersionList serverPVL) throws Exception {
 
-    // First handle our second class citizens .. 
-    // These are the Sequenced Parts.
+		// First handle our second class citizens ..
+		// These are the Sequenced Parts.
 
-    // Our local relIds should be correct already,
-    // UNLESS an updated/inserted/removed cc disrupted them,
-    // in which case the relevant server part MUST have changed.
-    // So it is sufficient to deal with just the ones
-    // for which we have an updated server part.
+		// Our local relIds should be correct already,
+		// UNLESS an updated/inserted/removed cc disrupted them,
+		// in which case the relevant server part MUST have changed.
+		// So it is sufficient to deal with just the ones
+		// for which we have an updated server part.
 
-    // Set up this useful little mapping.
-    // To do it, first we need values for fetchParts[i]
-    int j = 0;
-    int ii = 0;
-    HashMap<Integer, Integer> mapping = new HashMap<Integer, Integer>();
-    for (String s : PartVersionList.getSequenceableParts() )
-    {
-        if (relevantParts.contains(s)  // what used to be fetchParts[i]
-            ) {
-            mapping.put(j, ii);
-            j++;
-        }
-        ii++;
-    }
-    // How many of these are there?
-    int max = j;
+		// Set up this useful little mapping.
+		// To do it, first we need values for fetchParts[i]
+		int j = 0;
+		int ii = 0;
+		HashMap<Integer, Integer> mapping = new HashMap<Integer, Integer>();
+		for (String s : PartVersionList.getSequenceableParts()) {
+			if (relevantParts.contains(s) // what used to be fetchParts[i]
+			) {
+				mapping.put(j, ii);
+				j++;
+			}
+			ii++;
+		}
+		// How many of these are there?
+		int max = j;
 
-    // Setup serverSequencedParts
-    log.info("Setup serverSequencedParts");    
-    //Dictionary<string, SequencedPart> serverSequencedParts = 
-    //    new Dictionary<string,SequencedPart>();
-    SequencedPart[] serverSequencedParts = new SequencedPart[max];
-    j = -1;
-    for (int i = 0; i < weirdParts.length; i++) // could say && j<max, coz otherwise we've found them all
-    {
-        log.info("Considering " + relevantParts.get(i) );        	
-        if (!PartVersionList.getSequenceableParts().contains(
-               relevantParts.get(i)))
-        {
-            log.debug(".. ignoring; not sequencable." );        	
-            continue;
-        }
-        else
-        {
-            j++;
-        }
+		// Setup serverSequencedParts
+		log.info("Setup serverSequencedParts");
+		// Dictionary<string, SequencedPart> serverSequencedParts =
+		// new Dictionary<string,SequencedPart>();
+		SequencedPart[] serverSequencedParts = new SequencedPart[max];
+		j = -1;
+		for (int i = 0; i < weirdParts.length; i++) // could say && j<max, coz otherwise we've found them all
+		{
+			log.info("Considering " + relevantParts.get(i));
+			if (!PartVersionList.getSequenceableParts().contains(relevantParts.get(i))) {
+				log.debug(".. ignoring; not sequencable.");
+				continue;
+			} else {
+				j++;
+			}
 
-        String[] itemField = weirdParts[i];
+			String[] itemField = weirdParts[i];
 
-        log.debug("weirdParts[" + i + "] length = " + itemField.length);
+			log.debug("weirdParts[" + i + "] length = " + itemField.length);
 
-	        if (itemField[1].equals(""))
-	        {
-	            // Part doesn't exist on server
-	            // This should not happen.
+			if (itemField[1].equals("")) {
+				// Part doesn't exist on server
+				// This should not happen.
 
-	            log.error(i + " : " + PartVersionList.getSequenceableParts().get(mapping.get(i)) 
-	            		+ " doesn't exist on server!  INVESTIGATE");
+				log.error(i + " : " + PartVersionList.getSequenceableParts().get(mapping.get(i)) + " doesn't exist on server!  INVESTIGATE");
 
-	        }
-	        else
-	        {
+			} else {
 
-	            SequencedPart sp = (SequencedPart)org.plutext.client.partWrapper.Part.factory(
-	            		itemField[1] );
-	            serverSequencedParts[i] = sp;
-	            log.debug("Set serverSequencedParts[" + i );
-	                        
+				SequencedPart sp = (SequencedPart) org.plutext.client.partWrapper.Part.factory(itemField[1]);
+				serverSequencedParts[i] = sp;
+				log.debug("Set serverSequencedParts[" + i);
 
-	            // In anticipation of success in what follows, 
-	            // set the version of this part in StateDocx 
-	            stateDocx.getPartVersionList().setVersion( sp.getName(), itemField[0]);
-	            //sp.Version = itemField[0];
+				// In anticipation of success in what follows,
+				// set the version of this part in StateDocx
+				stateDocx.getPartVersionList().setVersion(sp.getName(), itemField[0]);
+				// sp.Version = itemField[0];
 
-	            // and update our record of the part in StateDocx
-	            // (since any change from this is something we want to transmit)
-	            stateDocx.getParts().put(sp.getName(), sp);
+				// and update our record of the part in StateDocx
+				// (since any change from this is something we want to transmit)
+				stateDocx.getParts().put(sp.getName(), sp);
 
-	        }
-	    }
+			}
+		}
 
-	    // .. and the corresponding local parts.
-    	log.info("Setup localSequencedParts");        
-	    // We want to work with the ones corresponding to the current state of the
-	    // document, not its last recorded state (which would be stateDocx)
-	    HashMap<String, org.plutext.client.partWrapper.Part> localParts 
-	    	= Util.extractParts( getWordMLDocument() );
-	    
-	    SequencedPart[] localSequencedParts = new SequencedPart[max];
-	    for (int i = 0; i < max; i++)
-	    {
-	        String partName = serverSequencedParts[i].getName();
-	    	log.info(partName);        
+		// .. and the corresponding local parts.
+		log.info("Setup localSequencedParts");
+		// We want to work with the ones corresponding to the current state of the
+		// document, not its last recorded state (which would be stateDocx)
+		HashMap<String, org.plutext.client.partWrapper.Part> localParts = Util.extractParts(getWordMLDocument());
 
-	        if (partName.equals("/word/_rels/document.xml.rels"))
-	        {
-	            //localSequencedParts[i] = (SequencedPartRels)stateDocx.Parts[partName];
-	            localSequencedParts[i] = (SequencedPartRels)localParts.get(partName);
-	            log.debug("Set localSequencedParts[" + i + " as rels");
-	            
-	        }
-	        else
-	        {
-	                //localSequencedParts[i] = (SequencedPart)stateDocx.Parts[partName];
-                localSequencedParts[i] = (SequencedPart)localParts.get(partName);
-                if ( localSequencedParts[i]==null )
-	            {
+		SequencedPart[] localSequencedParts = new SequencedPart[max];
+		for (int i = 0; i < max; i++) {
+			String partName = serverSequencedParts[i].getName();
+			log.info(partName);
 
-	                // So, the part doesn't yet exist locally.
-	                // However, if the local document does not already contain
-	                // a comment, footnote or endnote,
-	                // we will need to add it.
+			if (partName.equals("/word/_rels/document.xml.rels")) {
+				// localSequencedParts[i] = (SequencedPartRels)stateDocx.Parts[partName];
+				localSequencedParts[i] = (SequencedPartRels) localParts.get(partName);
+				log.debug("Set localSequencedParts[" + i + " as rels");
 
-	                // Rather than fetch it again,
-	                // We can just say:
-	                localSequencedParts[i] = serverSequencedParts[i];
-	                // (in which case the numbers are going to be aligned, and
-	                //  much of the following code would be unnecessary in that case;
-	                //  however, it does take care of adding the part for us...)
-		            log.debug("Set localSequencedParts[" + i + " using server part. ");	            	
-	            } else {
-		            log.debug("Set localSequencedParts[" + i + " ");	            	
-	            }
-	        }
-	        if ( localSequencedParts[i]==null ) {
-	        	log.error("but it is null!!");
-	        }
-	      }
+			} else {
+				// localSequencedParts[i] = (SequencedPart)stateDocx.Parts[partName];
+				localSequencedParts[i] = (SequencedPart) localParts.get(partName);
+				if (localSequencedParts[i] == null) {
 
+					// So, the part doesn't yet exist locally.
+					// However, if the local document does not already contain
+					// a comment, footnote or endnote,
+					// we will need to add it.
 
+					// Rather than fetch it again,
+					// We can just say:
+					localSequencedParts[i] = serverSequencedParts[i];
+					// (in which case the numbers are going to be aligned, and
+					// much of the following code would be unnecessary in that case;
+					// however, it does take care of adding the part for us...)
+					log.debug("Set localSequencedParts[" + i + " using server part. ");
+				} else {
+					log.debug("Set localSequencedParts[" + i + " ");
+				}
+			}
+			if (localSequencedParts[i] == null) {
+				log.error("but it is null!!");
+			}
+		}
 
-	    // construct composite part(s)
+		// construct composite part(s)
 
-	    // so here's the tricky bit
-	    /* for each of the parts we are dealing with,
-	    // we need to go through the document, and make a list of the correct
-	    // references:  
-	     *  - Sdt's which we didn't update, will reference the existing part
-	     *  - Sdt's which we inserted/updated will reference the part we just fetched.
-	    */
+		// so here's the tricky bit
+		/* for each of the parts we are dealing with,
+		// we need to go through the document, and make a list of the correct
+		// references:  
+		 *  - Sdt's which we didn't update, will reference the existing part
+		 *  - Sdt's which we inserted/updated will reference the part we just fetched.
+		*/
 
-	    // Go through the document ..
-	    
-	    // Trick here is to run a single transform which gives us
-	    // the data we want
-	    
-	    WordMLDocument doc = getWordMLDocument();
- 		DocumentElement root = (DocumentElement) doc.getDefaultRootElement();    	
- 		WordprocessingMLPackage wmlp = 
-    		((DocumentML) root.getElementML()).getWordprocessingMLPackage();
+		// Go through the document ..
+
+		// Trick here is to run a single transform which gives us
+		// the data we want
+
+		WordMLDocument doc = getWordMLDocument();
+		DocumentElement root = (DocumentElement) doc.getDefaultRootElement();
+		WordprocessingMLPackage wmlp = ((DocumentML) root.getElementML()).getWordprocessingMLPackage();
 		MainDocumentPart mdp = wmlp.getMainDocumentPart();
-		
-		org.w3c.dom.Document mdpW3C = XmlUtils.marshaltoW3CDomDocument( mdp.getJaxbElement() );
-		
+
+		org.w3c.dom.Document mdpW3C = XmlUtils.marshaltoW3CDomDocument(mdp.getJaxbElement());
+
 		javax.xml.transform.dom.DOMResult domResult = null;
 		try {
-			if (xsltReferenceMap==null) {
-				Source xsltSource  = new StreamSource( org.docx4j.utils.ResourceUtils.getResource("org/plutext/client/ReferenceMap.xslt"));
-				xsltReferenceMap = XmlUtils.getTransformerTemplate(xsltSource);			
+			if (xsltReferenceMap == null) {
+				Source xsltSource = new StreamSource(org.docx4j.utils.ResourceUtils.getResource("org/plutext/client/ReferenceMap.xslt"));
+				xsltReferenceMap = XmlUtils.getTransformerTemplate(xsltSource);
 			}
 			domResult = new javax.xml.transform.dom.DOMResult();
 			XmlUtils.transform(mdpW3C, xsltReferenceMap, null, domResult);
@@ -996,628 +880,565 @@ private void updateSequencedParts(//Pkg pkg, Map<String, StateChunk> currentStat
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-//		javax.xml.transform.stream.StreamResult debugStream =
-//			new javax.xml.transform.stream.StreamResult(System.out);		
-//		XmlUtils.transform(mdpW3C, xslt, null, debugStream);
-		
-	    /* Something like:
-	     * 
-	     * 
-	            <ReferenceMap>
-	                <sdt>
-	                    <id>368753226</id>
-	                    <rels />
-	                    <comments />
-	                    <footnotes />
-	                    <endnotes />
-	                </sdt>
-	                <sdt>
-	                    <id>770713813</id>
-	                    <rels>
-	                        <idref>rId4</idref>
-	                    </rels>
-	                    <comments />
-	                    <footnotes />
-	                    <endnotes />
-	                </sdt>
-	                <sdt>
-	                    <id>1413643190</id>
-	                    <rels>
-	                        <idref>rId5</idref>
-	                        <idref>rId6</idref>
-	                        <idref>rId7</idref>
-	                    </rels>
-	                    <comments />
-	                    <footnotes />
-	                    <endnotes />
-	                </sdt>
-	     */
 
-		//log.debug(domResult.getNode().getNodeName() ); --> #document		
+		// javax.xml.transform.stream.StreamResult debugStream =
+		// new javax.xml.transform.stream.StreamResult(System.out);
+		// XmlUtils.transform(mdpW3C, xslt, null, debugStream);
+
+		/* Something like:
+		 * 
+		 * 
+		        <ReferenceMap>
+		            <sdt>
+		                <id>368753226</id>
+		                <rels />
+		                <comments />
+		                <footnotes />
+		                <endnotes />
+		            </sdt>
+		            <sdt>
+		                <id>770713813</id>
+		                <rels>
+		                    <idref>rId4</idref>
+		                </rels>
+		                <comments />
+		                <footnotes />
+		                <endnotes />
+		            </sdt>
+		            <sdt>
+		                <id>1413643190</id>
+		                <rels>
+		                    <idref>rId5</idref>
+		                    <idref>rId6</idref>
+		                    <idref>rId7</idref>
+		                </rels>
+		                <comments />
+		                <footnotes />
+		                <endnotes />
+		            </sdt>
+		 */
+
+		// log.debug(domResult.getNode().getNodeName() ); --> #document
 		NodeList sdts = domResult.getNode().getFirstChild().getChildNodes();
-		
-		
-	    // nb: std's aren't sdt's as such - see the example XML above.
 
-	    ArrayList[] constructedContent = new ArrayList[max]; // or XmlNodeList[] ?
+		// nb: std's aren't sdt's as such - see the example XML above.
 
-	    // for each of the parts we are dealing with, 
-	    // get referenced objects from local | remote part as appropriate.
-	    // We do this to get the reference content (as opposed to the ids of
-	    // that referenced content, which we will renumber in due course).
-	    for (int i = 0; i < max; i++)
-	    {
-	        String partName = serverSequencedParts[i].getName(); // as good a way as any to get the part name
-	        log.debug("Constructing content for Part: " + i + " .. " + partName);
-	        
-	        constructedContent[i] = new ArrayList();
+		ArrayList[] constructedContent = new ArrayList[max]; // or XmlNodeList[] ?
 
-	        if (partName.equals("/word/footnotes.xml")
-	                || partName.equals("/word/endnotes.xml"))
-	        {
-	            // footnotes & endnotes 0 & 1 are artificial;
-	            // - add these; it doesn't matter whether we use the server or local copy
-	            // We don't actually read these entries again, we just 
-	            // have to fill the slots so later references to 
-	            // (constructedContent[i])[k + 2] work!
-	            log.debug("Adding  artificial entries.." );
-	            constructedContent[i].add(
-	                serverSequencedParts[i].getNodeByIndex(0));
-	            constructedContent[i].add(
-	                serverSequencedParts[i].getNodeByIndex(1));
-	        }	        
+		// for each of the parts we are dealing with,
+		// get referenced objects from local | remote part as appropriate.
+		// We do this to get the reference content (as opposed to the ids of
+		// that referenced content, which we will renumber in due course).
+		for (int i = 0; i < max; i++) {
+			String partName = serverSequencedParts[i].getName(); // as good a way as any to get the part name
+			log.debug("Constructing content for Part: " + i + " .. " + partName);
 
-	        //foreach (XmlNode sdt in sdts)
-            for (int nli=0 ; nli < sdts.getLength() ; nli++ )
-            {
-            	
-            	Node sdt = sdts.item(nli);
-	            //log.debug(sdt.getNodeName());
-	            //log.debug(sdt.getFirstChild().getNodeName());
-            	
-	            String sdtId = sdt.getFirstChild().getFirstChild().getNodeValue();
-	            	// getFirstChild().getNodeValue() is the value of the #text child
-	            //log.debug(sdtId);
-	            
-  	            // Omitted from docx4all: "Some things might not be in an SDT at all yet. These reference local"
-                if (sdtId.equals("OUTSIDE_SDT")){
-                	log.warn( "FIXME: " + XmlUtils.w3CDomNodeToString(sdt));
-                }
+			constructedContent[i] = new ArrayList();
 
-	            
-                Object dummy = changedChunks.get(sdtId);
-                if (dummy == null
-                		|| (sdtId.equals(SECTPR_MAGIC_ID) && !docSectPrUpdated) ) {
-                	
-	                log.debug("id: " + sdtId + " - references local SequencedPart");
+			if (partName.equals("/word/footnotes.xml") || partName.equals("/word/endnotes.xml")) {
+				// footnotes & endnotes 0 & 1 are artificial;
+				// - add these; it doesn't matter whether we use the server or local copy
+				// We don't actually read these entries again, we just
+				// have to fill the slots so later references to
+				// (constructedContent[i])[k + 2] work!
+				log.debug("Adding  artificial entries..");
+				constructedContent[i].add(serverSequencedParts[i].getNodeByIndex(0));
+				constructedContent[i].add(serverSequencedParts[i].getNodeByIndex(1));
+			}
 
-	                NodeList idrefs = sdt.getChildNodes().item(1 + mapping.get(i)).getChildNodes();
-	                //foreach (XmlNode idref in sdt.ChildNodes[1 + mapping[i]])
-	                for (int nl2i=0 ; nl2i < idrefs.getLength() ; nl2i++ )
-	                {
-	                	
-	                	Node idref = idrefs.item(nl2i); 
-	                
-	                    // An Sdt which we didn't update, will reference the existing part
-	                    if ( localSequencedParts[i] instanceof SequencedPartRels )
-	                    {
-	                        constructedContent[i].add(
-	                            ((SequencedPartRels)localSequencedParts[i]).getNodeById(
-	                                idref.getFirstChild().getNodeValue()).cloneNode(true));
-	                    }
-	                    else
-	                    {
-	                    	
-	                        int idx = parseIdref(idref.getFirstChild().getNodeValue());
-	                    	
-	                        constructedContent[i].add(
-	                            localSequencedParts[i].getNodeByIndex(idx ));
-	                        log.debug("Added to constructedContent[" + i);
-	                    }
-	                }
-                } else {
+			// foreach (XmlNode sdt in sdts)
+			for (int nli = 0; nli < sdts.getLength(); nli++) {
 
-	                // An Sdt which we inserted/updated will reference the part we just fetched
-	                // (assuming it contains rel idrefs).
-	                // If we didn't just insert/update the sdt, we branch to KeyNotFoundException
+				Node sdt = sdts.item(nli);
+				// log.debug(sdt.getNodeName());
+				// log.debug(sdt.getFirstChild().getNodeName());
 
-	                log.debug("id: " + sdtId + " - references serverSequencedPart");
-	                NodeList idrefs = sdt.getChildNodes().item(1 + mapping.get(i)).getChildNodes();
-	                //foreach (XmlNode idref in sdt.ChildNodes[1 + mapping.get(i)])
-	                for (int nl2i=0 ; nl2i < idrefs.getLength() ; nl2i++ )
-	                {
-	                	
-	                	Node idref = idrefs.item(nl2i); 
-	                    if ( serverSequencedParts[i] instanceof SequencedPartRels )
-	                    {
-	                        constructedContent[i].add(
-	                            ((SequencedPartRels)serverSequencedParts[i]).getNodeById(
-	                                idref.getFirstChild().getNodeValue()).cloneNode(true));
-	                        // Clone, so that if there 2 references to the same image,
-	                        // we get distinct copies of the rel node, which we can 
-	                        // number as we choose.  Without the distinct copies,
-	                        // when we number the images in the document sequentially,
-	                        // there is no corresponding rel for the second image.
-	                    }
-	                    else
-	                    {
-	                        int idx = parseIdref(idref.getFirstChild().getNodeValue());
-	                        constructedContent[i].add(
-	                            serverSequencedParts[i].getNodeByIndex(idx));
-	                        log.debug("Added to constructedContent[" + i);
-	                    }
-	                }
+				String sdtId = sdt.getFirstChild().getFirstChild().getNodeValue();
+				// getFirstChild().getNodeValue() is the value of the #text child
+				// log.debug(sdtId);
 
-	            }
-	        }
-	    }
+				// Omitted from docx4all: "Some things might not be in an SDT at all yet. These reference local"
+				if (sdtId.equals("OUTSIDE_SDT")) {
+					log.warn("FIXME: " + XmlUtils.w3CDomNodeToString(sdt));
+				}
 
-	    // ok, now we have the correct references in ArrayList[] constructedContent
-	    // All we have to do is, for each of the relevant sequences (ie comments, rels etc):
-	    // 2. renumber the id's in (i) document order and (ii) list, 
-	    // and (iii) build an actual part
+				Object dummy = changedChunks.get(sdtId);
+				if (dummy == null || (sdtId.equals(SECTPR_MAGIC_ID) && !docSectPrUpdated)) {
 
-	    
-	    // Use org.w3c.dom.Document mdpW3C	    
-	    // .. here we want to be manipulating the 'live' document
-	    // so when we are finished, we'll need to unmarshall that,
-	    // then do whatever is necessary for docx4all to use the
-	    // unmarshalled thing
-	    
+					log.debug("id: " + sdtId + " - references local SequencedPart");
 
- // NB same order as Pkg.sequencableParts
+					NodeList idrefs = sdt.getChildNodes().item(1 + mapping.get(i)).getChildNodes();
+					// foreach (XmlNode idref in sdt.ChildNodes[1 + mapping[i]])
+					for (int nl2i = 0; nl2i < idrefs.getLength(); nl2i++) {
 
-	    // NB XPath spec says: the location path //para[1] does not mean the same as the 
-	    // location path /descendant::para[1].
-	    // The latter selects the first descendant para element; the former selects all descendant para 
-	    // elements that are the first para children of their parents.
+						Node idref = idrefs.item(nl2i);
 
+						// An Sdt which we didn't update, will reference the existing part
+						if (localSequencedParts[i] instanceof SequencedPartRels) {
+							constructedContent[i].add(((SequencedPartRels) localSequencedParts[i]).getNodeById(
+									idref.getFirstChild().getNodeValue()).cloneNode(true));
+						} else {
 
-	    // Any @r:embed should only be temporary, since such images
-	    // will be replaced with @r:link on transmit.
+							int idx = parseIdref(idref.getFirstChild().getNodeValue());
 
-	    // Note: @r:id will match images, hyperlinks, object related stuff,
-	    // and header/footerReference
+							constructedContent[i].add(localSequencedParts[i].getNodeByIndex(idx));
+							log.debug("Added to constructedContent[" + i);
+						}
+					}
+				} else {
 
-	    Node rel_comment = null;
-	    
-	    
-	    // We need the real underlying parts, so we can update them
-	    // at the end of each loop
-        HashMap<PartName, org.docx4j.openpackaging.parts.Part> docx4jParts 
-        	= wmlp.getParts().getParts();
-	    // The Parts list doesn't include rels parts,
-	    // but we need "/word/_rels/document.xml.rels"
-        // so add it
-        RelationshipsPart relsPart = wmlp.getMainDocumentPart().getRelationshipsPart();
-        docx4jParts.put(relsPart.getPartName(), relsPart);
+					// An Sdt which we inserted/updated will reference the part we just fetched
+					// (assuming it contains rel idrefs).
+					// If we didn't just insert/update the sdt, we branch to KeyNotFoundException
 
-	    // for each of the parts we are dealing with, 
-	    for (int i = 0; i < max; i++)
-	    {
-	        String partName = serverSequencedParts[i].getName(); // as good a way as any to get the part name
-	        // Get a NodeList of the id's in the document
-	        // .. for this we need an XPath expression particular
-	        // to that type ...
-	        XPathExpression xpath = xpaths[mapping.get(i)];
-	        log.debug("Renumbering for XPath: " + xpath.toString() + " .. (" + partName);
-	        
-	        // Note that for each iteration, we are intending to
-	        // update the underlying main document part, 
-	        // which we intend to have already been updated in the
-	        // previous iteration. If this doesn't work, then
-	        // first workaround is to explicitly replace mdpW3C
-	        // at the end of each loop
-	        NodeList nodeList = null;
+					log.debug("id: " + sdtId + " - references serverSequencedPart");
+					NodeList idrefs = sdt.getChildNodes().item(1 + mapping.get(i)).getChildNodes();
+					// foreach (XmlNode idref in sdt.ChildNodes[1 + mapping.get(i)])
+					for (int nl2i = 0; nl2i < idrefs.getLength(); nl2i++) {
+
+						Node idref = idrefs.item(nl2i);
+						if (serverSequencedParts[i] instanceof SequencedPartRels) {
+							constructedContent[i].add(((SequencedPartRels) serverSequencedParts[i]).getNodeById(
+									idref.getFirstChild().getNodeValue()).cloneNode(true));
+							// Clone, so that if there 2 references to the same image,
+							// we get distinct copies of the rel node, which we can
+							// number as we choose. Without the distinct copies,
+							// when we number the images in the document sequentially,
+							// there is no corresponding rel for the second image.
+						} else {
+							int idx = parseIdref(idref.getFirstChild().getNodeValue());
+							constructedContent[i].add(serverSequencedParts[i].getNodeByIndex(idx));
+							log.debug("Added to constructedContent[" + i);
+						}
+					}
+
+				}
+			}
+		}
+
+		// ok, now we have the correct references in ArrayList[] constructedContent
+		// All we have to do is, for each of the relevant sequences (ie comments, rels etc):
+		// 2. renumber the id's in (i) document order and (ii) list,
+		// and (iii) build an actual part
+
+		// Use org.w3c.dom.Document mdpW3C
+		// .. here we want to be manipulating the 'live' document
+		// so when we are finished, we'll need to unmarshall that,
+		// then do whatever is necessary for docx4all to use the
+		// unmarshalled thing
+
+		// NB same order as Pkg.sequencableParts
+
+		// NB XPath spec says: the location path //para[1] does not mean the same as the
+		// location path /descendant::para[1].
+		// The latter selects the first descendant para element; the former selects all descendant para
+		// elements that are the first para children of their parents.
+
+		// Any @r:embed should only be temporary, since such images
+		// will be replaced with @r:link on transmit.
+
+		// Note: @r:id will match images, hyperlinks, object related stuff,
+		// and header/footerReference
+
+		Node rel_comment = null;
+
+		// We need the real underlying parts, so we can update them
+		// at the end of each loop
+		HashMap<PartName, org.docx4j.openpackaging.parts.Part> docx4jParts = wmlp.getParts().getParts();
+		// The Parts list doesn't include rels parts,
+		// but we need "/word/_rels/document.xml.rels"
+		// so add it
+		RelationshipsPart relsPart = wmlp.getMainDocumentPart().getRelationshipsPart();
+		docx4jParts.put(relsPart.getPartName(), relsPart);
+
+		// for each of the parts we are dealing with,
+		for (int i = 0; i < max; i++) {
+			String partName = serverSequencedParts[i].getName(); // as good a way as any to get the part name
+			// Get a NodeList of the id's in the document
+			// .. for this we need an XPath expression particular
+			// to that type ...
+			XPathExpression xpath = xpaths[mapping.get(i)];
+			log.debug("Renumbering for XPath: " + xpath.toString() + " .. (" + partName);
+
+			// Note that for each iteration, we are intending to
+			// update the underlying main document part,
+			// which we intend to have already been updated in the
+			// previous iteration. If this doesn't work, then
+			// first workaround is to explicitly replace mdpW3C
+			// at the end of each loop
+			NodeList nodeList = null;
 			try {
-				nodeList = (NodeList)xpath.evaluate(mdpW3C, XPathConstants.NODESET);
+				nodeList = (NodeList) xpath.evaluate(mdpW3C, XPathConstants.NODESET);
 			} catch (XPathExpressionException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-	        
-	        Boolean correctOffsetForCommentReference = false;
 
-	        // Renumber
-	        for (int k = 0; k < nodeList.getLength(); k++)
-	        {
-	            log.debug("Node k: " + k);
+			Boolean correctOffsetForCommentReference = false;
 
-	            if (partName.equals("/word/_rels/document.xml.rels"))
-	            {
-//	                // First, a sanity check
-//	                if (((SequencedPartRels)(serverSequencedParts[i])).getPrefixedRelsCount()
-//	                        != ((SequencedPartRels)(localSequencedParts[i])).getPrefixedRelsCount())
-//	                {
-//	                    log.error("Invalid assumption - prefixed rels have changed!");
-//
-//	                    // dump the 2 parts..	                    
-//	                    log.debug( XmlUtils.w3CDomNodeToString(serverSequencedParts[i].getXmlNode() ));
-//	                    log.debug( XmlUtils.w3CDomNodeToString(localSequencedParts[i].getXmlNode() ));
-//	                }
-//	                // Hope the sanity check was ok; if it wasn't, its better to use the local _rels
-//	                // since its for that that we actually have the matching parts
-//	                // id is a 1-based index.
-//	                int idNum = k + 1 + ((SequencedPartRels)(localSequencedParts[i])).getPrefixedRelsCount();
-	            		            	
-	                // 2009 09 07.  If the server copy has more PrefixedRelsCount, use that, since
-	                // later, we'll add the extra parts present on the server (typically footnotes/endnotes,
-	                // which get added when you first add a header (!) ).	            	
-	                int idNum = k + 1 + ((SequencedPartRels)(serverSequencedParts[i])).getPrefixedRelsCount();
+			// Renumber
+			for (int k = 0; k < nodeList.getLength(); k++) {
+				log.debug("Node k: " + k);
 
-	                log.debug(nodeList.item(k).getLocalName());
-	                if (nodeList.item(k).getLocalName().equals("commentReference"))
-	                // Name = w:commentReference, LocalName = commentReference
-	                {
-	                    // Special case - this is the first spot at which we
-	                    // encounter a commentReference, so its the location in the rels part
-	                    // at which we need to insert a reference to the comments part.
+				if (partName.equals("/word/_rels/document.xml.rels")) {
+					// // First, a sanity check
+					// if (((SequencedPartRels)(serverSequencedParts[i])).getPrefixedRelsCount()
+					// != ((SequencedPartRels)(localSequencedParts[i])).getPrefixedRelsCount())
+					// {
+					// log.error("Invalid assumption - prefixed rels have changed!");
+					//
+					// // dump the 2 parts..
+					// log.debug( XmlUtils.w3CDomNodeToString(serverSequencedParts[i].getXmlNode() ));
+					// log.debug( XmlUtils.w3CDomNodeToString(localSequencedParts[i].getXmlNode() ));
+					// }
+					// // Hope the sanity check was ok; if it wasn't, its better to use the local _rels
+					// // since its for that that we actually have the matching parts
+					// // id is a 1-based index.
+					// int idNum = k + 1 + ((SequencedPartRels)(localSequencedParts[i])).getPrefixedRelsCount();
 
-	                    // NB this commentReference is in nodeList, 
-	                    // but (given our PkgToReferenceMap.xslt), it is
-	                    // NOT in constructedcontent
+					// 2009 09 07. If the server copy has more PrefixedRelsCount, use that, since
+					// later, we'll add the extra parts present on the server (typically footnotes/endnotes,
+					// which get added when you first add a header (!) ).
+					int idNum = k + 1 + ((SequencedPartRels) (serverSequencedParts[i])).getPrefixedRelsCount();
 
-	                    // Subsequent refs are incremented by 1 to take account of this
-	                    // rel_comment_step = 1;
-	                    // - no need for that: because it has a slot in
-	                    // nodeList, it will be taken into account automatically.
-	                    
-	                    // But since the comment reference is in the NodeList,
-	                    // but not constructedContent, subsequent iterations
-	                    // will need to take this into account
-	                    correctOffsetForCommentReference = true;
+					log.debug(nodeList.item(k).getLocalName());
+					if (nodeList.item(k).getLocalName().equals("commentReference"))
+					// Name = w:commentReference, LocalName = commentReference
+					{
+						// Special case - this is the first spot at which we
+						// encounter a commentReference, so its the location in the rels part
+						// at which we need to insert a reference to the comments part.
 
-	                    // Renumber in the document
-	                    // - not in this case!
+						// NB this commentReference is in nodeList,
+						// but (given our PkgToReferenceMap.xslt), it is
+						// NOT in constructedcontent
 
-	                    // But we will need a rel to comments with the correct id.
-	                    // This isn't in constructed content (and nor are
-	                    // any of the rels in FIXED_PARTS_PREFIX or FIXED_PARTS_SUFFIX),
-	                    // so just note its id for now. We can add it at the end
-	                    // of the rels part (because although we are taking care 
-	                    // to get all the id's correct, they don't have to be written
-	                    // in order)
+						// Subsequent refs are incremented by 1 to take account of this
+						// rel_comment_step = 1;
+						// - no need for that: because it has a slot in
+						// nodeList, it will be taken into account automatically.
 
-	                    String rel_comment_id_new = "rId" + idNum;
-	                    
-	                    // WRONG! String rel_comment_id_old = nodeList[k].Attributes.GetNamedItem(Namespaces.WORDML_NAMESPACE, "id").Value;
-	                    // log.Debug("rel_comment_id_old: " + rel_comment_id_old);
+						// But since the comment reference is in the NodeList,
+						// but not constructedContent, subsequent iterations
+						// will need to take this into account
+						correctOffsetForCommentReference = true;
 
-	                    rel_comment = ((SequencedPartRels)(localSequencedParts[i])).getNodeByType("comments");
-	                    if (rel_comment == null)
-	                    {
-	                        // Comments part does not exist locally
-	                        rel_comment = ((SequencedPartRels)(serverSequencedParts[i])).getNodeByType("comments").cloneNode(true);
-	                    }
-	                    else
-	                    {
-	                        // We know it exists, so let's use a clone of it
-	                        rel_comment = ((SequencedPartRels)(localSequencedParts[i])).getNodeByType("comments").cloneNode(true);
-	                    }
-	                    rel_comment.getAttributes().getNamedItem("Id").setNodeValue(rel_comment_id_new);
-	                }
-	                else // its not a commentReference
-	                {
-	                    log.debug("Setting rId" + idNum );
-	                    // Renumber in the document
-	                    nodeList.item(k).setNodeValue( "rId" + idNum);
+						// Renumber in the document
+						// - not in this case!
 
-	                    // Number the constructed content the same
-	                    Node n;
-	                    if (!correctOffsetForCommentReference)
-	                    {
-	                        // Up to the point in the nodelist where
-	                        // we encountered the single comment reference
-	                        n = (Node)(constructedContent[i].get(k));
-	                    }
-	                    else
-	                    {
-	                        // After the comment reference
-	                        n = (Node)(constructedContent[i].get(k-1));
-	                    }
-	                    n.getAttributes().getNamedItem("Id").setNodeValue("rId" + idNum);  // No Namespaces.WORDML_NAMESPACE
+						// But we will need a rel to comments with the correct id.
+						// This isn't in constructed content (and nor are
+						// any of the rels in FIXED_PARTS_PREFIX or FIXED_PARTS_SUFFIX),
+						// so just note its id for now. We can add it at the end
+						// of the rels part (because although we are taking care
+						// to get all the id's correct, they don't have to be written
+						// in order)
 
-	                }
-	            } // end rels
-	            else if (partName.equals("/word/footnotes.xml")
-	                || partName.equals("/word/endnotes.xml"))
-	            {
+						String rel_comment_id_new = "rId" + idNum;
 
-	                // footnotes & endnotes 0 & 1 are artificial;
-	                //    the first one in the document is #2 ...
+						// WRONG! String rel_comment_id_old = nodeList[k].Attributes.GetNamedItem(Namespaces.WORDML_NAMESPACE, "id").Value;
+						// log.Debug("rel_comment_id_old: " + rel_comment_id_old);
 
-	                // Renumber in the document
-	                nodeList.item(k).setNodeValue( Integer.toString(k + 2));
-	                /* The existing value should already have been changed to match
-	                 * the value on the server, so any change is something to be
-	                 * transmitted.
-	                 * 
-	                 * That is, if we renumber here (ie actually change the number 
-	                 * to something different), we will need to transmit the change.
-	                 * 
-	                 * However, such a change will be detected in the transmit 
-	                 * code (since this will be different to the statechunk we'll
-	                 * be comparing it to), so nothing extra is required here.
-	                 */ 
+						rel_comment = ((SequencedPartRels) (localSequencedParts[i])).getNodeByType("comments");
+						if (rel_comment == null) {
+							// Comments part does not exist locally
+							rel_comment = ((SequencedPartRels) (serverSequencedParts[i])).getNodeByType("comments").cloneNode(true);
+						} else {
+							// We know it exists, so let's use a clone of it
+							rel_comment = ((SequencedPartRels) (localSequencedParts[i])).getNodeByType("comments").cloneNode(true);
+						}
+						rel_comment.getAttributes().getNamedItem("Id").setNodeValue(rel_comment_id_new);
+					} else // its not a commentReference
+					{
+						log.debug("Setting rId" + idNum);
+						// Renumber in the document
+						nodeList.item(k).setNodeValue("rId" + idNum);
 
-	                // Number the constructed content the same
-	                Node n = (Node)constructedContent[i].get(k + 2);
-	                n.getAttributes().getNamedItemNS(Namespaces.WORDML_NAMESPACE, "id").setNodeValue( Integer.toString(k + 2) );
-	            }
-	            else  // comments, and hmm, what might else this catch all catch?
-	            {
-	                // Each comment has 3 nodes:
-	                /*
-	                 * <w:commentRangeStart w:id="0" />
-				        <w:r>
+						// Number the constructed content the same
+						Node n;
+						if (!correctOffsetForCommentReference) {
+							// Up to the point in the nodelist where
+							// we encountered the single comment reference
+							n = (Node) (constructedContent[i].get(k));
+						} else {
+							// After the comment reference
+							n = (Node) (constructedContent[i].get(k - 1));
+						}
+						n.getAttributes().getNamedItem("Id").setNodeValue("rId" + idNum); // No Namespaces.WORDML_NAMESPACE
+
+					}
+				} // end rels
+				else if (partName.equals("/word/footnotes.xml") || partName.equals("/word/endnotes.xml")) {
+
+					// footnotes & endnotes 0 & 1 are artificial;
+					// the first one in the document is #2 ...
+
+					// Renumber in the document
+					nodeList.item(k).setNodeValue(Integer.toString(k + 2));
+					/* The existing value should already have been changed to match
+					 * the value on the server, so any change is something to be
+					 * transmitted.
+					 * 
+					 * That is, if we renumber here (ie actually change the number 
+					 * to something different), we will need to transmit the change.
+					 * 
+					 * However, such a change will be detected in the transmit 
+					 * code (since this will be different to the statechunk we'll
+					 * be comparing it to), so nothing extra is required here.
+					 */
+
+					// Number the constructed content the same
+					Node n = (Node) constructedContent[i].get(k + 2);
+					n.getAttributes().getNamedItemNS(Namespaces.WORDML_NAMESPACE, "id").setNodeValue(Integer.toString(k + 2));
+				} else // comments, and hmm, what might else this catch all catch?
+				{
+					// Each comment has 3 nodes:
+					/*
+					 * <w:commentRangeStart w:id="0" />
+					    <w:r>
 					        <w:t>Here</w:t>
-				        </w:r>
-				        <w:commentRangeEnd w:id="0" />
-				        <w:r>
+					    </w:r>
+					    <w:commentRangeEnd w:id="0" />
+					    <w:r>
 					        <w:rPr>
 						        <w:rStyle w:val="CommentReference" />
 					        </w:rPr>
 					        <w:commentReference w:id="0" />
-				        </w:r>
-	                 */ 
+					    </w:r>
+					 */
 
-	                // Renumber in the document - 3 times  
-	                // FIXME: what if its not a comment??
-	                int cid = (int)(k / 3);
-	                log.debug("Comment @id: " + cid);
-	                nodeList.item(k).setNodeValue( Integer.toString(cid) );
+					// Renumber in the document - 3 times
+					// FIXME: what if its not a comment??
+					int cid = k / 3;
+					log.debug("Comment @id: " + cid);
+					nodeList.item(k).setNodeValue(Integer.toString(cid));
 
-	                // Number the constructed content the same - once
-	                if (cid == (k / 3))
-	                {
-	                    Node n = (Node)constructedContent[i].get(cid);
-	                    n.getAttributes().getNamedItemNS(Namespaces.WORDML_NAMESPACE, "id").setNodeValue(
-	                    		Integer.toString(cid));
-	                }
+					// Number the constructed content the same - once
+					if (cid == (k / 3)) {
+						Node n = (Node) constructedContent[i].get(cid);
+						n.getAttributes().getNamedItemNS(Namespaces.WORDML_NAMESPACE, "id").setNodeValue(Integer.toString(cid));
+					}
 
-	            }
+				}
 
-	        }
+			}
 
-	        // Build the part
-	        // .. we have a list of nodes, some of which are foreign
-	        // We need to attach them 
-	        Node parent = localSequencedParts[i].getXmlNode();
-	        Node listParent = parent.getFirstChild().getFirstChild();
+			// Build the part
+			// .. we have a list of nodes, some of which are foreign
+			// We need to attach them
+			Node parent = localSequencedParts[i].getXmlNode();
+			Node listParent = parent.getFirstChild().getFirstChild();
 
-	        if (partName.equals("/word/_rels/document.xml.rels"))
-	        {
-	            // Keep FIXED_RELS_PREFIX and FIXED_RELS_SUFFIX,
-	            // but Remove the other children 
+			if (partName.equals("/word/_rels/document.xml.rels")) {
+				// Keep FIXED_RELS_PREFIX and FIXED_RELS_SUFFIX,
+				// but Remove the other children
 
-	            int prefixedRelsCount = ((SequencedPartRels)(serverSequencedParts[i])).getPrefixedRelsCount();
-	            int suffixedRelsCount = ((SequencedPartRels)(serverSequencedParts[i])).getSuffixedRelsCount();
-	            // 2009 09 07, for these we use serverSequencedParts, since we want to preserve any extras
-	            // they contain (for example, footnotes/endnotes, or glossary).
-	            // So for the rels part:
-	            parent = serverSequencedParts[i].getXmlNode();
-	            listParent = parent.getFirstChild().getFirstChild();
+				int prefixedRelsCount = ((SequencedPartRels) (serverSequencedParts[i])).getPrefixedRelsCount();
+				int suffixedRelsCount = ((SequencedPartRels) (serverSequencedParts[i])).getSuffixedRelsCount();
+				// 2009 09 07, for these we use serverSequencedParts, since we want to preserve any extras
+				// they contain (for example, footnotes/endnotes, or glossary).
+				// So for the rels part:
+				parent = serverSequencedParts[i].getXmlNode();
+				listParent = parent.getFirstChild().getFirstChild();
 
-//	            int prefixedRelsCount = ((SequencedPartRels)(localSequencedParts[i])).getPrefixedRelsCount();
-//	            int suffixedRelsCount = ((SequencedPartRels)(localSequencedParts[i])).getSuffixedRelsCount();
-//	            log.debug("localPrefixedRelsCount = " + prefixedRelsCount);
-//	            log.debug("localSuffixedRelsCount = " + suffixedRelsCount);
-//
-//	            //log.debug(listParent.OuterXml);
-//
-//	            // Sanity check - as good to do it here as anywhere
-//	            if (((SequencedPartRels)(serverSequencedParts[i])).getSuffixedRelsCount()
-//	                    != suffixedRelsCount)
-//	            {
-//	                log.error("Invalid assumption - suffixed rels have changed!");
-//
-//	                //  dump the 2 parts?
-//	            }
+				// int prefixedRelsCount = ((SequencedPartRels)(localSequencedParts[i])).getPrefixedRelsCount();
+				// int suffixedRelsCount = ((SequencedPartRels)(localSequencedParts[i])).getSuffixedRelsCount();
+				// log.debug("localPrefixedRelsCount = " + prefixedRelsCount);
+				// log.debug("localSuffixedRelsCount = " + suffixedRelsCount);
+				//
+				// //log.debug(listParent.OuterXml);
+				//
+				// // Sanity check - as good to do it here as anywhere
+				// if (((SequencedPartRels)(serverSequencedParts[i])).getSuffixedRelsCount()
+				// != suffixedRelsCount)
+				// {
+				// log.error("Invalid assumption - suffixed rels have changed!");
+				//
+				// // dump the 2 parts?
+				// }
 
-	            // Keep FIXED_RELS_PREFIX and FIXED_RELS_SUFFIX,
-	            // but Remove the other children 
-	            // These *aren't stored in order*, so we can't just do:
-	            // XmlNode deletion = listParent.ChildNodes[i2 - 1];
-	            
-	            //int relCount = prefixedRelsCount + constructedContent[i].size() + suffixedRelsCount;	    // wrong where there is a comment        
-	            int relCount = listParent.getChildNodes().getLength(); // correct, and simpler!
-	            for (int i2 = relCount; i2 > 0; i2--)
-	            {
+				// Keep FIXED_RELS_PREFIX and FIXED_RELS_SUFFIX,
+				// but Remove the other children
+				// These *aren't stored in order*, so we can't just do:
+				// XmlNode deletion = listParent.ChildNodes[i2 - 1];
 
-	                // extract number from rIdnn
-	                String idtmp = listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Id").getNodeValue();
-	                int relId =  Integer.parseInt(idtmp.substring(3));
+				// int relCount = prefixedRelsCount + constructedContent[i].size() + suffixedRelsCount; // wrong where there is a comment
+				int relCount = listParent.getChildNodes().getLength(); // correct, and simpler!
+				for (int i2 = relCount; i2 > 0; i2--) {
 
-	                log.debug(idtmp + " ( " + listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Target").getNodeValue());
-	                if (relId <= prefixedRelsCount)
-	                {
-	                    // Its one of the FIXED_RELS_PREFIX,
-	                    // so just keep it
-	                    log.debug(relId + "<=" + prefixedRelsCount + "---> keeping");
+					// extract number from rIdnn
+					String idtmp = listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Id").getNodeValue();
+					int relId = Integer.parseInt(idtmp.substring(3));
 
-	                }
-	                else if (relId >
-	                    (relCount - suffixedRelsCount))
-	                {
-	                    // Its one of the FIXED_RELS_SUFFIX,
-	                    // so renumber (which is all we need to do with this)
-	                    log.debug(relId + ">" + relCount + " - " + suffixedRelsCount);
-	                    int offset = relId - (relCount - suffixedRelsCount);
-	                    log.debug(prefixedRelsCount + " + " + (constructedContent[i]).size() + " + " + offset);
+					log.debug(idtmp + " ( " + listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Target").getNodeValue());
+					if (relId <= prefixedRelsCount) {
+						// Its one of the FIXED_RELS_PREFIX,
+						// so just keep it
+						log.debug(relId + "<=" + prefixedRelsCount + "---> keeping");
 
-	                    int newnum = prefixedRelsCount
-	                        + (constructedContent[i]).size()
-	                        + offset;
-	                    if (rel_comment != null)
-	                    {
-	                        newnum++;
-	                    }
+					} else if (relId > (relCount - suffixedRelsCount)) {
+						// Its one of the FIXED_RELS_SUFFIX,
+						// so renumber (which is all we need to do with this)
+						log.debug(relId + ">" + relCount + " - " + suffixedRelsCount);
+						int offset = relId - (relCount - suffixedRelsCount);
+						log.debug(prefixedRelsCount + " + " + (constructedContent[i]).size() + " + " + offset);
 
-	                    listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Id").setNodeValue(
-	                        "rId" + newnum );
-	                    log.debug("---> renumbered as " + newnum);
+						int newnum = prefixedRelsCount + (constructedContent[i]).size() + offset;
+						if (rel_comment != null) {
+							newnum++;
+						}
 
-	                }
-	                else
-	                {
-	                    // its one of the others, so delete it
-	                    Node deletion = listParent.getChildNodes().item(i2 - 1);
-	                    listParent.removeChild(deletion);
-	                    log.debug("---> deleted");
+						listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Id").setNodeValue("rId" + newnum);
+						log.debug("---> renumbered as " + newnum);
 
-	                }
-	            }
+					} else {
+						// its one of the others, so delete it
+						Node deletion = listParent.getChildNodes().item(i2 - 1);
+						listParent.removeChild(deletion);
+						log.debug("---> deleted");
 
-	            if (rel_comment != null)
-	            {
-	                // We need a reference to the comments part;
-	                // we can do it at the end;
-	                // we have already given it its correct Id.
-	                Node importedNode = parent.getOwnerDocument().importNode(rel_comment, true);  // pkgB.PkgXmlDocument.ImportNode(n, true);
-	                listParent.appendChild(importedNode);
-	            }
-	        }
-	        else   // non rels part
-	        {
-	            // Remove all the children 
-	            for (int i2 = listParent.getChildNodes().getLength(); i2 > 0; i2--)
-	            {
-	                log.debug(""+i2);
-	                Node deletion = listParent.getChildNodes().item(i2 - 1);
-	                listParent.removeChild(deletion);
-	            }
-	        }
+					}
+				}
 
-	        for (int j2 = 0; j2 < (constructedContent[i]).size(); j2++)
-	        {
-	            log.debug(""+j2);
-	            Node n = (Node)constructedContent[i].get(j2);
-	            Node importedNode = parent.getOwnerDocument().importNode(n, true);  // pkgB.PkgXmlDocument.ImportNode(n, true);
-	            listParent.appendChild(importedNode);
-	        }
-	        if (partName.equals("/word/_rels/document.xml.rels")) {
-	            log.debug("RESULT: " +  org.docx4j.XmlUtils.w3CDomNodeToString(parent) );
-	        }
+				if (rel_comment != null) {
+					// We need a reference to the comments part;
+					// we can do it at the end;
+					// we have already given it its correct Id.
+					Node importedNode = parent.getOwnerDocument().importNode(rel_comment, true); // pkgB.PkgXmlDocument.ImportNode(n, true);
+					listParent.appendChild(importedNode);
+				}
+			} else // non rels part
+			{
+				// Remove all the children
+				for (int i2 = listParent.getChildNodes().getLength(); i2 > 0; i2--) {
+					log.debug("" + i2);
+					Node deletion = listParent.getChildNodes().item(i2 - 1);
+					listParent.removeChild(deletion);
+				}
+			}
 
-	        updateDocx4jPart(docx4jParts, partName, listParent);
-	    }
-	    
-	    // In the loop above, we updated each of the sequencable parts.
-	    // But we still have to do the main document part itself:
-	    mdp.unmarshal( mdpW3C.getDocumentElement() );
-	    
-        // Now we need for docx4all to update its model of the document. 
-	    //  see WordMLEditor.synchEditorView? That seems to 
-        // replace just the mdp; but perhaps everything else follows
-        // from that?
-	    // See WordMLDocument.applyFilter
-		org.docx4j.wml.Document wmlDoc = 
-			(org.docx4j.wml.Document)
-				mdp.getJaxbElement();
-		doc.replaceBodyML(new BodyML(wmlDoc.getBody()));
-		
-//		Need: ?
-//    	editorView.validate();
-//    	editorView.repaint();
+			for (int j2 = 0; j2 < (constructedContent[i]).size(); j2++) {
+				log.debug("" + j2);
+				Node n = (Node) constructedContent[i].get(j2);
+				Node importedNode = parent.getOwnerDocument().importNode(n, true); // pkgB.PkgXmlDocument.ImportNode(n, true);
+				listParent.appendChild(importedNode);
+			}
+			if (partName.equals("/word/_rels/document.xml.rels")) {
+				log.debug("RESULT: " + org.docx4j.XmlUtils.w3CDomNodeToString(parent));
+			}
 
-	    // Now update local PartVersionList with the new 2nd class part versions
-	    for (int i = 0; i < max; i++)
-	    {
-	        // Get the relevant part name
-	        String partName = serverSequencedParts[i].getName();
+			updateDocx4jPart(docx4jParts, partName, listParent);
+		}
 
-	        // Find the server version
-	        String newVersion = serverPVL.getVersion(partName);
+		// In the loop above, we updated each of the sequencable parts.
+		// But we still have to do the main document part itself:
+		mdp.unmarshal(mdpW3C.getDocumentElement());
 
-	        // Update it in local PartVersionList (adding if nec)
-	        stateDocx.getPartVersionList().setVersion(partName, newVersion);
-	    }	 
-		
+		// Now we need for docx4all to update its model of the document.
+		// see WordMLEditor.synchEditorView? That seems to
+		// replace just the mdp; but perhaps everything else follows
+		// from that?
+		// See WordMLDocument.applyFilter
+		org.docx4j.wml.Document wmlDoc = mdp.getJaxbElement();
+		doc.replaceBodyML(new BodyML(wmlDoc.getBody(), doc.getElementMLFactory()));
+
+		// Need: ?
+		// editorView.validate();
+		// editorView.repaint();
+
+		// Now update local PartVersionList with the new 2nd class part versions
+		for (int i = 0; i < max; i++) {
+			// Get the relevant part name
+			String partName = serverSequencedParts[i].getName();
+
+			// Find the server version
+			String newVersion = serverPVL.getVersion(partName);
+
+			// Update it in local PartVersionList (adding if nec)
+			stateDocx.getPartVersionList().setVersion(partName, newVersion);
+		}
+
 		// Note that we don't update our record of these parts in StateDocx,
-	    // because we want to detect these as changes to be transmitted
-	    // when the user next presses transmit.
+		// because we want to detect these as changes to be transmitted
+		// when the user next presses transmit.
 	}
 
-private void updateDocx4jPart(
-		HashMap<PartName, org.docx4j.openpackaging.parts.Part> docx4jParts,
-		String partName, Node listParent) throws InvalidFormatException,
-		JAXBException {
-	
-    // .. Get the part; (where the local part exists, the local SequencedPart
-    // object wraps it, so we can either get it that way, or go back to
-    // using the underlying package.  If the local part doesn't exist
-    // though, we'd have to go back to the underlying package to create
-    // it. So we may as well operate at that level right from the start...)	
-	org.docx4j.openpackaging.parts.Part p = docx4jParts.get( new PartName(partName) );
-	JaxbXmlPart jPart;
-	if (p == null ) {
-		// This is a new part ie one which is present on the server,
-		// but not available locally.
-		// So we need to add it to the package. 
-		
+	private void updateDocx4jPart(HashMap<PartName, org.docx4j.openpackaging.parts.Part> docx4jParts, String partName, Node listParent)
+			throws InvalidFormatException, JAXBException {
+
+		// .. Get the part; (where the local part exists, the local SequencedPart
+		// object wraps it, so we can either get it that way, or go back to
+		// using the underlying package. If the local part doesn't exist
+		// though, we'd have to go back to the underlying package to create
+		// it. So we may as well operate at that level right from the start...)
+		org.docx4j.openpackaging.parts.Part p = docx4jParts.get(new PartName(partName));
+		JaxbXmlPart jPart;
+		if (p == null) {
+			// This is a new part ie one which is present on the server,
+			// but not available locally.
+			// So we need to add it to the package.
+
 			log.error(partName + " does not exist .. creating");
 			PartName pn = new PartName(partName);
-		       if (partName.equals("/word/_rels/document.xml.rels")) {
-		    	   
-		    	   // In 3.2.0, can't do:
-		    	   //    jPart = new RelationshipsPart( pn );
-		    	   
-		    	   MainDocumentPart mdp = (MainDocumentPart)docx4jParts.get( new PartName("/word/document.xml") );
-		    	   jPart = mdp.getRelationshipsPart(true);
-		    	   
-		        } else if (partName.equals("/word/comments.xml")) {	
-		        	jPart = new CommentsPart( pn );
-		        } else if (partName.equals("/word/footnotes.xml")) {	        	        	
-		        	jPart = new FootnotesPart( pn );	        	        	
-		        } else if (partName.equals("/word/endnotes.xml")) {
-		        	jPart = new EndnotesPart( pn );
-		        } else if (partName.equals("/word/header.xml")) {
-		        	jPart = new HeaderPart( pn );
-		        } else if (partName.equals("/word/footer.xml")) {
-		        	jPart = new FooterPart( pn );
-		        } else if (partName.equals("/word/numbering.xml")) {
-		        	jPart = new NumberingDefinitionsPart( pn );
-		        } else if (partName.equals("/word/styles.xml")) {
-		        	jPart = new StyleDefinitionsPart( pn );
-		        } else if (partName.startsWith("/word/theme/theme")) {
-		        	jPart = new ThemePart( pn );
-		        } else if (partName.startsWith("/word/settings.xml")) {
-		        	jPart = new DocumentSettingsPart( pn );
-		        } else if (partName.startsWith("/word/webSettings.xml")) {
-		        	jPart = new WebSettingsPart( pn );
-		        } else if (partName.startsWith("/word/fontTable.xml")) {
-		        	jPart = new FontTablePart( pn );
-		        } else {
-		        	log.warn("TODO: handle " + partName);
-		        	jPart = null;
-		        }		       
-		       
-		       docx4jParts.put(pn, jPart);  // That should add it to the live docxj package
-		       log.debug("Added new part " + partName);
-		       
-		    // (But it should already be
-	    	// present in the document rels, courtesy of some other
-	    	// iteration through this loop)
-		       
-		    // What about [Content_Types].xml?
-			
-	} else {
-	    // It is safe to assume we are dealing with a JAXB part, since
-	    // each of the sequenceableParts are that:
-	    // 
-	    // 		/word/_rels/document.xml.rels
-	    // 		/word/comments.xml
-	    //		/word/footnotes.xml
-	    //		/word/endnotes.xml
-		// similarly, the third class parts:
-		//  headers, footers, styles, numbering
-	    		        
-	    jPart = (JaxbXmlPart)p;
+			if (partName.equals("/word/_rels/document.xml.rels")) {
+
+				// In 3.2.0, can't do:
+				// jPart = new RelationshipsPart( pn );
+
+				MainDocumentPart mdp = (MainDocumentPart) docx4jParts.get(new PartName("/word/document.xml"));
+				jPart = mdp.getRelationshipsPart(true);
+
+			} else if (partName.equals("/word/comments.xml")) {
+				jPart = new CommentsPart(pn);
+			} else if (partName.equals("/word/footnotes.xml")) {
+				jPart = new FootnotesPart(pn);
+			} else if (partName.equals("/word/endnotes.xml")) {
+				jPart = new EndnotesPart(pn);
+			} else if (partName.equals("/word/header.xml")) {
+				jPart = new HeaderPart(pn);
+			} else if (partName.equals("/word/footer.xml")) {
+				jPart = new FooterPart(pn);
+			} else if (partName.equals("/word/numbering.xml")) {
+				jPart = new NumberingDefinitionsPart(pn);
+			} else if (partName.equals("/word/styles.xml")) {
+				jPart = new StyleDefinitionsPart(pn);
+			} else if (partName.startsWith("/word/theme/theme")) {
+				jPart = new ThemePart(pn);
+			} else if (partName.startsWith("/word/settings.xml")) {
+				jPart = new DocumentSettingsPart(pn);
+			} else if (partName.startsWith("/word/webSettings.xml")) {
+				jPart = new WebSettingsPart(pn);
+			} else if (partName.startsWith("/word/fontTable.xml")) {
+				jPart = new FontTablePart(pn);
+			} else {
+				log.warn("TODO: handle " + partName);
+				jPart = null;
+			}
+
+			docx4jParts.put(pn, jPart); // That should add it to the live docxj package
+			log.debug("Added new part " + partName);
+
+			// (But it should already be
+			// present in the document rels, courtesy of some other
+			// iteration through this loop)
+
+			// What about [Content_Types].xml?
+
+		} else {
+			// It is safe to assume we are dealing with a JAXB part, since
+			// each of the sequenceableParts are that:
+			//
+			// /word/_rels/document.xml.rels
+			// /word/comments.xml
+			// /word/footnotes.xml
+			// /word/endnotes.xml
+			// similarly, the third class parts:
+			// headers, footers, styles, numbering
+
+			jPart = (JaxbXmlPart) p;
+		}
+		jPart.unmarshal((Element) listParent);
 	}
-    jPart.unmarshal((Element)listParent);  
-}
-	
 
 	/* Apply registered transforms. */
 	public void applyUpdates(FetchRemoteEditsWorker worker) {
@@ -1628,31 +1449,26 @@ private void updateDocx4jPart(
 
 		log.debug(stateDocx.getDocID() + ".. .. applyUpdates");
 
-		List<TransformAbstract> transformsBySeqNum = 
-			stateDocx.getTransforms().getTransformsBySeqNum();
+		List<TransformAbstract> transformsBySeqNum = stateDocx.getTransforms().getTransformsBySeqNum();
 		List<TransformAbstract> discards = new ArrayList<TransformAbstract>();
-		
+
 		boolean cantOverwrite = false;
 		// loop through and apply
 		int total = transformsBySeqNum.size();
 		int i = 1;
 		long changeset = transformsBySeqNum.get(0).getChangesetNumber();
-		
+
 		for (TransformAbstract t : transformsBySeqNum) {
 			// OPTIMISATION: could do the most recent only for each cc
 			// (ie reverse order), except for MOVES and INSERTS, which need to
 			// be done in order.
 
-            worker.setProgress(
-            	FetchProgress.APPLYING_UPDATES, 
-            	"Update " + (i++) + " of " + total);
+			worker.setProgress(FetchProgress.APPLYING_UPDATES, "Update " + (i++) + " of " + total);
 			if (t.getApplied()) // then it shouldn't be in the list ?!
-				// ? (unless it was injected by 
-		        // transmitLocalChanges, or hasn't previously been discarded)
+			// ? (unless it was injected by
+			// transmitLocalChanges, or hasn't previously been discarded)
 			{
-				if (stateDocx.getTransforms()
-						.getTSequenceNumberHighestFetched() > t
-						.getSequenceNumber()) {
+				if (stateDocx.getTransforms().getTSequenceNumberHighestFetched() > t.getSequenceNumber()) {
 					discards.add(t);
 				}
 				continue;
@@ -1663,7 +1479,7 @@ private void updateDocx4jPart(
 				changeset = t.getChangesetNumber();
 				refreshLocalDocument();
 			}
-			
+
 			log.debug(".. applying " + t.getSequenceNumber());
 
 			long resultCode = applyUpdate(t);
@@ -1676,14 +1492,11 @@ private void updateDocx4jPart(
 			} else if (resultCode > 0) {
 				// Applied, so can discard, provided highest fetched is higher
 				// than this snum (otherwise it will just get fetched again!)
-				if (stateDocx.getTransforms()
-						.getTSequenceNumberHighestFetched() > t
-						.getSequenceNumber()) {
+				if (stateDocx.getTransforms().getTSequenceNumberHighestFetched() > t.getSequenceNumber()) {
 					discards.add(t);
 				}
 			} else {
-				log.debug("Failed to apply transformation "
-						+ t.getSequenceNumber());
+				log.debug("Failed to apply transformation " + t.getSequenceNumber());
 			}
 		}
 
@@ -1693,11 +1506,10 @@ private void updateDocx4jPart(
 		}
 
 		refreshLocalDocument();
-		
+
 		if (cantOverwrite) {
-			worker.setProgress(
-				FetchProgress.APPLYING_DONE, 
-				"You need to accept/reject revisions before all remote changes can be applied.  Please do so, then hit the button again.");
+			worker.setProgress(FetchProgress.APPLYING_DONE,
+					"You need to accept/reject revisions before all remote changes can be applied.  Please do so, then hit the button again.");
 		} else {
 			worker.setProgress(FetchProgress.APPLYING_DONE, "Changesets applied");
 		}
@@ -1707,19 +1519,16 @@ private void updateDocx4jPart(
 	private long applyUpdate(TransformAbstract t) {
 		long resultCode;
 
-		log.debug("applyUpdate " + t.getClass().getName() + " - "
-				+ t.getSequenceNumber());
+		log.debug("applyUpdate " + t.getClass().getName() + " - " + t.getSequenceNumber());
 
 		String plutextId = t.getPlutextId();
 
-		StateChunk currentChunk = 
-			Util.getStateChunk(getWordMLDocument(), plutextId);
-		
+		StateChunk currentChunk = Util.getStateChunk(getWordMLDocument(), plutextId);
+
 		boolean virgin = (currentChunk == null);
 
-		Changeset changeset =
-			this.changeSets.get(Long.toString(t.getChangesetNumber()));
-        
+		Changeset changeset = this.changeSets.get(Long.toString(t.getChangesetNumber()));
+
 		if (virgin && (t instanceof TransformInsert)) {
 			// Server reduces Delete > Insert (reinstate)
 			// to Insert, so it is possible for this client to
@@ -1731,31 +1540,29 @@ private void updateDocx4jPart(
 
 			resultCode = t.apply(this, stateDocx.getStateChunks());
 			t.setApplied(true);
-//	        try {
-//				scanSdtForIdref(t);
-//			} catch (XPathExpressionException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}		
-	        changedChunks.put( t.getPlutextId(), t.getPlutextId() );  
-	        	// TODO, what if it is already there?	        
-			log.debug(t.getSequenceNumber() + " applied ("
-					+ t.getClass().getName() + ")");
-			
-	        // Word Add-In 2009 02 05 - Add it to currentStateChunks, so it is there
-	        // for updateRelatedParts
-	        //currentStateChunks.put(t.getId(), stateDocx.getStateChunks().get(t.getId()));
+			// try {
+			// scanSdtForIdref(t);
+			// } catch (XPathExpressionException e) {
+			// // TODO Auto-generated catch block
+			// e.printStackTrace();
+			// }
+			changedChunks.put(t.getPlutextId(), t.getPlutextId());
+			// TODO, what if it is already there?
+			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
+
+			// Word Add-In 2009 02 05 - Add it to currentStateChunks, so it is there
+			// for updateRelatedParts
+			// currentStateChunks.put(t.getId(), stateDocx.getStateChunks().get(t.getId()));
 			// TODO We do the above in the Word Add-In, but how to do it here
 			// (since there is no currentStateChunks as such)?
 			// And is it even necessary??
 
 			if (resultCode >= 0) {
-				this.sdtChangeTypes.put(plutextId,
-						TrackedChangeType.OtherUserChange);
+				this.sdtChangeTypes.put(plutextId, TrackedChangeType.OtherUserChange);
 			}
 
 			return resultCode;
-			
+
 		} else if (t instanceof TransformDelete) {
 			StateChunk stateDocxSC = stateDocx.getStateChunks().get(plutextId);
 			if (currentChunk == null) {
@@ -1769,10 +1576,10 @@ private void updateDocx4jPart(
 
 			} else {
 				boolean conflict = isConflict(currentChunk, stateDocxSC);
-				
-	            // The update we will insert is one that contains the results
-	            // of comparing the server's SDT to the user's local one.
-	            // This will allow the user to see other people's changes.				
+
+				// The update we will insert is one that contains the results
+				// of comparing the server's SDT to the user's local one.
+				// This will allow the user to see other people's changes.
 				if (conflict) {
 					if (currentChunk.containsTrackedChanges()) {
 						/*
@@ -1789,18 +1596,17 @@ private void updateDocx4jPart(
 
 						// You need to accept/reject revisions before all
 						// remote changes can be applied
-						this.sdtChangeTypes.put(plutextId,
-								TrackedChangeType.Conflict);
+						this.sdtChangeTypes.put(plutextId, TrackedChangeType.Conflict);
 						return CANT_OVERWRITE;
-						
+
 					} else {
 						t.markupChanges(currentChunk.getXml(), changeset);
 					}
-					
+
 				} else if (matchedOnMarkedUpVersion(currentChunk, stateDocxSC)) {
 					// Compare it to non-marked up
 					t.markupChanges(stateDocxSC.getXml(), changeset);
-					
+
 				} else {
 					// Easy - they are the same
 					t.markupChanges(currentChunk.getXml(), changeset);
@@ -1811,37 +1617,32 @@ private void updateDocx4jPart(
 			t.setApplied(true);
 
 			if (resultCode >= 0) {
-				this.sdtChangeTypes.put(plutextId,
-						TrackedChangeType.OtherUserChange);
+				this.sdtChangeTypes.put(plutextId, TrackedChangeType.OtherUserChange);
 				this.sdtIdUndead.put(plutextId, plutextId);
 			}
-			
-	        // Word Add-In 2009 02 05 - Add it to currentStateChunks, so it is there
-	        // for updateRelatedParts
-//	        try
-//	        {
-//	            currentStateChunks.Remove(t.getId());
-//	        }
-//	        catch (KeyNotFoundException knf) { }	
+
+			// Word Add-In 2009 02 05 - Add it to currentStateChunks, so it is there
+			// for updateRelatedParts
+			// try
+			// {
+			// currentStateChunks.Remove(t.getId());
+			// }
+			// catch (KeyNotFoundException knf) { }
 			// TODO We do the above in the Word Add-In, but how to do it here
 			// (since there is no currentStateChunks as such)?
 			// And is it even necessary??
-	        
 
-			log.debug(t.getSequenceNumber() + " applied ("
-					+ t.getClass().getName() + ")");
+			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
 			return resultCode;
 
 		} else if (t instanceof TransformMove) {
 			resultCode = t.apply(this, stateDocx.getStateChunks());
 			t.setApplied(true);
 			if (resultCode >= 0) {
-				this.sdtChangeTypes.put(plutextId,
-						TrackedChangeType.OtherUserChange);
+				this.sdtChangeTypes.put(plutextId, TrackedChangeType.OtherUserChange);
 			}
 
-			log.debug(t.getSequenceNumber() + " applied ("
-					+ t.getClass().getName() + ")");
+			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
 			return resultCode;
 
 		} else if (t instanceof TransformStyle) {
@@ -1853,29 +1654,24 @@ private void updateDocx4jPart(
 			// this.sdtChangeTypes.put(idStr,
 			// TrackedChangeType.OtherUserChange);
 			// }
-			log.debug(t.getSequenceNumber() + " applied ("
-					+ t.getClass().getName() + ")");
+			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
 			return resultCode;
 
-		} else if ((t instanceof TransformUpdate)
-				|| (t instanceof TransformInsert)) {
-			
-	        // Special handling for document level sectPr
-	        if (t.getPlutextId().equals(SECTPR_MAGIC_ID ))
-	        {
-	            // Get the sectPr
-	        	org.docx4j.wml.P p = (org.docx4j.wml.P)t.getSdt().getSdtContent().getContent().get(0);
-	        	org.docx4j.wml.SectPr sectPr = (org.docx4j.wml.SectPr)p.getPPr().getSectPr();
-	        	
-	            replaceDocumentSectPr(sectPr);
+		} else if ((t instanceof TransformUpdate) || (t instanceof TransformInsert)) {
 
-	            docSectPrUpdated = true;
+			// Special handling for document level sectPr
+			if (t.getPlutextId().equals(SECTPR_MAGIC_ID)) {
+				// Get the sectPr
+				org.docx4j.wml.P p = (org.docx4j.wml.P) t.getSdt().getSdtContent().getContent().get(0);
+				org.docx4j.wml.SectPr sectPr = p.getPPr().getSectPr();
+
+				replaceDocumentSectPr(sectPr);
+
+				docSectPrUpdated = true;
 				t.setApplied(true);
-	            return 9999; // some number > 0
+				return 9999; // some number > 0
 
-	        }
-			
-			
+			}
 
 			StateChunk stateDocxSC = stateDocx.getStateChunks().get(plutextId);
 			boolean conflict = false;
@@ -1897,9 +1693,9 @@ private void updateDocx4jPart(
 			} else {
 				conflict = isConflict(currentChunk, stateDocxSC);
 
-	            // The update we will insert is one that contains the results
-	            // of comparing the server's SDT to the user's local one.
-	            // This will allow the user to see other people's changes.				
+				// The update we will insert is one that contains the results
+				// of comparing the server's SDT to the user's local one.
+				// This will allow the user to see other people's changes.
 				if (conflict) {
 					if (currentChunk.containsTrackedChanges()) {
 						/*
@@ -1916,8 +1712,7 @@ private void updateDocx4jPart(
 
 						// You need to accept/reject revisions before all
 						// remote changes can be applied
-						this.sdtChangeTypes.put(plutextId,
-								TrackedChangeType.Conflict);
+						this.sdtChangeTypes.put(plutextId, TrackedChangeType.Conflict);
 						return CANT_OVERWRITE;
 
 					} else {
@@ -1937,29 +1732,27 @@ private void updateDocx4jPart(
 
 			resultCode = t.apply(this, stateDocx.getStateChunks());
 			t.setApplied(true);
-//	        try {
-//				scanSdtForIdref(t);
-//			} catch (XPathExpressionException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-	        changedChunks.put( t.getPlutextId(), t.getPlutextId() );  
-	        	// TODO, what if it is already there?
+			// try {
+			// scanSdtForIdref(t);
+			// } catch (XPathExpressionException e) {
+			// // TODO Auto-generated catch block
+			// e.printStackTrace();
+			// }
+			changedChunks.put(t.getPlutextId(), t.getPlutextId());
+			// TODO, what if it is already there?
 
-			log.debug(t.getSequenceNumber() + " applied ("
-					+ t.getClass().getName() + ")");
+			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
 
 			if (conflict) {
 				this.sdtChangeTypes.put(plutextId, TrackedChangeType.Conflict);
 				log.debug("set state to CONFLICTED");
 			} else {
-				this.sdtChangeTypes.put(plutextId,
-						TrackedChangeType.OtherUserChange);
+				this.sdtChangeTypes.put(plutextId, TrackedChangeType.OtherUserChange);
 			}
-			
-	        // Word Add-In 2009 02 05 - Add it to currentStateChunks, so it is there
-	        // for updateRelatedParts
-//	        currentStateChunks.put(t.getId(), stateDocx.StateChunks[t.getId()]);			
+
+			// Word Add-In 2009 02 05 - Add it to currentStateChunks, so it is there
+			// for updateRelatedParts
+			// currentStateChunks.put(t.getId(), stateDocx.StateChunks[t.getId()]);
 			// TODO We do the above in the Word Add-In, but how to do it here
 			// (since there is no currentStateChunks as such)?
 			// And is it even necessary??
@@ -1972,29 +1765,25 @@ private void updateDocx4jPart(
 		}
 	}
 
-	/// <summary>
-	/// Determine whether the user has changed this sdt, so that changes fetched from
-	/// the server have to be merged (and this marked as TrackedChangeType.Conflict).
-	/// If the only change is Word's renumbering of rel references, that doesn't
-	/// count.
-	/// </summary>
-	/// <param name="currentStateChunk"></param>
-	/// <param name="stateDocxSC"></param>
-	/// <returns></returns>	
+	// / <summary>
+	// / Determine whether the user has changed this sdt, so that changes fetched from
+	// / the server have to be merged (and this marked as TrackedChangeType.Conflict).
+	// / If the only change is Word's renumbering of rel references, that doesn't
+	// / count.
+	// / </summary>
+	// / <param name="currentStateChunk"></param>
+	// / <param name="stateDocxSC"></param>
+	// / <returns></returns>
 	boolean isConflict(StateChunk currentStateChunk, StateChunk stateDocxSC) {
-		
-		
-// STILL REQUIRED?  MOVED?		
-		
 
-		boolean conflict = !(currentStateChunk.getXml().equals(stateDocxSC
-				.getXml()));
-		
-	    if (!conflict)
-	    {
-	        return false;
-	    }
-	    
+		// STILL REQUIRED? MOVED?
+
+		boolean conflict = !(currentStateChunk.getXml().equals(stateDocxSC.getXml()));
+
+		if (!conflict) {
+			return false;
+		}
+
 		log.debug("different!");
 		log.debug("stateDocx : " + stateDocxSC.getXml());
 		log.debug("current : " + currentStateChunk.getXml());
@@ -2010,135 +1799,130 @@ private void updateDocx4jPart(
 		if (currentStateChunk.getXml().equals(stateDocxSC.getMarkedUpSdt())) {
 			log.debug("Match on marked up versions");
 			return false;
-		} 
-		
+		}
+
 		log.debug("Still different!");
-		log.debug("stateDocx marked up: "
-				+ stateDocxSC.getMarkedUpSdt());
+		log.debug("stateDocx marked up: " + stateDocxSC.getMarkedUpSdt());
 		log.debug("current : " + currentStateChunk.getXml());
-		
-	    // If all that has happened is that Word has renumbered the rel id's,
-	    // we don't flag that
+
+		// If all that has happened is that Word has renumbered the rel id's,
+		// we don't flag that
 		// TODO - do we need a docx4all equivalent?
-//	    if (currentStateChunk.RelReferencesDropped.equals(stateDocxSC.RelReferencesDropped))
-//	    {
-//	        log.debug("Match with RelReferencesDropped.");
-//	        return false;
-//	    }
-		
+		// if (currentStateChunk.RelReferencesDropped.equals(stateDocxSC.RelReferencesDropped))
+		// {
+		// log.debug("Match with RelReferencesDropped.");
+		// return false;
+		// }
+
 		return true;
 
 	}
 
-	private boolean matchedOnMarkedUpVersion(StateChunk currentStateChunk,
-			StateChunk stateDocxSC) {
+	private boolean matchedOnMarkedUpVersion(StateChunk currentStateChunk, StateChunk stateDocxSC) {
 
 		boolean matched = currentStateChunk.getXml().equals(stateDocxSC.getMarkedUpSdt());
 
-		log.debug("matchedOnMarkedUpVersion(): currentStateChunk = " 
-			+ currentStateChunk.getXml());
-		log.debug("matchedOnMarkedUpVersion(): stateDocxSC.getMarkedUpSdt() = "
-			+ stateDocxSC.getMarkedUpSdt());
+		log.debug("matchedOnMarkedUpVersion(): currentStateChunk = " + currentStateChunk.getXml());
+		log.debug("matchedOnMarkedUpVersion(): stateDocxSC.getMarkedUpSdt() = " + stateDocxSC.getMarkedUpSdt());
 		log.debug("matchedOnMarkedUpVersion(): matched = " + matched);
-		
+
 		return matched;
 	}
-	
-	
-//	public boolean [] fetchParts = new boolean[4];
-//
-//	public static int PART_RELS = 0;
-//	public static int PART_COMMENTS = 1;
-//	public static int PART_FOOTNOTES = 2;
-//	public static int PART_ENDNOTES = 3;
 
-	/// <summary>
-	/// Sdt's which are altered through the application of a transform, 
-	/// during this round of apply updates.
-	/// </summary>
+	// public boolean [] fetchParts = new boolean[4];
+	//
+	// public static int PART_RELS = 0;
+	// public static int PART_COMMENTS = 1;
+	// public static int PART_FOOTNOTES = 2;
+	// public static int PART_ENDNOTES = 3;
+
+	// / <summary>
+	// / Sdt's which are altered through the application of a transform,
+	// / during this round of apply updates.
+	// / </summary>
 	HashMap<String, String> changedChunks;
 
-//	void scanSdtForIdref(TransformAbstract t) throws XPathExpressionException
-//	{
-//	    // Look at this Insert | Update, to see
-//	    // whether it contains any of these 
-//	    // id's which Word renumbers in document order
-//	    NodeList nodeList;
-//
-//	    Node sdt = XmlUtils.marshaltoW3CDomDocument(t.getSdt());
-//
-//	    if (!fetchParts[PART_COMMENTS])
-//	    {
-//	        // <w:commentReference w:id="1" />
-//	    	
-//			// xpaths[1] =  xPath.compile(".//w:commentReference/@w:id | .//w:commentRangeStart/@w:id | .//w:commentRangeEnd/@w:id");
-//	    	
-//	        //nodeList = sdt.SelectNodes("//w:commentReference", nsmgr);
-//	    	nodeList = (NodeList)xpaths[1].evaluate(sdt, XPathConstants.NODESET);
-//	        if (nodeList.getLength() > 0)
-//	        {
-//	            fetchParts[PART_COMMENTS] = true;
-//	            log.debug("Detected comment");
-//	            // TODO: iff this is the first comment, we need to adjust the rels part.
-//	            // But for now:
-//	            fetchParts[PART_RELS] = true;
-//	        }
-//	    }
-//
-//	    if (!fetchParts[PART_FOOTNOTES])
-//	    {
-//	        // <w:footnoteReference w:id="3" />
-//	    	
-//			// xpaths[2] =  xPath.compile(".//w:footnoteReference/@w:id");
-//	    	nodeList = (NodeList)xpaths[2].evaluate(sdt, XPathConstants.NODESET);
-//	        if (nodeList.getLength() > 0)
-//	        {
-//	            fetchParts[PART_FOOTNOTES] = true;
-//	            log.debug("Detected footnote");
-//	            // TODO: iff this is the first footnote, we need to adjust the rels part.
-//	            // But for now:
-//	            fetchParts[PART_RELS] = true;
-//	        }
-//	    }
-//
-//
-//	    if (!fetchParts[PART_ENDNOTES])
-//	    {
-//	        // <w:endnoteReference w:id="2" />
-//	    	
-//			// xpaths[3] =  xPath.compile(".//w:endnoteReference/@w:id");
-//	    	nodeList = (NodeList)xpaths[3].evaluate(sdt, XPathConstants.NODESET);
-//	        if (nodeList.getLength() > 0)
-//	        {
-//	            fetchParts[PART_ENDNOTES] = true;
-//	            log.debug("Detected endnote");
-//	            // TODO: iff this is the first endnote, we need to adjust the rels part.
-//	            // But for now:
-//	            fetchParts[PART_RELS] = true;
-//	        }
-//	    }				
-//
-//	    if (!fetchParts[PART_RELS] )
-//	    {
-//	        // Only perform this test, if we don't already require this part
-//	    	
-//			// xpathRelTest = xPath.compile(" .//@r:link | .//@r:id ");
-//	    	nodeList = (NodeList)xpathRelTest.evaluate(sdt, XPathConstants.NODESET);
-//
-//	            /* We only expect @r:link, since all
-//	             * @r:embed would have been converted when the 
-//	             * sdt containing the image was transmitted
-//	             * to the server by the other client. */
-//
-//	        if (nodeList.getLength() > 0)
-//	        {
-//	            fetchParts[PART_RELS] = true;
-//	            log.debug("Detected @r");
-//	        }
-//
-//	    }
-//
-//	}
+	// void scanSdtForIdref(TransformAbstract t) throws XPathExpressionException
+	// {
+	// // Look at this Insert | Update, to see
+	// // whether it contains any of these
+	// // id's which Word renumbers in document order
+	// NodeList nodeList;
+	//
+	// Node sdt = XmlUtils.marshaltoW3CDomDocument(t.getSdt());
+	//
+	// if (!fetchParts[PART_COMMENTS])
+	// {
+	// // <w:commentReference w:id="1" />
+	//
+	// // xpaths[1] = xPath.compile(".//w:commentReference/@w:id | .//w:commentRangeStart/@w:id | .//w:commentRangeEnd/@w:id");
+	//
+	// //nodeList = sdt.SelectNodes("//w:commentReference", nsmgr);
+	// nodeList = (NodeList)xpaths[1].evaluate(sdt, XPathConstants.NODESET);
+	// if (nodeList.getLength() > 0)
+	// {
+	// fetchParts[PART_COMMENTS] = true;
+	// log.debug("Detected comment");
+	// // TODO: iff this is the first comment, we need to adjust the rels part.
+	// // But for now:
+	// fetchParts[PART_RELS] = true;
+	// }
+	// }
+	//
+	// if (!fetchParts[PART_FOOTNOTES])
+	// {
+	// // <w:footnoteReference w:id="3" />
+	//
+	// // xpaths[2] = xPath.compile(".//w:footnoteReference/@w:id");
+	// nodeList = (NodeList)xpaths[2].evaluate(sdt, XPathConstants.NODESET);
+	// if (nodeList.getLength() > 0)
+	// {
+	// fetchParts[PART_FOOTNOTES] = true;
+	// log.debug("Detected footnote");
+	// // TODO: iff this is the first footnote, we need to adjust the rels part.
+	// // But for now:
+	// fetchParts[PART_RELS] = true;
+	// }
+	// }
+	//
+	//
+	// if (!fetchParts[PART_ENDNOTES])
+	// {
+	// // <w:endnoteReference w:id="2" />
+	//
+	// // xpaths[3] = xPath.compile(".//w:endnoteReference/@w:id");
+	// nodeList = (NodeList)xpaths[3].evaluate(sdt, XPathConstants.NODESET);
+	// if (nodeList.getLength() > 0)
+	// {
+	// fetchParts[PART_ENDNOTES] = true;
+	// log.debug("Detected endnote");
+	// // TODO: iff this is the first endnote, we need to adjust the rels part.
+	// // But for now:
+	// fetchParts[PART_RELS] = true;
+	// }
+	// }
+	//
+	// if (!fetchParts[PART_RELS] )
+	// {
+	// // Only perform this test, if we don't already require this part
+	//
+	// // xpathRelTest = xPath.compile(" .//@r:link | .//@r:id ");
+	// nodeList = (NodeList)xpathRelTest.evaluate(sdt, XPathConstants.NODESET);
+	//
+	// /* We only expect @r:link, since all
+	// * @r:embed would have been converted when the
+	// * sdt containing the image was transmitted
+	// * to the server by the other client. */
+	//
+	// if (nodeList.getLength() > 0)
+	// {
+	// fetchParts[PART_RELS] = true;
+	// log.debug("Detected @r");
+	// }
+	//
+	// }
+	//
+	// }
 
 	/* ****************************************************************************************
 	*          ACCEPT REMOTE CHANGES
@@ -2173,8 +1957,7 @@ private void updateDocx4jPart(
 	}
 
 	public boolean hasNonConflictingChanges() {
-		return this.sdtChangeTypes
-				.containsValue(TrackedChangeType.OtherUserChange);
+		return this.sdtChangeTypes.containsValue(TrackedChangeType.OtherUserChange);
 	}
 
 	public TrackedChangeType getTrackedChangeType(String plutextId) {
@@ -2188,8 +1971,7 @@ private void updateDocx4jPart(
 	public List<String> getIdsOfNonConflictingChanges() {
 		List<String> nonConflictingChanges = new ArrayList<String>();
 
-		Iterator<Map.Entry<String, TrackedChangeType>> it = this.sdtChangeTypes
-				.entrySet().iterator();
+		Iterator<Map.Entry<String, TrackedChangeType>> it = this.sdtChangeTypes.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry<String, TrackedChangeType> entry = it.next();
 			String plutextId = entry.getKey();
@@ -2203,8 +1985,7 @@ private void updateDocx4jPart(
 	}
 
 	/***************************************************************************
-	 * TRANSMIT LOCAL CHANGES
-	 * ****************************************************************************************
+	 * TRANSMIT LOCAL CHANGES ****************************************************************************************
 	 */
 	public boolean transmitLocalChanges(TransmitLocalEditsWorker worker) throws RemoteException, ClientException {
 		// Look for local modifications
@@ -2216,275 +1997,257 @@ private void updateDocx4jPart(
 		return success;
 	}
 
-    boolean transmitContentUpdates(TransmitLocalEditsWorker worker) throws RemoteException {
+	boolean transmitContentUpdates(TransmitLocalEditsWorker worker) throws RemoteException {
 		log.debug(stateDocx.getDocID() + ".. .. transmitContentUpdates");
-	
-	    // 2009 07 13: make sure there are no revisions, since we don't
-	    // want to transmit a set of document rels which includes a reference
-	    // from a content control which we refuse to transmit (because it
-	    // contains revisions)
-	    //if (myDoc.Revisions.Count > 0)
+
+		// 2009 07 13: make sure there are no revisions, since we don't
+		// want to transmit a set of document rels which includes a reference
+		// from a content control which we refuse to transmit (because it
+		// contains revisions)
+		// if (myDoc.Revisions.Count > 0)
 		if (!sdtChangeTypes.isEmpty()) // How to do this better??
-	    {
-	        log.debug(sdtChangeTypes.size() + " revisions found, so aborting transmitContentUpdates");
-			String message =
-				"Please accept/reject all revisions first, then try again.";
+		{
+			log.debug(sdtChangeTypes.size() + " revisions found, so aborting transmitContentUpdates");
+			String message = "Please accept/reject all revisions first, then try again.";
 			worker.setProgress(TransmitProgress.DONE, message);
-	        
-	        return false;
-	    }		
-		
+
+			return false;
+		}
+
 		// The list of transforms to be transmitted
 		List<T> transformsToSend = new ArrayList<T>();
-		
+
 		// See TransmitLocalEditsWorker.preTransmit()
-		
+
 		// TODO When an image is added, making that External needs to
 		// be done here. See Word Add-In line ~ 2019
 		// But this work can be defered until such time as it is
 		// possible to add a new image in docx4all ..
 		// and it would be best if the code used for adding
-		// an image took care of making it external		
-	    // (which includes actually saving them on the server)
-				
-//	    foreach (DetachedImagePart dip in detachedImages)
-//	    {
-//	        log.debug( ws.injectPart(stateDocx.DocID, 
-//	            dip.Name, "0", dip.ContentType, dip.Data) );
-//	    }
-	
-	    /*
-	     * Handle remote deleted chunks.
-	     * 
-	     * These are marked up locally as deleted.
-	     * 
-	     * If the user accepts the deletions, we are left with an
-	     * empty content control (contains only whitespace), 
-	     * which needs to be removed.
-	     * 
-	     * If the user rejected the deletions, the control will be
-	     * sent as an insert.
-	     * 
-	     * If the control still contains markup, we have an interesting
-	     * problem.  The problem is that we don't want to transmit it
-	     * as an insertion, but the position of other local moves &
-	     * inserts will still be calculated counting this one, which the 
-	     * server doesn't know about.
-	     * 
-	     * Choices:
-	     * 1. refuse to transmit any moves/inserts, until changes handled
-	     * 2. exclude it from local Skeleton, so it isn't counted in
-	     * moves/inserts
-	     * 3. (NO: accept changes and transmit it as an insert)
-	     * 
-	     * Go with option 2.
-	     * 
-	     * [Consider the situation when *applying* a later round of remote 
-	     *  changes.  I think that is ok, since the position of 
-	     *  moves and inserts already adjusts to accommodate local
-	     *  differences.]
-	     * 
-	     * How to implement?
-	     * 
-	     * We need to be able to reliably identify an 'undead' chunk,
-	     * so that:
-	     * (i) can differentiate from a new sdt containing only
-	     *     whitespace,
-	     * (ii)can differentiate from some other sdt containing 
-	     *     markup, which DOES need to be included in the Skeleton
-	     * 
-	     * So we need a dictionary of the undead, which we process here.
-	     */
-		
-		worker.setProgress(
-			TransmitProgress.INSPECTING_LOCAL_DOC_STRUCTURE, 
-			"Inspecting local document structure");
-		
-	    WordMLDocument doc = getWordMLDocument();
-	    
-	    List<String> bornAgain = new ArrayList<String>();
-	    
-	    //Build an iterator for iterating applied TransformDelete(s).
-	    //See:applyUpdate(TransformAbstract) method
-	    Iterator<Map.Entry<String, String>> it = 
-	    	this.sdtIdUndead.entrySet().iterator();
-	    while (it.hasNext()) {
-	    	Map.Entry<String, String> entry = it.next(); 
-	    	StateChunk currentChunk = Util.getStateChunk(doc, entry.getKey());
-	    	log.debug("Inspecting undead: " + entry.getKey() );
-	    	if (currentChunk == null) {
-	    		//The applied TransformDelete must have been accepted.
-	            log.debug(".. really kill.");
-	            // All we do here is remove it from sdtIdUndead
-	            bornAgain.add(entry.getKey());
-	            
-	    	} else if (currentChunk.containsTrackedChanges()) // 2009 07 13: shouldn't happen
-	    	{
-	            // Remove it from inferredSkeleton and currentStateChunks
-	            // but keep in document.
-	            log.debug(".. still in limbo.");
-	            if (!this.currentClientSkeleleton.removeRib(
-	            	  new TextLine(entry.getKey())) ) {
-	            	log.error("Couldn't find '" + entry.getKey() + "' to remove!");
-	            }
-	            
-	        } else {
-	            // The delete was  rejected
-	            // (in which case this content control lives again)
-	
-	            log.debug(".. reincarnating.");
-	            // Simply remove from sdtIdUndead
-	            bornAgain.add(entry.getKey());
-	
-	            // .. so it will be treated like any other
-	            // new sdt (though the server will recognise
-	            // this one has existed before)
-	    	}
-	    }// while (it.hasNext())
-	    
-	    for (String s: bornAgain) {
-	        this.sdtIdUndead.remove(s);
-	    }
-	
-	    // Identify structural changes (ie moves, inserts, deletes)
-	    // If skeletons are different, there must be local changes 
-	    // which we need to transmit
-	
-	    /* For example
-	
-	        1324568180  1324568180 (no change)
-	        1911345834  1911345834 (no change)
-	        --- 293467343 not at this location in source  <---- if user deletes
-	        884169107   884169107 (no change)
-	        528989532   528989532 (no change)
-         * 
-         * Note that we need to ensure that we are working against
-         * the latest server skeleton, so that the positions we
-         * send for moves and inserts correspond to the server's state.
-         */
-	
-        worker.setProgress(
-        	TransmitProgress.FETCHING_REMOTE_DOC_STRUCTURE, 
-        	"Fetching remote document structure");
-        
-	    String serverSkeletonStr = ws.getSkeletonDocument(stateDocx.getDocID());
-	    log.debug(serverSkeletonStr);
+		// an image took care of making it external
+		// (which includes actually saving them on the server)
 
-	    Skeleton serverSkeleton = new Skeleton(serverSkeletonStr);
-	    
-	    // TODO - Add to docx4all 2009 03 05
-//	    boolean structuralTransformsPending = !serverSkeleton.init(
-//	            stateDocx.getTransforms().getTSequenceNumberHighestFetched() );
-//
-//
-	    /* When we detect a difference, we need to know whether
-         * this is a local change, or a remote one which we haven't
-         * applied yet.
-         * 
-         * Given that we have to work with the latest server skeleton,
-         * we have to rely on it to be able to tell us that.
-         * (If we could use an older one, then that ambiguity 
-         *  would go away.  And we could keep the old one around
-         *  for this purpose, but code which used the old one to
-         *  resolve such ambiguities would probably be a little
-         *  harder to understand - though with the advantage that
-         *  maybe we could continue - TODO think this through ..)
-         * 
-         * So, if there are any pending remote moves/inserts/deletes,
-         * require the user to apply these before transmitting:
-	     * 
-	     * ALSO
-	     * 
-	     * If a content control contains new rels or removes an old one, 
-	     * you must be able to transmit the rels part as well (ie the 
-	     * document must be uptodate(more specifically, any content controls 
-	     * containing rels must not have changed their rels), including the 
-	     * rels part).  
-	     * 
-	     * Put another way, we�ll be transmitting the rels part, if cc rels 
-	     * have �changed� in any of the cc�s being transmitted.  
-	     * 
-	     * In this case, we require the document to be up to date before 
-	     * transmission, where up to date means:
-	     * 
-	     * 1. Cc�s are up to date (ie we have all transforms, not just
-	     * structural ones - transformsPending above now tests this
-	     * stronger condition), and 
-	     * 
-	     * 2. Changes accepted.  More specifically:
-	     *    a. Tracked changed in cc being transmitted have been accepted/rejected 
-	     *    (of course)
-	     *    b. Any tracked changes in the document which reference a rel, 
-	     *    have been accepted or rejected 
-	     *    
-	     *    This is tested at the start of this method.
-	     *    
-	     * 3. We have the current rels part (according to part version list).  
-	     * If the cc�s are up to date (as per 1), we will have the current document rels, 
-	     * and no other 2nd or 3rd class part is likely to have changed on 
-	     * the server (certainly not document rels, though the styles part 
-	     * or a header/footer could have (since you can change those without 
-	     * changing the document), as could a comment/footnote or endnote - though 
-	     * just an edit, not add/delete). Given this, we don�t bother fetching PVL to
-	     * test those parts are uptodate (but we will refuse to transmit an update 
-	     * to them if they aren�t).
-	     * 
-	     * So we need a quick way to determine whether the document is uptodate.  
-	     * Since we just did getSkeletonDocument above, we'll use that.
-	     */
-//	         */
-//	        if (structuralTransformsPending)
-//	        {
-//	            worker.setProgress(0, "Please fetch remote updates, then try again.");
-//	            return false;
-//	        }
-	    
-	
-	    // OK, compare the inferredSkeleton to serverSkeleton
-        worker.setProgress(
-        	TransmitProgress.IDENTIFYING_STRUCTURAL_CHANGES,
-        	"Identifying structural changes in document");
-        
-	    createTransformsForStructuralChanges(
-	    	transformsToSend,
-	        this.currentClientSkeleleton, 
-	        serverSkeleton);
-	
-	    Boolean someTransmitted = false;
-        // Whether an sdt on the server is newer than the local version
-	    Boolean someConflicted = false;
-	
-        // Whether the local sdt contains tracked changes
-        // (which must be resolved before it can be transmitted)
-        Boolean someTrackedConflicts = false;
+		// foreach (DetachedImagePart dip in detachedImages)
+		// {
+		// log.debug( ws.injectPart(stateDocx.DocID,
+		// dip.Name, "0", dip.ContentType, dip.Data) );
+		// }
 
-		org.plutext.transforms.ObjectFactory transformsFactory = 
-			new org.plutext.transforms.ObjectFactory();
+		/*
+		 * Handle remote deleted chunks.
+		 * 
+		 * These are marked up locally as deleted.
+		 * 
+		 * If the user accepts the deletions, we are left with an
+		 * empty content control (contains only whitespace), 
+		 * which needs to be removed.
+		 * 
+		 * If the user rejected the deletions, the control will be
+		 * sent as an insert.
+		 * 
+		 * If the control still contains markup, we have an interesting
+		 * problem.  The problem is that we don't want to transmit it
+		 * as an insertion, but the position of other local moves &
+		 * inserts will still be calculated counting this one, which the 
+		 * server doesn't know about.
+		 * 
+		 * Choices:
+		 * 1. refuse to transmit any moves/inserts, until changes handled
+		 * 2. exclude it from local Skeleton, so it isn't counted in
+		 * moves/inserts
+		 * 3. (NO: accept changes and transmit it as an insert)
+		 * 
+		 * Go with option 2.
+		 * 
+		 * [Consider the situation when *applying* a later round of remote 
+		 *  changes.  I think that is ok, since the position of 
+		 *  moves and inserts already adjusts to accommodate local
+		 *  differences.]
+		 * 
+		 * How to implement?
+		 * 
+		 * We need to be able to reliably identify an 'undead' chunk,
+		 * so that:
+		 * (i) can differentiate from a new sdt containing only
+		 *     whitespace,
+		 * (ii)can differentiate from some other sdt containing 
+		 *     markup, which DOES need to be included in the Skeleton
+		 * 
+		 * So we need a dictionary of the undead, which we process here.
+		 */
+
+		worker.setProgress(TransmitProgress.INSPECTING_LOCAL_DOC_STRUCTURE, "Inspecting local document structure");
+
+		WordMLDocument doc = getWordMLDocument();
+
+		List<String> bornAgain = new ArrayList<String>();
+
+		// Build an iterator for iterating applied TransformDelete(s).
+		// See:applyUpdate(TransformAbstract) method
+		Iterator<Map.Entry<String, String>> it = this.sdtIdUndead.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, String> entry = it.next();
+			StateChunk currentChunk = Util.getStateChunk(doc, entry.getKey());
+			log.debug("Inspecting undead: " + entry.getKey());
+			if (currentChunk == null) {
+				// The applied TransformDelete must have been accepted.
+				log.debug(".. really kill.");
+				// All we do here is remove it from sdtIdUndead
+				bornAgain.add(entry.getKey());
+
+			} else if (currentChunk.containsTrackedChanges()) // 2009 07 13: shouldn't happen
+			{
+				// Remove it from inferredSkeleton and currentStateChunks
+				// but keep in document.
+				log.debug(".. still in limbo.");
+				if (!this.currentClientSkeleleton.removeRib(new TextLine(entry.getKey()))) {
+					log.error("Couldn't find '" + entry.getKey() + "' to remove!");
+				}
+
+			} else {
+				// The delete was rejected
+				// (in which case this content control lives again)
+
+				log.debug(".. reincarnating.");
+				// Simply remove from sdtIdUndead
+				bornAgain.add(entry.getKey());
+
+				// .. so it will be treated like any other
+				// new sdt (though the server will recognise
+				// this one has existed before)
+			}
+		}// while (it.hasNext())
+
+		for (String s : bornAgain) {
+			this.sdtIdUndead.remove(s);
+		}
+
+		// Identify structural changes (ie moves, inserts, deletes)
+		// If skeletons are different, there must be local changes
+		// which we need to transmit
+
+		/* For example
+		
+		    1324568180  1324568180 (no change)
+		    1911345834  1911345834 (no change)
+		    --- 293467343 not at this location in source  <---- if user deletes
+		    884169107   884169107 (no change)
+		    528989532   528989532 (no change)
+		 * 
+		 * Note that we need to ensure that we are working against
+		 * the latest server skeleton, so that the positions we
+		 * send for moves and inserts correspond to the server's state.
+		 */
+
+		worker.setProgress(TransmitProgress.FETCHING_REMOTE_DOC_STRUCTURE, "Fetching remote document structure");
+
+		String serverSkeletonStr = ws.getSkeletonDocument(stateDocx.getDocID());
+		log.debug(serverSkeletonStr);
+
+		Skeleton serverSkeleton = new Skeleton(serverSkeletonStr);
+
+		// TODO - Add to docx4all 2009 03 05
+		// boolean structuralTransformsPending = !serverSkeleton.init(
+		// stateDocx.getTransforms().getTSequenceNumberHighestFetched() );
+		//
+		//
+		/* When we detect a difference, we need to know whether
+		 * this is a local change, or a remote one which we haven't
+		 * applied yet.
+		 * 
+		 * Given that we have to work with the latest server skeleton,
+		 * we have to rely on it to be able to tell us that.
+		 * (If we could use an older one, then that ambiguity 
+		 *  would go away.  And we could keep the old one around
+		 *  for this purpose, but code which used the old one to
+		 *  resolve such ambiguities would probably be a little
+		 *  harder to understand - though with the advantage that
+		 *  maybe we could continue - TODO think this through ..)
+		 * 
+		 * So, if there are any pending remote moves/inserts/deletes,
+		 * require the user to apply these before transmitting:
+		 * 
+		 * ALSO
+		 * 
+		 * If a content control contains new rels or removes an old one, 
+		 * you must be able to transmit the rels part as well (ie the 
+		 * document must be uptodate(more specifically, any content controls 
+		 * containing rels must not have changed their rels), including the 
+		 * rels part).  
+		 * 
+		 * Put another way, we�ll be transmitting the rels part, if cc rels 
+		 * have �changed� in any of the cc�s being transmitted.  
+		 * 
+		 * In this case, we require the document to be up to date before 
+		 * transmission, where up to date means:
+		 * 
+		 * 1. Cc�s are up to date (ie we have all transforms, not just
+		 * structural ones - transformsPending above now tests this
+		 * stronger condition), and 
+		 * 
+		 * 2. Changes accepted.  More specifically:
+		 *    a. Tracked changed in cc being transmitted have been accepted/rejected 
+		 *    (of course)
+		 *    b. Any tracked changes in the document which reference a rel, 
+		 *    have been accepted or rejected 
+		 *    
+		 *    This is tested at the start of this method.
+		 *    
+		 * 3. We have the current rels part (according to part version list).  
+		 * If the cc�s are up to date (as per 1), we will have the current document rels, 
+		 * and no other 2nd or 3rd class part is likely to have changed on 
+		 * the server (certainly not document rels, though the styles part 
+		 * or a header/footer could have (since you can change those without 
+		 * changing the document), as could a comment/footnote or endnote - though 
+		 * just an edit, not add/delete). Given this, we don�t bother fetching PVL to
+		 * test those parts are uptodate (but we will refuse to transmit an update 
+		 * to them if they aren�t).
+		 * 
+		 * So we need a quick way to determine whether the document is uptodate.  
+		 * Since we just did getSkeletonDocument above, we'll use that.
+		 */
+		// */
+		// if (structuralTransformsPending)
+		// {
+		// worker.setProgress(0, "Please fetch remote updates, then try again.");
+		// return false;
+		// }
+
+		// OK, compare the inferredSkeleton to serverSkeleton
+		worker.setProgress(TransmitProgress.IDENTIFYING_STRUCTURAL_CHANGES, "Identifying structural changes in document");
+
+		createTransformsForStructuralChanges(transformsToSend, this.currentClientSkeleleton, serverSkeleton);
+
+		Boolean someTransmitted = false;
+		// Whether an sdt on the server is newer than the local version
+		Boolean someConflicted = false;
+
+		// Whether the local sdt contains tracked changes
+		// (which must be resolved before it can be transmitted)
+		Boolean someTrackedConflicts = false;
+
+		org.plutext.transforms.ObjectFactory transformsFactory = new org.plutext.transforms.ObjectFactory();
 
 		WordMLDocument wordMLDoc = getWordMLDocument();
-		DocumentElement root = (DocumentElement) wordMLDoc
-				.getDefaultRootElement();
+		DocumentElement root = (DocumentElement) wordMLDoc.getDefaultRootElement();
 
 		try {
-			worker.setProgress(
-					TransmitProgress.IDENTIFYING_UPDATED_TEXT, 
-        		"Identifying updated text");
-        
+			worker.setProgress(TransmitProgress.IDENTIFYING_UPDATED_TEXT, "Identifying updated text");
+
 			for (int idx = 0; idx < root.getElementCount(); idx++) {
 				DocumentElement elem = (DocumentElement) root.getElement(idx);
 				ElementML ml = elem.getElementML();
 				if (ml instanceof SdtBlockML) {
-					org.docx4j.wml.SdtBlock sdt = 
-						(org.docx4j.wml.SdtBlock) ml.getDocxObject();
+					org.docx4j.wml.SdtBlock sdt = (org.docx4j.wml.SdtBlock) ml.getDocxObject();
 					StateChunk chunkCurrent = new StateChunk(sdt);
 
 					// TODO
-//		            if (chunkCurrent.IsNew)
-//		            {
-//		                log.debug(chunkCurrent.getIdAsString() + " IsNew, so ignoring");
-//		                continue;
-//		            }					
-					
+					// if (chunkCurrent.IsNew)
+					// {
+					// log.debug(chunkCurrent.getIdAsString() + " IsNew, so ignoring");
+					// continue;
+					// }
+
 					String sdtId = chunkCurrent.getIdAsString();
 
 					StateChunk chunkOlder = stateDocx.getStateChunks().get(sdtId);
@@ -2492,7 +2255,7 @@ private void updateDocx4jPart(
 					if (chunkOlder == null) {
 						log.debug("Couldn't find " + sdtId + " .. Shouldn't happen!?");
 						continue;
-					
+
 					} else if (chunkCurrent.getXml().equals(chunkOlder.getXml())
 							|| chunkCurrent.getXml().equals(chunkOlder.getMarkedUpSdt())) {
 						continue;
@@ -2503,53 +2266,53 @@ private void updateDocx4jPart(
 					log.debug("");
 					log.debug("TO   " + chunkCurrent.getXml());
 					log.debug("");
-				
-                    // If we get this far, it is an update
-                    // However, we need to worry about the possibility that it has
-                    // changed remotely, since we HAVE NOT checked all updates
-                    // on server had been applied 
 
-                    // 2 possible approaches:
+					// If we get this far, it is an update
+					// However, we need to worry about the possibility that it has
+					// changed remotely, since we HAVE NOT checked all updates
+					// on server had been applied
 
-                    // 1: optimistic checkin, which the server is
-                    // supposed to reject [need to look at 409 conflict
-                    // bit again - workaround for case where version 
-                    // changed already in given changeset].  User 
-                    // then has to manually fetch updates.
+					// 2 possible approaches:
 
-                    // This was the approach until 2008 09 08
+					// 1: optimistic checkin, which the server is
+					// supposed to reject [need to look at 409 conflict
+					// bit again - workaround for case where version
+					// changed already in given changeset]. User
+					// then has to manually fetch updates.
 
-                    // 2:  we have the server skeleton document;
+					// This was the approach until 2008 09 08
+
+					// 2: we have the server skeleton document;
 					// That tells us whether the server
-                    // version is newer:
-                    // <ns3:rib ns3:version="2" ns3:id="1773260365">
-					Long localVersionNumber = Long.valueOf(chunkCurrent.getVersionAsLong() );
+					// version is newer:
+					// <ns3:rib ns3:version="2" ns3:id="1773260365">
+					Long localVersionNumber = Long.valueOf(chunkCurrent.getVersionAsLong());
 					if (serverSkeleton.getVersion(sdtId) == null) {
-                        // Shouldn't need to worry about the std not being
-                        // present in the skeleton, since:
-                        // 1. we don't get this far if the object has been 
-                        //    deleted on the server
-                        // 2. this loop has already exited for new objects on the client 
+						// Shouldn't need to worry about the std not being
+						// present in the skeleton, since:
+						// 1. we don't get this far if the object has been
+						// deleted on the server
+						// 2. this loop has already exited for new objects on the client
 
-                        // so this is an error.
+						// so this is an error.
 
-                        log.error("Couldn't find key " + sdtId);						
-                        
+						log.error("Couldn't find key " + sdtId);
+
 					} else if (localVersionNumber.longValue() < serverSkeleton.getVersion(sdtId).longValue()) {
-                        log.debug("Conflict (old local version) ! Local edit " + sdtId + " not committed.");
-                        someConflicted = true;
-                        continue;
+						log.debug("Conflict (old local version) ! Local edit " + sdtId + " not committed.");
+						someConflicted = true;
+						continue;
 					}
-					
-                    if ( chunkCurrent.containsTrackedChanges()) {
-                        // This is a conflicting update, so don't transmit ours.
-                        // Keep a copy of what this user did in StateChunk
-                        // (so that 
-                        log.debug("Unresolved tracked change! Local edit " + sdtId + " not committed.");
-                        someTrackedConflicts = true;
-                        continue;
-                    }
-			
+
+					if (chunkCurrent.containsTrackedChanges()) {
+						// This is a conflicting update, so don't transmit ours.
+						// Keep a copy of what this user did in StateChunk
+						// (so that
+						log.debug("Unresolved tracked change! Local edit " + sdtId + " not committed.");
+						someTrackedConflicts = true;
+						continue;
+					}
+
 					// TransformUpdate tu = new TransformUpdate();
 					// tu.attachSdt(chunkCurrent.getXml() );
 					// tu.setId( chunkCurrent.getId() );
@@ -2557,68 +2320,60 @@ private void updateDocx4jPart(
 
 					T t = transformsFactory.createTransformsT();
 					t.setOp("update");
-					t.setIdref(chunkCurrent.getIdAsLong() );
+					t.setIdref(chunkCurrent.getIdAsLong());
 					t.setSdt(chunkCurrent.getSdt());
 					transformsToSend.add(t);
 				}
 			}// for (idx) loop
-			
-	        // 2009 09 09: if any are conflicted, don't send, since rel integrity may
-	        // break if a conflicted sdt contains rels.  (A slight improvement in
-	        // usability would be to refuse, only if there are rels in the conflicted sdts)
-	        if (someConflicted || someTrackedConflicts)
-	        {
-	            
+
+			// 2009 09 09: if any are conflicted, don't send, since rel integrity may
+			// break if a conflicted sdt contains rels. (A slight improvement in
+			// usability would be to refuse, only if there are rels in the conflicted sdts)
+			if (someConflicted || someTrackedConflicts) {
+
 				if (someConflicted) {
-					String message = 
-						"Done - Conflict warning: Fetch updates then accept/reject changes before trying again.";
-					worker.setProgress(TransmitProgress.DONE, message);					
-				} else if (someTrackedConflicts) {
-					String message =
-						"Done - Conflict warning: Accept/Reject changes before trying again.";
+					String message = "Done - Conflict warning: Fetch updates then accept/reject changes before trying again.";
 					worker.setProgress(TransmitProgress.DONE, message);
-				} 
-	            
-	            return false;  // 2009 09 09 TODO: check we didn't irreversibly change local state
-	        }
+				} else if (someTrackedConflicts) {
+					String message = "Done - Conflict warning: Accept/Reject changes before trying again.";
+					worker.setProgress(TransmitProgress.DONE, message);
+				}
 
-	        // Has the final sectPr changed?
-	        T tSect = transformDocumentSectPr();
-	        if (tSect != null) { 
+				return false; // 2009 09 09 TODO: check we didn't irreversibly change local state
+			}
+
+			// Has the final sectPr changed?
+			T tSect = transformDocumentSectPr();
+			if (tSect != null) {
 				transformsToSend.add(tSect);
-	        }
+			}
 
-	        //bw.ReportProgress(5, "Inspecting styles");
-	        //transmitStyleUpdates(transformsToSend);
-			
+			// bw.ReportProgress(5, "Inspecting styles");
+			// transmitStyleUpdates(transformsToSend);
+
 			boolean otherUpdates = false;
-	        try {
-	        	otherUpdates = transmitOtherUpdates(); // TODO - move this, since its a separate ws call.			
+			try {
+				otherUpdates = transmitOtherUpdates(); // TODO - move this, since its a separate ws call.
 			} catch (Exception e1) {
 				log.error(e1.getMessage(), e1);
 				e1.printStackTrace();
 				throw e1;
 			}
-	    
+
 			if (transformsToSend.isEmpty()) {
-				
-	            if (otherUpdates)
-	            {
-	            	worker.setProgress(TransmitProgress.DONE, "Updates sent.");
-	            }
-	            else
-	            {
-	            	worker.setProgress(TransmitProgress.DONE, "Nothing to send.");
-	            }
-	            return true;
-				
+
+				if (otherUpdates) {
+					worker.setProgress(TransmitProgress.DONE, "Updates sent.");
+				} else {
+					worker.setProgress(TransmitProgress.DONE, "Nothing to send.");
+				}
+				return true;
+
 			}
-	    
+
 			String checkinComment = null;
 			if (stateDocx.getPromptForCheckinMessage()) {
-				java.awt.Frame frame = 
-					(java.awt.Frame)
-        				SwingUtilities.getWindowAncestor(getWordMLTextPane());
+				java.awt.Frame frame = (java.awt.Frame) SwingUtilities.getWindowAncestor(getWordMLTextPane());
 				CheckinCommentDialog d = new CheckinCommentDialog(frame);
 				d.pack();
 				d.setLocationRelativeTo(frame);
@@ -2630,63 +2385,51 @@ private void updateDocx4jPart(
 			}
 
 			// Ok, now send what we have
-			worker.setProgress(
-            	TransmitProgress.TRANSMITTING_MESSAGE, 
-            	"Preparing and transmitting message");
-            
+			worker.setProgress(TransmitProgress.TRANSMITTING_MESSAGE, "Preparing and transmitting message");
+
 			Transforms transforms = transformsFactory.createTransforms();
 			transforms.getT().addAll(transformsToSend);
 			boolean suppressDeclaration = true;
 			boolean prettyprint = false;
-			
-    		//JAXBContext jcTransforms = JAXBContext.newInstance("org.plutext.transforms");
-			
-			String transformsString = 
-				org.docx4j.XmlUtils.marshaltoString(
-					transforms, 
-					suppressDeclaration, 
-					prettyprint,
+
+			// JAXBContext jcTransforms = JAXBContext.newInstance("org.plutext.transforms");
+
+			String transformsString = org.docx4j.XmlUtils.marshaltoString(transforms, suppressDeclaration, prettyprint,
 					Context.jcTransforms);
 
 			log.debug("TRANSMITTING " + transformsString);
 
-			String[] result = 
-				ws.transform(
-					stateDocx.getDocID(), 
-					transformsString,
-					checkinComment);
+			String[] result = ws.transform(stateDocx.getDocID(), transformsString, checkinComment);
 
-			worker.setProgress(
-				TransmitProgress.INTERPRETING_TRANSMISSION_RESULT, 
-        		"Response received. Interpreting...");
-        
+			worker.setProgress(TransmitProgress.INTERPRETING_TRANSMISSION_RESULT, "Response received. Interpreting...");
+
 			log.debug("Checkin also returned results");
 
-	        /* Design choice:
-	         * 
-	         * Either you chunk locally, in which case, you don't have to apply
-	         * transforms which are local in origin, 
-	         * 
-	         * .. or you leave it to the 
-	         * server to do the chunking, in which case you do have to apply
-	         * the resulting transforms.
-	         * 
-	         * You have to do one or the other to apply the changes immediately,
-	         * so there is no issue with the user making changes before it
-	         * is applied, and those changes getting lost
-	         * 
-	         * I've opted to chunk locally.  
-	         * 
-	         * If one was to leave it to the server to do the chunking, then
-	         * apply the resulting transforms, you'd have to make sure you
-	         * had the corresponding server skeleton doc, so any insertions 
-	         * were in the correct place.
-	         * 
-	         */
-	        // In strict theory, we shouldn't do this, because they'll end 
-	        // up in the list in the wrong order.
-	        // But we actually know there are no conflicting transforms with
-	        // lower snums, so it isn't a problem.
+			/* Design choice:
+			 * 
+			 * Either you chunk locally, in which case, you don't have to apply
+			 * transforms which are local in origin, 
+			 * 
+			 * .. or you leave it to the 
+			 * server to do the chunking, in which case you do have to apply
+			 * the resulting transforms.
+			 * 
+			 * You have to do one or the other to apply the changes immediately,
+			 * so there is no issue with the user making changes before it
+			 * is applied, and those changes getting lost
+			 * 
+			 * I've opted to chunk locally.  
+			 * 
+			 * If one was to leave it to the server to do the chunking, then
+			 * apply the resulting transforms, you'd have to make sure you
+			 * had the corresponding server skeleton doc, so any insertions 
+			 * were in the correct place.
+			 * 
+			 */
+			// In strict theory, we shouldn't do this, because they'll end
+			// up in the list in the wrong order.
+			// But we actually know there are no conflicting transforms with
+			// lower snums, so it isn't a problem.
 			Boolean appliedTrue = true;
 			Boolean localTrue = true; // means it wouldn't be treated as a conflict
 			Boolean updateHighestFetchedFalse = false;
@@ -2707,7 +2450,7 @@ private void updateDocx4jPart(
 				 * server while this method was running, and we wouldn't want to
 				 * miss those changes.
 				 */
-			
+
 				if (result[i].contains("xmlns")) {
 					StringBuffer sb = new StringBuffer();
 					sb.append("<p:transforms xmlns:p='");
@@ -2720,33 +2463,26 @@ private void updateDocx4jPart(
 					// = ta.getTag();
 					org.plutext.transforms.Transforms transformsObj = null;
 					try {
-						Unmarshaller u = 
-							Context.jcTransforms.createUnmarshaller();
-						u.setEventHandler(
-							new org.docx4j.jaxb.JaxbValidationEventHandler());
-						transformsObj = 
-							(org.plutext.transforms.Transforms) 
-							u.unmarshal(new java.io.StringReader(sb.toString()));
+						Unmarshaller u = Context.jcTransforms.createUnmarshaller();
+						u.setEventHandler(new org.docx4j.jaxb.JaxbValidationEventHandler());
+						transformsObj = (org.plutext.transforms.Transforms) u.unmarshal(new java.io.StringReader(sb.toString()));
 					} catch (JAXBException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 
 					for (T tmp : transformsObj.getT()) {
-						TransformAbstract ta = TransformHelper.construct(tmp);
+						TransformAbstract ta = TransformHelper.construct(tmp, getWordMLDocument().getElementMLFactory());
 						if (ta instanceof TransformUpdate) {
 							// Set the in-document tag to match the one we got back
 							// ?? the actual sdt or the state chunk?
-							
-			                // Set the in-document tag to match the one we got back 
-			                // unless its just the sectPr
-			                if (!ta.getPlutextId().equals(SECTPR_MAGIC_ID))
-			                {							
+
+							// Set the in-document tag to match the one we got back
+							// unless its just the sectPr
+							if (!ta.getPlutextId().equals(SECTPR_MAGIC_ID)) {
 								updateLocalContentControlTag(ta.getPlutextId(), ta.getTag());
-								this.stateDocx.getStateChunks().put(
-									ta.getPlutextId(),
-									new StateChunk(ta.getSdt()));
-			                }
+								this.stateDocx.getStateChunks().put(ta.getPlutextId(), new StateChunk(ta.getSdt()));
+							}
 						} else {
 							// Assumption is that chunking is done locally,
 							// and we won't get eg an Insert back
@@ -2754,15 +2490,13 @@ private void updateDocx4jPart(
 						}
 					}
 
-					registerTransforms(transformsObj, appliedTrue, localTrue,
-						updateHighestFetchedFalse);
+					registerTransforms(transformsObj, appliedTrue, localTrue, updateHighestFetchedFalse);
 
 				} else if (Integer.parseInt(result[i]) > 0) {
-					TransformAbstract ta = 
-						org.plutext.client.wrappedTransforms.TransformHelper.construct(t);
+					TransformAbstract ta = org.plutext.client.wrappedTransforms.TransformHelper.construct(t, getWordMLDocument()
+							.getElementMLFactory());
 					ta.setSequenceNumber(Integer.parseInt(result[i]));
-					registerTransform(ta, appliedTrue, localTrue,
-						updateHighestFetchedFalse);
+					registerTransform(ta, appliedTrue, localTrue, updateHighestFetchedFalse);
 				} else {
 					// If result was 0, the server has decided
 					// this transform is redundant, and thus discarded
@@ -2774,88 +2508,76 @@ private void updateDocx4jPart(
 
 				i++;
 			}
-			
+
 			someTransmitted = true;
-			
+
 		} catch (Exception exc) {
 			exc.printStackTrace();
 			someTransmitted = false;
 		}
-		
+
 		boolean success = false;
-        String checkinResult = null;
-        
-        if (someConflicted) {
-        	checkinResult = 
-        		"Done - Conflict warning: Fetch updates then accept/reject changes before trying again.";
-        	
-        } else if (someTrackedConflicts) {
-        	checkinResult =
-        		"Done - Conflict warning: Accept/Reject changes before trying again."; 
-        	
-        } else if (someTransmitted) {
-        	checkinResult =
-        		"Done - Your changes were transmitted successfully.";
-        	success = true;
-        	
-        } else {
-        	checkinResult = "Your changes were NOT transmitted.";
-        }
-    	
-        worker.setProgress(TransmitProgress.DONE, checkinResult);
-    	return success;
+		String checkinResult = null;
+
+		if (someConflicted) {
+			checkinResult = "Done - Conflict warning: Fetch updates then accept/reject changes before trying again.";
+
+		} else if (someTrackedConflicts) {
+			checkinResult = "Done - Conflict warning: Accept/Reject changes before trying again.";
+
+		} else if (someTransmitted) {
+			checkinResult = "Done - Your changes were transmitted successfully.";
+			success = true;
+
+		} else {
+			checkinResult = "Your changes were NOT transmitted.";
+		}
+
+		worker.setProgress(TransmitProgress.DONE, checkinResult);
+		return success;
 	}
 
-    public static String SECTPR_MAGIC_ID = "9999";
-    final static String PLUTEXT_ID     ="p:id"; 
-    final static String PLUTEXT_VERSION="p:v"; 
+	public static String SECTPR_MAGIC_ID = "9999";
+	final static String PLUTEXT_ID = "p:id";
+	final static String PLUTEXT_VERSION = "p:v";
 
-    T transformDocumentSectPr()
-    {
-        // Get current sectPr
- 		DocumentElement root = (DocumentElement) getWordMLDocument().getDefaultRootElement();    			
- 		WordprocessingMLPackage wmlp = 
-    		((DocumentML) root.getElementML()).getWordprocessingMLPackage();
-        String sectPrString = Util.extractDocumentSectPr(wmlp);
+	T transformDocumentSectPr() {
+		// Get current sectPr
+		DocumentElement root = (DocumentElement) getWordMLDocument().getDefaultRootElement();
+		WordprocessingMLPackage wmlp = ((DocumentML) root.getElementML()).getWordprocessingMLPackage();
+		String sectPrString = Util.extractDocumentSectPr(wmlp);
 
-        // Is it the same as stateDocx copy?
-        // If so, return null
-        if (sectPrString.equals(stateDocx.getSectPr()))
-        {
-            log.debug("sectPr: No changes detected.");
-            return null;
-        }
+		// Is it the same as stateDocx copy?
+		// If so, return null
+		if (sectPrString.equals(stateDocx.getSectPr())) {
+			log.debug("sectPr: No changes detected.");
+			return null;
+		}
 
-        // Otherwise, wrap it in an sdt with magic id,
-        String sdtStr = "<w:sdt xmlns:w=\"" + Namespaces.WORDML_NAMESPACE + "\">" 
-     	+"<w:sdtPr><w:id w:val=\"" + SECTPR_MAGIC_ID + "\"/>"   
-     	+"<w:tag w:val=\"" + PLUTEXT_ID + "=" + SECTPR_MAGIC_ID + "&amp;" + PLUTEXT_VERSION + "=0\"/>" 
-     	+"</w:sdtPr>"
-        + "<w:sdtContent><w:p><w:pPr>"+ sectPrString + "</w:pPr></w:p></w:sdtContent>" 
-     	+ "</w:sdt>"; 
+		// Otherwise, wrap it in an sdt with magic id,
+		String sdtStr = "<w:sdt xmlns:w=\"" + Namespaces.WORDML_NAMESPACE + "\">" + "<w:sdtPr><w:id w:val=\"" + SECTPR_MAGIC_ID + "\"/>"
+				+ "<w:tag w:val=\"" + PLUTEXT_ID + "=" + SECTPR_MAGIC_ID + "&amp;" + PLUTEXT_VERSION + "=0\"/>" + "</w:sdtPr>"
+				+ "<w:sdtContent><w:p><w:pPr>" + sectPrString + "</w:pPr></w:p></w:sdtContent>" + "</w:sdt>";
 
-        org.docx4j.wml.SdtBlock sdt=null;
+		org.docx4j.wml.SdtBlock sdt = null;
 		try {
-			sdt = (org.docx4j.wml.SdtBlock)org.docx4j.XmlUtils.unmarshalString(sdtStr);
+			sdt = (org.docx4j.wml.SdtBlock) org.docx4j.XmlUtils.unmarshalString(sdtStr);
 		} catch (JAXBException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-        // and create a transform 
-        
-		org.plutext.transforms.ObjectFactory transformsFactory = 
-			new org.plutext.transforms.ObjectFactory();        
+		// and create a transform
+
+		org.plutext.transforms.ObjectFactory transformsFactory = new org.plutext.transforms.ObjectFactory();
 		T t = transformsFactory.createTransformsT();
 		t.setOp("update");
-		t.setIdref( Long.parseLong(SECTPR_MAGIC_ID)  );
+		t.setIdref(Long.parseLong(SECTPR_MAGIC_ID));
 		t.setSdt(sdt);
 		return t;
-        
 
-    }
-    
-    
+	}
+
 	/**
 	 * Transmit changes to 2nd and 3rd class parts
 	 * 
@@ -2865,11 +2587,9 @@ private void updateDocx4jPart(
 		log.debug("In transmitOtherUpdates");
 		boolean stuffTransmitted = false;
 
-		HashMap<String, org.plutext.client.partWrapper.Part> knownParts = stateDocx
-				.getParts();
+		HashMap<String, org.plutext.client.partWrapper.Part> knownParts = stateDocx.getParts();
 
-		HashMap<String, org.plutext.client.partWrapper.Part> discoveredParts = Util
-				.extractParts(getWordMLDocument());
+		HashMap<String, org.plutext.client.partWrapper.Part> discoveredParts = Util.extractParts(getWordMLDocument());
 		// See PartVersionList.relevant for definition of parts we update;
 
 		Map.Entry pairs;
@@ -2898,17 +2618,14 @@ private void updateDocx4jPart(
 			if (discoveredPart == null) {
 				{
 					// This part has been deleted
-					log
-							.warn(knownPart.getName()
-									+ " no longer present locally; delete it on server?");
+					log.warn(knownPart.getName() + " no longer present locally; delete it on server?");
 					// TODO removePart(PartName)
 				}
 			}
 		}
-		
+
 		// INSERTED/UPDATED parts
-		Iterator discoveredPartsIterator = discoveredParts.entrySet()
-				.iterator();
+		Iterator discoveredPartsIterator = discoveredParts.entrySet().iterator();
 		while (discoveredPartsIterator.hasNext()) {
 			pairs = (Map.Entry) discoveredPartsIterator.next();
 
@@ -2918,8 +2635,7 @@ private void updateDocx4jPart(
 			}
 			// foreach (KeyValuePair<String, Part> kvp in discoveredParts)
 			// {
-			discoveredPart = (org.plutext.client.partWrapper.Part) pairs
-					.getValue();
+			discoveredPart = (org.plutext.client.partWrapper.Part) pairs.getValue();
 			log.error("Considering " + discoveredPart.getName());
 			// do we know about it?
 			knownPart = knownParts.get(discoveredPart.getName());
@@ -2927,10 +2643,8 @@ private void updateDocx4jPart(
 			if (knownPart == null) {
 
 				// This must be a new part, so version is 0.
-				String resultingVersion = ws.injectPart(stateDocx.getDocID(),
-						discoveredPart.getName(), "0", discoveredPart
-								.getContentType(), discoveredPart
-								.getUnwrappedXml());
+				String resultingVersion = ws.injectPart(stateDocx.getDocID(), discoveredPart.getName(), "0",
+						discoveredPart.getContentType(), discoveredPart.getUnwrappedXml());
 				stuffTransmitted = true;
 
 				// expect that to be 1? well, no: the first version on the
@@ -2938,14 +2652,12 @@ private void updateDocx4jPart(
 				if (!resultingVersion.equals("0")) {
 					log.error("expected this be to version 0 ?!");
 				}
-				stateDocx.getPartVersionList().setVersion(
-						discoveredPart.getName(), resultingVersion);
+				stateDocx.getPartVersionList().setVersion(discoveredPart.getName(), resultingVersion);
 
 				// and update our record of the part in StateDocx
 				// (since any change from this new baseline is something we
 				// will want to transmit)
-				stateDocx.getParts().put(discoveredPart.getName(),
-						discoveredPart);
+				stateDocx.getParts().put(discoveredPart.getName(), discoveredPart);
 
 				// note that _rels of this which is a target will get
 				// handled
@@ -2976,8 +2688,7 @@ private void updateDocx4jPart(
 					// version
 					// number.
 
-					String localVersion = stateDocx.getPartVersionList()
-							.getVersion(discoveredPart.getName());
+					String localVersion = stateDocx.getPartVersionList().getVersion(discoveredPart.getName());
 
 					/*
 					 * NB: We don't test
@@ -3005,13 +2716,10 @@ private void updateDocx4jPart(
 					// log.Debug("Transmitting updated " +
 					// discoveredPart.Name + ": " +
 					// discoveredPart.UnwrappedXml);
-					String resultingVersion = ws.injectPart(stateDocx
-							.getDocID(), discoveredPart.getName(),
-							localVersion, discoveredPart.getContentType(),
-							discoveredPart.getUnwrappedXml());
+					String resultingVersion = ws.injectPart(stateDocx.getDocID(), discoveredPart.getName(), localVersion,
+							discoveredPart.getContentType(), discoveredPart.getUnwrappedXml());
 					stuffTransmitted = true;
-					stateDocx.getPartVersionList().setVersion(
-							discoveredPart.getName(), resultingVersion);
+					stateDocx.getPartVersionList().setVersion(discoveredPart.getName(), resultingVersion);
 
 					// and update our record of the part in StateDocx
 					// (since any change from this new baseline is something
@@ -3022,23 +2730,17 @@ private void updateDocx4jPart(
 			}
 
 		}
-		
-	    // SPECIAL CASE:  theme
-	    // .. not required in docx4all code.		
-		
-		
+
+		// SPECIAL CASE: theme
+		// .. not required in docx4all code.
+
 		return stuffTransmitted;
 
 	}
-    
-    
-	void createTransformsForStructuralChanges(
-		List<T> transformsToSend,
-		Skeleton inferredSkeleton, 
-		Skeleton serverSkeleton) {
-		
-		org.plutext.transforms.ObjectFactory transformsFactory 
-			= new org.plutext.transforms.ObjectFactory();
+
+	void createTransformsForStructuralChanges(List<T> transformsToSend, Skeleton inferredSkeleton, Skeleton serverSkeleton) {
+
+		org.plutext.transforms.ObjectFactory transformsFactory = new org.plutext.transforms.ObjectFactory();
 
 		DiffEngine de = new DiffEngine();
 		de.processDiff(inferredSkeleton, serverSkeleton);
@@ -3066,14 +2768,9 @@ private void updateDocx4jPart(
 				for (i = 0; i < drs.getLength(); i++) {
 					insertPos++;
 					// Must be a new local insertion
-					log.debug(insertPos
-							+ ": "
-							+ ((TextLine) inferredSkeleton.getByIndex(drs
-									.getSourceIndex()
-									+ i)).getLine()
+					log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine()
 							+ " not at this location in dest");
-					String insertionId = ((TextLine) inferredSkeleton
-							.getByIndex(drs.getSourceIndex() + i)).getLine();
+					String insertionId = ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine();
 					notHereInDest.put(insertionId, insertPos);
 				}
 
@@ -3081,15 +2778,8 @@ private void updateDocx4jPart(
 			case NOCHANGE:
 				for (i = 0; i < drs.getLength(); i++) {
 					insertPos++;
-					log.debug(insertPos
-							+ ": "
-							+ ((TextLine) inferredSkeleton.getByIndex(drs
-									.getSourceIndex()
-									+ i)).getLine()
-							+ "\t"
-							+ ((TextLine) serverSkeleton.getByIndex(drs
-									.getDestIndex()
-									+ i)).getLine() + " (no change)");
+					log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine() + "\t"
+							+ ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine() + " (no change)");
 
 					// Nothing to do
 				}
@@ -3098,14 +2788,9 @@ private void updateDocx4jPart(
 			case ADD_DESTINATION:
 				for (i = 0; i < drs.getLength(); i++) {
 					// insertPos++; // Not for a delete
-					log.debug(insertPos
-							+ ": "
-							+ ((TextLine) serverSkeleton.getByIndex(drs
-									.getDestIndex()
-									+ i)).getLine()
+					log.debug(insertPos + ": " + ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine()
 							+ " not at this location in source");
-					String deletionId = ((TextLine) serverSkeleton
-							.getByIndex(drs.getDestIndex() + i)).getLine();
+					String deletionId = ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine();
 					notHereInSource.put(deletionId, insertPos);
 
 				}
@@ -3124,13 +2809,8 @@ private void updateDocx4jPart(
 			switch (drs.getDiffResultSpanStatus()) {
 			case DELETE_SOURCE: // Means we're doing an insertion
 				for (i = 0; i < drs.getLength(); i++) {
-					String insertionId = ((TextLine) inferredSkeleton
-							.getByIndex(drs.getSourceIndex() + i)).getLine();
-					log
-							.debug(insertPos
-									+ ": "
-									+ insertionId
-									+ " is at this location in src but not dest, so needs to be inserted");
+					String insertionId = ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine();
+					log.debug(insertPos + ": " + insertionId + " is at this location in src but not dest, so needs to be inserted");
 
 					Integer dicVal = notHereInSource.get(insertionId);
 
@@ -3138,10 +2818,8 @@ private void updateDocx4jPart(
 
 						// Just a new local insertion
 
-						long adjPos = divergences
-								.getTargetLocation(insertionId);
-						log.debug("Couldn't find " + insertionId
-								+ " so inserting at " + adjPos);
+						long adjPos = divergences.getTargetLocation(insertionId);
+						log.debug("Couldn't find " + insertionId + " so inserting at " + adjPos);
 
 						divergences.insert(insertionId); // change +1 to 0
 
@@ -3149,12 +2827,12 @@ private void updateDocx4jPart(
 
 						WordMLDocument doc = getWordMLDocument();
 						StateChunk sc = Util.getStateChunk(doc, insertionId);
-						//Mediator.cs needs to call sc.setNew(true)
-						//because when pasting MS-Word UI preserves 
-						//pre-existing tag value and Mediator.cs has
-						//to create a 'new' StateChunk whose tag value is 0 (zero)
-						//sc.setNew(true);
-						
+						// Mediator.cs needs to call sc.setNew(true)
+						// because when pasting MS-Word UI preserves
+						// pre-existing tag value and Mediator.cs has
+						// to create a 'new' StateChunk whose tag value is 0 (zero)
+						// sc.setNew(true);
+
 						// TransformInsert ti = new TransformInsert();
 						// ti.setPos( Integer.toString(adjPos) );
 						// ti.setId( sc.getId() );
@@ -3164,12 +2842,11 @@ private void updateDocx4jPart(
 						T t = transformsFactory.createTransformsT();
 						t.setOp("insert");
 						t.setPosition(adjPos);
-						t.setIdref(sc.getIdAsLong() );
+						t.setIdref(sc.getIdAsLong());
 						t.setSdt(sc.getSdt());
 						transformsToSend.add(t);
 
-						this.stateDocx.getStateChunks().put(sc.getIdAsString(),
-								sc);
+						this.stateDocx.getStateChunks().put(sc.getIdAsString(), sc);
 
 						log.debug("text Inserted:");
 						log.debug("TO   " + sc.getXml());
@@ -3213,18 +2890,15 @@ private void updateDocx4jPart(
 						// delete first (update divergences object)
 						divergences.delete(insertionId); // remove -1
 
-						long adjPos = divergences
-								.getTargetLocation(insertionId);
+						long adjPos = divergences.getTargetLocation(insertionId);
 
-						log.debug("<transform op=move id=" + insertionId
-								+ "  pos=" + adjPos);
+						log.debug("<transform op=move id=" + insertionId + "  pos=" + adjPos);
 
 						divergences.insert(insertionId); // change +1 to 0
 
 						divergences.debugInferred();
 
-						log.debug("<transform op=move id=" + insertionId
-								+ "  pos=" + adjPos);
+						log.debug("<transform op=move id=" + insertionId + "  pos=" + adjPos);
 
 						WordMLDocument doc = getWordMLDocument();
 						StateChunk sc = Util.getStateChunk(doc, insertionId);
@@ -3238,7 +2912,7 @@ private void updateDocx4jPart(
 						T t = transformsFactory.createTransformsT();
 						t.setOp("move");
 						t.setPosition(adjPos);
-						t.setIdref(sc.getIdAsLong() );
+						t.setIdref(sc.getIdAsLong());
 						// t.setSdt( sc.getSdt() );
 						transformsToSend.add(t);
 
@@ -3259,36 +2933,23 @@ private void updateDocx4jPart(
 			case NOCHANGE:
 				for (i = 0; i < drs.getLength(); i++) {
 
-					log.debug(insertPos
-							+ ": "
-							+ ((TextLine) inferredSkeleton.getByIndex(drs
-									.getSourceIndex()
-									+ i)).getLine()
-							+ "\t"
-							+ ((TextLine) serverSkeleton.getByIndex(drs
-									.getDestIndex()
-									+ i)).getLine() + " (no change)");
+					log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine() + "\t"
+							+ ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine() + " (no change)");
 
 				}
 
 				break;
 			case ADD_DESTINATION:
 				for (i = 0; i < drs.getLength(); i++) {
-					String deletionId = ((TextLine) serverSkeleton
-							.getByIndex(drs.getDestIndex() + i)).getLine();
-					log
-							.debug(insertPos
-									+ ": "
-									+ deletionId
-									+ " present at this location in dest but not source, so needs to be deleted");
+					String deletionId = ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine();
+					log.debug(insertPos + ": " + deletionId + " present at this location in dest but not source, so needs to be deleted");
 
 					Integer dicVal = notHereInDest.get(deletionId);
 
 					if (dicVal == null) {
 						// Just a new local deletion
 
-						log.debug("Couldn't find " + deletionId
-								+ " so deleting");
+						log.debug("Couldn't find " + deletionId + " so deleting");
 						divergences.delete(deletionId);
 
 						divergences.debugInferred();
@@ -3309,8 +2970,7 @@ private void updateDocx4jPart(
 					} else {
 						// there is a corresponding insert, so this is really a
 						// move
-						log.debug("   " + deletionId
-								+ " is a MOVE to elsewhere (" + dicVal + ")");
+						log.debug("   " + deletionId + " is a MOVE to elsewhere (" + dicVal + ")");
 						// DO NOTHING
 					}
 				}
@@ -3319,8 +2979,6 @@ private void updateDocx4jPart(
 			}
 		}
 	}
-	
-	
 
 	void transmitStyleUpdates() throws RemoteException {
 		log.debug(stateDocx.getDocID() + ".. .. transmitStyleUpdates");
@@ -3356,68 +3014,64 @@ private void updateDocx4jPart(
 	 * **************************************************************************************** */
 	public WordprocessingMLPackage getVersionHistory(String sdtId) throws RemoteException {
 		WordprocessingMLPackage theHistory = null;
-		
+
 		String historyString = ws.reportVersionHistory(this.stateDocx.getDocID(), sdtId);
 		log.debug("getVersionHistory(): historyString = " + historyString);
-		
+
 		try {
 			JAXBContext jc = org.docx4j.jaxb.Context.jcXmlPackage;
 
 			Unmarshaller u = jc.createUnmarshaller();
-						
+
 			u.setEventHandler(new org.docx4j.jaxb.JaxbValidationEventHandler());
 
 			StreamSource src = new StreamSource(new StringReader(historyString));
-			Object o = u.unmarshal(src); 
-			org.docx4j.xmlPackage.Package xmlPackage 
-				= (org.docx4j.xmlPackage.Package)((JAXBElement<?>)o).getValue();
-					
-			org.docx4j.convert.in.FlatOpcXmlImporter inWorker = 
-				new org.docx4j.convert.in.FlatOpcXmlImporter(xmlPackage);
-			
+			Object o = u.unmarshal(src);
+			org.docx4j.xmlPackage.Package xmlPackage = (org.docx4j.xmlPackage.Package) ((JAXBElement<?>) o).getValue();
+
+			org.docx4j.convert.in.FlatOpcXmlImporter inWorker = new org.docx4j.convert.in.FlatOpcXmlImporter(xmlPackage);
+
 			theHistory = (WordprocessingMLPackage) inWorker.get();
-			
+
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		
+
 		return theHistory;
-    }
+	}
 
 	/* ****************************************************************************************
 	 *          REPORT RECENT CHANGES
 	 * **************************************************************************************** */
 	public WordprocessingMLPackage getRecentChangesReport() throws RemoteException {
 		WordprocessingMLPackage theReport = null;
-		
+
 		String reportString = ws.reportRecentChanges(this.stateDocx.getDocID());
-	    log.debug("Recent changes: " + reportString);
-	    
+		log.debug("Recent changes: " + reportString);
+
 		try {
 			JAXBContext jc = org.docx4j.jaxb.Context.jcXmlPackage;
 
 			Unmarshaller u = jc.createUnmarshaller();
-						
+
 			u.setEventHandler(new org.docx4j.jaxb.JaxbValidationEventHandler());
 
 			StreamSource src = new StreamSource(new StringReader(reportString));
-			Object o = u.unmarshal(src); 
-			org.docx4j.xmlPackage.Package xmlPackage 
-				= (org.docx4j.xmlPackage.Package)((JAXBElement<?>)o).getValue();
-					
-			org.docx4j.convert.in.FlatOpcXmlImporter inWorker = 
-				new org.docx4j.convert.in.FlatOpcXmlImporter(xmlPackage);
-			
+			Object o = u.unmarshal(src);
+			org.docx4j.xmlPackage.Package xmlPackage = (org.docx4j.xmlPackage.Package) ((JAXBElement<?>) o).getValue();
+
+			org.docx4j.convert.in.FlatOpcXmlImporter inWorker = new org.docx4j.convert.in.FlatOpcXmlImporter(xmlPackage);
+
 			theReport = (WordprocessingMLPackage) inWorker.get();
-			theReport = XmlUtil.export(theReport);
-			
+			theReport = XmlUtil.export(theReport, getWordMLDocument().getElementMLFactory().getObjectFactory());
+
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		
+
 		return theReport;
 	}
-	
+
 	private void updateLocalContentControlTag(String sdtId, Tag tag) {
 		WordMLDocument doc = getWordMLDocument();
 		DocumentElement elem = Util.getDocumentElement(doc, sdtId);
@@ -3430,7 +3084,7 @@ private void updateDocx4jPart(
 	}
 
 	private void refreshLocalDocument() {
-    	WordMLDocument doc = getWordMLDocument();
+		WordMLDocument doc = getWordMLDocument();
 		int start = getUpdateStartOffset();
 		int end = getUpdateEndOffset();
 		if (start <= end) {
@@ -3439,55 +3093,51 @@ private void updateDocx4jPart(
 			setUpdateEndOffset(0);
 		}
 	}
-	
+
 	private boolean isUndead(String sdtId) {
 		return sdtIdUndead.containsKey(sdtId);
 	}
-	
+
 	private static final java.util.Random RANDOM = new java.util.Random();
-	
-    public static final String generateId() {
-    	java.math.BigInteger id =
-    		java.math.BigInteger.valueOf(Math.abs(RANDOM.nextInt()));
-    	return id.toString();
-    }
-	
+
+	public static final String generateId() {
+		java.math.BigInteger id = java.math.BigInteger.valueOf(Math.abs(RANDOM.nextInt()));
+		return id.toString();
+	}
+
 	public static boolean isDeletedPermanently(Mediator mediator, String sdtId, String textContents) {
 		if (!mediator.isUndead(sdtId)) {
-            // This is not a candidate for removal
-            return false;
-        }
+			// This is not a candidate for removal
+			return false;
+		}
 
-        // Remove it, if the w:del changes have been 
-        // accepted (ie the sdt contains only whitespace)
-        // So far, we can look at the text contents, but
-        // we don't know whether they are in a normal run,
-        // or a w:del (or w:ins) element
-        if (textContents.trim().length() == 0)
-        {
-            log.debug("Extension detected only whitespace in : " + sdtId);
-            return true;
-        }
+		// Remove it, if the w:del changes have been
+		// accepted (ie the sdt contains only whitespace)
+		// So far, we can look at the text contents, but
+		// we don't know whether they are in a normal run,
+		// or a w:del (or w:ins) element
+		if (textContents.trim().length() == 0) {
+			log.debug("Extension detected only whitespace in : " + sdtId);
+			return true;
+		}
 
-        return false;
+		return false;
 	}
-	
+
 	/**
-	 * NB At present, docx4all has no notion of sectPr at the ML level,
-	 * so this operates solely at the docx4j level.
+	 * NB At present, docx4all has no notion of sectPr at the ML level, so this operates solely at the docx4j level.
+	 * 
 	 * @param foreignSectPr
 	 */
-	public void replaceDocumentSectPr(org.docx4j.wml.SectPr foreignSectPr ) {
-		
-		WordMLDocument doc = 
-			(WordMLDocument)getWordMLTextPane().getDocument();
- 		DocumentElement root = (DocumentElement) doc.getDefaultRootElement();    			
- 		WordprocessingMLPackage wmlp = 
-    		((DocumentML) root.getElementML()).getWordprocessingMLPackage();
- 		
- 		wmlp.getMainDocumentPart().getJaxbElement().getBody().setSectPr(foreignSectPr);
-		
+	public void replaceDocumentSectPr(org.docx4j.wml.SectPr foreignSectPr) {
+
+		WordMLDocument doc = getWordMLTextPane().getDocument();
+		DocumentElement root = (DocumentElement) doc.getDefaultRootElement();
+		WordprocessingMLPackage wmlp = ((DocumentML) root.getElementML()).getWordprocessingMLPackage();
+
+		wmlp.getMainDocumentPart().getJaxbElement().getBody().setSectPr(foreignSectPr);
+
 	}
-	
+
 }// Mediator class
 

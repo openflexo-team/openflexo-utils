@@ -29,7 +29,6 @@ import org.docx4all.util.DocUtil;
 import org.docx4all.xml.ElementML;
 import org.docx4all.xml.HyperlinkML;
 import org.docx4all.xml.ImpliedContainerML;
-import org.docx4all.xml.ObjectFactory;
 import org.docx4all.xml.ParagraphML;
 import org.docx4all.xml.RunContentML;
 import org.docx4all.xml.RunDelML;
@@ -37,13 +36,13 @@ import org.docx4all.xml.RunInsML;
 import org.docx4all.xml.RunML;
 
 /**
- *	@author Jojada Tirtowidjojo - 17/01/2008
+ * @author Jojada Tirtowidjojo - 17/01/2008
  */
 public class WordMLFragment implements Cloneable {
 
 	private ElementMLRecord[] records;
 	private String text;
-	
+
 	public WordMLFragment(TextSelector ts) {
 		List<ElementMLRecord> list = ts.getElementMLRecords();
 		if (!list.isEmpty()) {
@@ -52,28 +51,23 @@ public class WordMLFragment implements Cloneable {
 		}
 		this.text = ts.getText();
 	}
-	
-	public WordMLFragment(String text) {
+
+	public WordMLFragment(String text, WordMLDocument doc) {
 		this.text = text;
 		String[] sarray = text.split(Constants.NEWLINE, -1);
 		if (sarray.length == 1) {
 			this.records = new ElementMLRecord[1];
-			RunContentML rcml = 
-				new RunContentML(ObjectFactory.createT(sarray[0]));
-			this.records[0] = 
-				new ElementMLRecord(rcml, true);
+			RunContentML rcml = new RunContentML(doc.getElementMLFactory().getObjectFactory().createT(sarray[0]), doc.getElementMLFactory());
+			this.records[0] = new ElementMLRecord(rcml, true);
 		} else {
 			List<ElementMLRecord> list = new ArrayList<ElementMLRecord>();
-			for (int i=0; i < sarray.length; i++) {
-				if (i == sarray.length - 1 
-					&& sarray[i].length() == 0) {
+			for (int i = 0; i < sarray.length; i++) {
+				if (i == sarray.length - 1 && sarray[i].length() == 0) {
 					;// ignore
 				} else {
 					String s = (sarray[i].length() == 0) ? null : sarray[i];
-					ParagraphML para = 
-						new ParagraphML(ObjectFactory.createP(s));
-					boolean isFragmented =
-						(s != null) && (i == sarray.length - 1);
+					ParagraphML para = new ParagraphML(doc.getElementMLFactory().getObjectFactory().createP(s), doc.getElementMLFactory());
+					boolean isFragmented = (s != null) && (i == sarray.length - 1);
 					list.add(new ElementMLRecord(para, isFragmented));
 				}
 			}
@@ -81,156 +75,130 @@ public class WordMLFragment implements Cloneable {
 			list.toArray(this.records);
 		}
 	}
-	
-	public WordMLFragment(ElementMLRecord[] records) {
+
+	public WordMLFragment(ElementMLRecord[] records, WordMLDocument doc) {
 		this.records = records;
-		
-		ElementML container = new ImpliedContainerML();
-		for (int i=0; i < records.length; i++) {
+
+		ElementML container = new ImpliedContainerML(doc.getElementMLFactory());
+		for (int i = 0; i < records.length; i++) {
 			ElementML ml = records[i].getElementML();
 			container.addChild(ml, false);
 		}
 
 		List<ElementSpec> specs = DocUtil.getElementSpecs(container);
-    	StringBuffer sb = new StringBuffer();
-    	for (ElementSpec es: specs) {
-    		if (es.getType() == ElementSpec.ContentType) {
-    			sb.append(es.getArray());
-    		}
-    	}
-    	this.text = sb.toString();
+		StringBuffer sb = new StringBuffer();
+		for (ElementSpec es : specs) {
+			if (es.getType() == ElementSpec.ContentType) {
+				sb.append(es.getArray());
+			}
+		}
+		this.text = sb.toString();
 	}
-	
+
 	public List<ElementMLRecord> getParagraphRecords() {
-		List<ElementMLRecord> theRecords = 
-			new ArrayList<ElementMLRecord>();
-		
-		for (int i=records.length-1; i >= 0; i--) {
+		List<ElementMLRecord> theRecords = new ArrayList<ElementMLRecord>();
+
+		for (int i = records.length - 1; i >= 0; i--) {
 			ElementML ml = records[i].getElementML();
-			if ((ml instanceof RunML) 
-				|| (ml instanceof RunContentML)
-				|| (ml instanceof RunInsML)
-				|| (ml instanceof RunDelML)
-				|| (ml instanceof HyperlinkML)) {
+			if ((ml instanceof RunML) || (ml instanceof RunContentML) || (ml instanceof RunInsML) || (ml instanceof RunDelML)
+					|| (ml instanceof HyperlinkML)) {
 				break;
 			} else {
 				theRecords.add(0, records[i]);
 			}
 		}
-		
+
 		if (theRecords.isEmpty()) {
 			theRecords = null;
 		}
-		
+
 		return theRecords;
 	}
-	
+
 	public List<ElementMLRecord> getParagraphContentRecords() {
-		List<ElementMLRecord> theRecords = 
-			new ArrayList<ElementMLRecord>();
-		
-		for (ElementMLRecord rec: records) {
+		List<ElementMLRecord> theRecords = new ArrayList<ElementMLRecord>();
+
+		for (ElementMLRecord rec : records) {
 			ElementML ml = rec.getElementML();
-			if ((ml instanceof RunML) 
-				|| (ml instanceof RunContentML)
-				|| (ml instanceof RunInsML)
-				|| (ml instanceof RunDelML)
-				|| (ml instanceof HyperlinkML)) {
-				theRecords.add(rec);				
+			if ((ml instanceof RunML) || (ml instanceof RunContentML) || (ml instanceof RunInsML) || (ml instanceof RunDelML)
+					|| (ml instanceof HyperlinkML)) {
+				theRecords.add(rec);
 			} else {
 				break;
 			}
 		}
-		
+
 		if (theRecords.isEmpty()) {
 			theRecords = null;
 		}
-		
+
 		return theRecords;
 	}
-	
+
 	public String getText() {
 		return text;
 	}
-	
-    public Object clone() {
-    	WordMLFragment theClone = null;
-        try {
-        	theClone = (WordMLFragment) super.clone();
-        	
-        	theClone.records = null;
-        	if (records != null) {
-        		theClone.records = 
-        			new ElementMLRecord[records.length];
-				for (int i=0; i < records.length; i++) {
-					theClone.records[i] = 
-						(ElementMLRecord) records[i].clone();
+
+	@Override
+	public Object clone() {
+		WordMLFragment theClone = null;
+		try {
+			theClone = (WordMLFragment) super.clone();
+
+			theClone.records = null;
+			if (records != null) {
+				theClone.records = new ElementMLRecord[records.length];
+				for (int i = 0; i < records.length; i++) {
+					theClone.records[i] = (ElementMLRecord) records[i].clone();
 				}
 			}
-        	
-        	theClone.text = null;
-        	if (text != null) {
-        		theClone.text = new String(text);
-        	}
-        } catch (CloneNotSupportedException ex) {
-            ex.printStackTrace();
-        }
 
-        return theClone;
-    }
+			theClone.text = null;
+			if (text != null) {
+				theClone.text = new String(text);
+			}
+		} catch (CloneNotSupportedException ex) {
+			ex.printStackTrace();
+		}
+
+		return theClone;
+	}
 
 	public static class ElementMLRecord implements Cloneable {
 		private ElementML elementML;
-		private boolean isFragmented;
-		
+		private final boolean isFragmented;
+
 		public ElementMLRecord(ElementML elementML, boolean isFragmented) {
 			this.elementML = elementML;
 			this.isFragmented = isFragmented;
 		}
-		
+
 		public ElementML getElementML() {
 			return this.elementML;
 		}
-		
+
 		public boolean isFragmented() {
 			return this.isFragmented;
 		}
-		
-	    public Object clone() {
-	    	ElementMLRecord theClone = null;
-	        try {
-	        	theClone = (ElementMLRecord) super.clone();
-	        	
-	        	theClone.elementML = null;
-	        	if (elementML != null) {
-	        		theClone.elementML = (ElementML) elementML.clone();
-	        	}
-	        } catch (CloneNotSupportedException ex) {
-	            ex.printStackTrace();
-	        }
 
-	        return theClone;
-	    }
+		@Override
+		public Object clone() {
+			ElementMLRecord theClone = null;
+			try {
+				theClone = (ElementMLRecord) super.clone();
 
-	}//ElementMLRecord inner class
-	
+				theClone.elementML = null;
+				if (elementML != null) {
+					theClone.elementML = (ElementML) elementML.clone();
+				}
+			} catch (CloneNotSupportedException ex) {
+				ex.printStackTrace();
+			}
+
+			return theClone;
+		}
+
+	}// ElementMLRecord inner class
+
 }// WordMLFragment class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

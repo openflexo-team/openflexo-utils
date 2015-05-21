@@ -27,7 +27,6 @@ import javax.swing.text.AttributeSet;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.vfs.FileObject;
-import org.docx4all.swing.text.WordMLDocument;
 import org.docx4all.ui.main.Constants;
 import org.docx4all.util.XmlUtil;
 import org.docx4j.convert.in.FlatOpcXmlImporter;
@@ -48,26 +47,34 @@ public class ElementMLFactory {
 
 	private static Logger log = LoggerFactory.getLogger(ElementMLFactory.class);
 
-	public ElementMLFactory(WordMLDocument document) {
+	private final IObjectFactory objectFactory;
+
+	public ElementMLFactory(IObjectFactory objectFactory) {
+		this.objectFactory = objectFactory;
 	}
 
-	public final static DocumentML createEmptyDocumentML() {
-		WordprocessingMLPackage docPackage = ObjectFactory.createEmptyDocumentPackage();
-		return new DocumentML(docPackage);
+	public IObjectFactory getObjectFactory() {
+		return objectFactory;
 	}
 
-	public final static DocumentML createDocumentML(Document doc) {
-		WordprocessingMLPackage docPackage = ObjectFactory.createDocumentPackage(doc);
-		return new DocumentML(docPackage);
+	public DocumentML createEmptyDocumentML() {
+		WordprocessingMLPackage docPackage = objectFactory.createEmptyDocumentPackage();
+		return new DocumentML(docPackage, this);
 	}
 
-	public final static DocumentML createDocumentML(FileObject f) throws IOException {
+	public DocumentML createDocumentML(Document doc) {
+		WordprocessingMLPackage docPackage = objectFactory.createDocumentPackage(doc);
+		return new DocumentML(docPackage, this);
+	}
+
+	public DocumentML createDocumentML(FileObject f) throws IOException {
 		return createDocumentML(f, false);
 	}
 
-	public final static DocumentML createDocumentML(FileObject f, boolean applyFilter) throws IOException {
-		if (f == null || !(Constants.DOCX_STRING.equalsIgnoreCase(f.getName().getExtension())
-				|| Constants.FLAT_OPC_STRING.equalsIgnoreCase(f.getName().getExtension()))) {
+	public DocumentML createDocumentML(FileObject f, boolean applyFilter) throws IOException {
+		if (f == null
+				|| !(Constants.DOCX_STRING.equalsIgnoreCase(f.getName().getExtension()) || Constants.FLAT_OPC_STRING.equalsIgnoreCase(f
+						.getName().getExtension()))) {
 			throw new IllegalArgumentException("Not a .docx (or .xml) file.");
 		}
 
@@ -100,7 +107,7 @@ public class ElementMLFactory {
 			if (applyFilter) {
 				wordMLPackage = XmlUtil.applyFilter(wordMLPackage);
 			}
-			docML = new DocumentML(wordMLPackage);
+			docML = new DocumentML(wordMLPackage, this);
 		} catch (Docx4JException exc) {
 			throw new IOException(exc);
 		} catch (Exception exc) {
@@ -110,7 +117,7 @@ public class ElementMLFactory {
 		return docML;
 	}
 
-	public final static ParagraphML createEmptyParagraphML() {
+	public ParagraphML createEmptyParagraphML() {
 		return createParagraphML(null, null, null);
 	}
 
@@ -125,9 +132,9 @@ public class ElementMLFactory {
 	 *            A RunPropertiesML given to a newly created RunML. A RunML is newly created if 'contents' parameter contains RunContentML.
 	 * @return the newly created ParagraphML
 	 */
-	public final static ParagraphML createParagraphML(List<ElementML> contents, ParagraphPropertiesML newPPr, RunPropertiesML newRPr) {
+	public ParagraphML createParagraphML(List<ElementML> contents, ParagraphPropertiesML newPPr, RunPropertiesML newRPr) {
 
-		ParagraphML thePara = new ParagraphML(ObjectFactory.createP(null));
+		ParagraphML thePara = new ParagraphML(objectFactory.createP(null), this);
 		thePara.setParagraphProperties(newPPr);
 
 		RunML newRunML = null;
@@ -137,7 +144,7 @@ public class ElementMLFactory {
 				if (ml instanceof RunContentML) {
 					// collect in one new RunML
 					if (newRunML == null) {
-						newRunML = new RunML(ObjectFactory.createR(null));
+						newRunML = new RunML(objectFactory.createR(null), this);
 						newRunML.setRunProperties(newRPr);
 						thePara.addChild(newRunML);
 					}
@@ -164,9 +171,9 @@ public class ElementMLFactory {
 	 * @return the newly created RunML
 	 * @throws IllegalArgumentException
 	 */
-	public final static RunML createRunML(List<ElementML> contents, RunPropertiesML newRPr) {
+	public RunML createRunML(List<ElementML> contents, RunPropertiesML newRPr) {
 
-		RunML theRun = new RunML(ObjectFactory.createR(null));
+		RunML theRun = new RunML(objectFactory.createR(null), this);
 		theRun.setRunProperties(newRPr);
 
 		if (contents != null) {
@@ -178,36 +185,36 @@ public class ElementMLFactory {
 		return theRun;
 	}
 
-	public final static RunPropertiesML createRunPropertiesML(AttributeSet attrs) {
-		RunPropertiesML theProp = new RunPropertiesML(ObjectFactory.createRPr());
+	public RunPropertiesML createRunPropertiesML(AttributeSet attrs) {
+		RunPropertiesML theProp = new RunPropertiesML(objectFactory.createRPr(), this);
 		theProp.addAttributes(attrs);
 		theProp.save();
 		return theProp;
 	}
 
-	public final static ParagraphPropertiesML createParagraphPropertiesML(AttributeSet attrs) {
-		ParagraphPropertiesML theProp = new ParagraphPropertiesML(ObjectFactory.createPPr());
+	public ParagraphPropertiesML createParagraphPropertiesML(AttributeSet attrs) {
+		ParagraphPropertiesML theProp = new ParagraphPropertiesML(objectFactory.createPPr(), this);
 		theProp.addAttributes(attrs);
 		theProp.save();
 		return theProp;
 	}
 
-	public final static SdtBlockML createSdtBlockML() {
-		org.docx4j.wml.SdtBlock sdtBlock = ObjectFactory.createSdtBlock();
-		org.docx4j.wml.SdtPr sdtPr = ObjectFactory.createSdtPr();
-		org.docx4j.wml.SdtContentBlock content = ObjectFactory.createSdtContentBlock();
+	public SdtBlockML createSdtBlockML() {
+		org.docx4j.wml.SdtBlock sdtBlock = objectFactory.createSdtBlock();
+		org.docx4j.wml.SdtPr sdtPr = objectFactory.createSdtPr();
+		org.docx4j.wml.SdtContentBlock content = objectFactory.createSdtContentBlock();
 
 		String id = Mediator.generateId();
-		sdtPr.setTag(ObjectFactory.createTag(SdtWrapper.generateTag(id, "0")));
+		sdtPr.setTag(objectFactory.createTag(SdtWrapper.generateTag(id, "0")));
 		sdtBlock.setSdtPr(sdtPr);
 		sdtBlock.setSdtContent(content);
 
-		SdtBlockML theBlock = new SdtBlockML(sdtBlock);
+		SdtBlockML theBlock = new SdtBlockML(sdtBlock, this);
 		return theBlock;
 	}
 
-	public final static HyperlinkML createEmptyHyperlinkML() {
-		HyperlinkML theLink = new HyperlinkML(ObjectFactory.createHyperlink());
+	public HyperlinkML createEmptyHyperlinkML() {
+		HyperlinkML theLink = new HyperlinkML(getObjectFactory().createHyperlink(), this);
 		return theLink;
 	}
 

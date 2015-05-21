@@ -21,25 +21,24 @@ package org.docx4all.swing.text;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter.FilterBypass;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
-import javax.swing.text.DocumentFilter.FilterBypass;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.ui.main.Constants;
 import org.docx4all.util.DocUtil;
 import org.docx4all.xml.ElementML;
 import org.docx4all.xml.ElementMLFactory;
-import org.docx4all.xml.ObjectFactory;
 import org.docx4all.xml.ParagraphML;
 import org.docx4all.xml.ParagraphPropertiesML;
 import org.docx4all.xml.RunML;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 07/02/2008
+ * @author Jojada Tirtowidjojo - 07/02/2008
  */
 public class TextInserter implements TextProcessor {
 	private static Logger log = LoggerFactory.getLogger(TextInserter.class);
@@ -48,7 +47,7 @@ public class TextInserter implements TextProcessor {
 	private final int offset;
 	private final String text;
 	private final AttributeSet attrs;
-	
+
 	public TextInserter(FilterBypass fb, int offset, String text, AttributeSet attrs) {
 		this.filterBypass = fb;
 		this.offset = offset;
@@ -56,100 +55,96 @@ public class TextInserter implements TextProcessor {
 		this.attrs = (attrs == null) ? SimpleAttributeSet.EMPTY : attrs;
 	}
 
+	@Override
 	public void doAction() throws BadLocationException {
 		if (text == null || text.length() == 0) {
 			return;
 		}
-		
+
 		if (Constants.NEWLINE.equals(text)) {
 			doInsertNewlineAction();
 			return;
 		}
-		
-		final WordMLDocument doc = (WordMLDocument) filterBypass.getDocument();
-		DocumentElement elem = 
-			(DocumentElement) doc.getParagraphMLElement(offset, false);
-		if (elem.getParentElement() == doc.getDefaultRootElement()
-			&& elem.getEndOffset() == doc.getDefaultRootElement().getEndOffset()) {
-			//insert a string in the last paragraph
 
-			//Need not Resolve Parent attribute
+		final WordMLDocument doc = (WordMLDocument) filterBypass.getDocument();
+		DocumentElement elem = (DocumentElement) doc.getParagraphMLElement(offset, false);
+		if (elem.getParentElement() == doc.getDefaultRootElement() && elem.getEndOffset() == doc.getDefaultRootElement().getEndOffset()) {
+			// insert a string in the last paragraph
+
+			// Need not Resolve Parent attribute
 			((MutableAttributeSet) attrs).removeAttribute(StyleConstants.ResolveAttribute);
-			
-			RunML newRun = new RunML(ObjectFactory.createR(text));
+
+			RunML newRun = new RunML(doc.getElementMLFactory().getObjectFactory().createR(text), doc.getElementMLFactory());
 			newRun.addAttributes(attrs, true);
-					
-			ParagraphML newPara = new ParagraphML(ObjectFactory.createP(null));
+
+			ParagraphML newPara = new ParagraphML(doc.getElementMLFactory().getObjectFactory().createP(null), doc.getElementMLFactory());
 			newPara.addChild(newRun);
-			
+
 			ParagraphML para = (ParagraphML) elem.getElementML();
-			ParagraphPropertiesML pPr =
-				(ParagraphPropertiesML) para.getParagraphProperties();
+			ParagraphPropertiesML pPr = (ParagraphPropertiesML) para.getParagraphProperties();
 			if (pPr != null) {
 				pPr = (ParagraphPropertiesML) pPr.clone();
 			}
 			newPara.setParagraphProperties(pPr);
-			
+
 			para.addSibling(newPara, false);
 			doc.refreshParagraphs(elem.getStartOffset(), 1);
-			
-		} else if (elem.getEndOffset() - elem.getStartOffset() == 1){
-			//insert a string in an empty paragraph
-			
-			//Need not Resolve Parent attribute
+
+		} else if (elem.getEndOffset() - elem.getStartOffset() == 1) {
+			// insert a string in an empty paragraph
+
+			// Need not Resolve Parent attribute
 			((MutableAttributeSet) attrs).removeAttribute(StyleConstants.ResolveAttribute);
-			
-			RunML newRun = new RunML(ObjectFactory.createR(text));
+
+			RunML newRun = new RunML(doc.getElementMLFactory().getObjectFactory().createR(text), doc.getElementMLFactory());
 			newRun.addAttributes(attrs, true);
-			
+
 			ElementML para = elem.getElementML();
 			para.addChild(newRun);
 
 			doc.refreshParagraphs(elem.getStartOffset(), 1);
-			
+
 		} else {
-			//insert a string in a non-empty paragraph
+			// insert a string in a non-empty paragraph
 			int paraStart = elem.getStartOffset();
 			int paraEnd = elem.getEndOffset();
-			
-			//Grab the resolve parent of attrs and remove from it. 
-			//This is done so that normal typing case condition can be 
-			//correctly verified.
-			//Typing is normal if a new ElementML needs not be created as
-			//a result of typing; otherwise it is abnormal.
+
+			// Grab the resolve parent of attrs and remove from it.
+			// This is done so that normal typing case condition can be
+			// correctly verified.
+			// Typing is normal if a new ElementML needs not be created as
+			// a result of typing; otherwise it is abnormal.
 			MutableAttributeSet resolveAttrs = null;
 			if (attrs.getResolveParent() != null) {
-				//Keep resolve parent attrs for 'abnormal' typing case condition
+				// Keep resolve parent attrs for 'abnormal' typing case condition
 				resolveAttrs = new SimpleAttributeSet(attrs.getResolveParent());
-				//don't need its ElementML attribute
+				// don't need its ElementML attribute
 				resolveAttrs.removeAttribute(WordMLStyleConstants.ElementMLAttribute);
 				((MutableAttributeSet) attrs).removeAttribute(StyleConstants.ResolveAttribute);
 			}
-			
-			//Keep input attribute element which is a WordMLDocument.TextElement
+
+			// Keep input attribute element which is a WordMLDocument.TextElement
 			elem = DocUtil.getInputAttributeElement(doc, offset, null);
-			
-			if (attrs.getAttributeCount() > 0
-				&& elem != null
-				&& elem.getAttributes().containsAttributes(attrs)) {
-				//Normal typing
+
+			if (attrs.getAttributeCount() > 0 && elem != null && elem.getAttributes().containsAttributes(attrs)) {
+				// Normal typing
 				filterBypass.insertString(offset, text, attrs);
-				
+
 			} else {
-				//A new RunML needs to be created for the inserted string.
-				//Remember to save text content first.
+				// A new RunML needs to be created for the inserted string.
+				// Remember to save text content first.
 				DocUtil.saveTextContentToElementML((WordMLDocument.TextElement) elem);
-				
-				RunML newRun = new RunML(ObjectFactory.createR(text));
-				
-				//The attributes of this newRun depends on both 
-				//'attrs' and 'elem' which is the input attribute element.
+
+				RunML newRun = new RunML(doc.getElementMLFactory().getObjectFactory().createR(text), doc.getElementMLFactory());
+
+				// The attributes of this newRun depends on both
+				// 'attrs' and 'elem' which is the input attribute element.
 				MutableAttributeSet newAttrs = new SimpleAttributeSet();
 				DocumentElement runE = null;
 				if (elem == null) {
-					//No input attribute element.
-					//Check the RunML element at 'offset' and
-					//grab its attributes if 'offset' is not at its ends.
+					// No input attribute element.
+					// Check the RunML element at 'offset' and
+					// grab its attributes if 'offset' is not at its ends.
 					runE = (DocumentElement) doc.getRunMLElement(offset);
 					if (runE.getStartOffset() < offset && offset < runE.getEndOffset()) {
 						newAttrs.addAttributes(runE.getAttributes().copyAttributes());
@@ -164,125 +159,96 @@ public class TextInserter implements TextProcessor {
 				}
 				newAttrs.removeAttribute(WordMLStyleConstants.ElementMLAttribute);
 				newRun.addAttributes(newAttrs, true);
-				
+
 				if (runE.getStartOffset() < offset && offset < runE.getEndOffset()) {
 					int idx = offset - runE.getStartOffset();
-					if (elem != null 
-						&& elem.isEditable()
-						&& DocUtil.canSplitElementML(runE, idx)) {
-						//Has to be editable so that it can be split.
+					if (elem != null && elem.isEditable() && DocUtil.canSplitElementML(runE, idx)) {
+						// Has to be editable so that it can be split.
 						DocUtil.splitElementML(runE, idx);
 						runE.getElementML().addSibling(newRun, true);
-						
-						doc.refreshParagraphs(paraStart, (paraEnd-paraStart));
+
+						doc.refreshParagraphs(paraStart, (paraEnd - paraStart));
 					}
 				} else if (runE.getElementML().isImplied()) {
-					//runE.getElementML() must be ElementML.IMPLIED_NEWLINE.
-					//Get NON-IMPLIED ParagraphML parent and add newRun
-					//as its new child.
-					DocumentElement parent = 
-						(DocumentElement) runE.getParentElement().getParentElement();
+					// runE.getElementML() must be ElementML.IMPLIED_NEWLINE.
+					// Get NON-IMPLIED ParagraphML parent and add newRun
+					// as its new child.
+					DocumentElement parent = (DocumentElement) runE.getParentElement().getParentElement();
 					parent.getElementML().addChild(newRun);
-					doc.refreshParagraphs(paraStart, (paraEnd-paraStart));
+					doc.refreshParagraphs(paraStart, (paraEnd - paraStart));
 				} else {
 					boolean after = (runE.getEndOffset() == offset);
 					runE.getElementML().addSibling(newRun, after);
-					doc.refreshParagraphs(paraStart, (paraEnd-paraStart));
+					doc.refreshParagraphs(paraStart, (paraEnd - paraStart));
 				}
 			}
 		}
 	}
 
-    private void doInsertNewlineAction() throws BadLocationException {
+	private void doInsertNewlineAction() throws BadLocationException {
 		final WordMLDocument doc = (WordMLDocument) filterBypass.getDocument();
 
 		if (log.isDebugEnabled()) {
 			log.debug("doInsertNewlineAction(): offset=" + offset);
 		}
 
-		DocumentElement leafE = (DocumentElement) doc
-				.getCharacterElement(offset);
-		if (!leafE.isEditable() && leafE.getStartOffset() < offset
-				&& offset < leafE.getEndOffset()) {
+		DocumentElement leafE = (DocumentElement) doc.getCharacterElement(offset);
+		if (!leafE.isEditable() && leafE.getStartOffset() < offset && offset < leafE.getEndOffset()) {
 			throw new BadLocationException("Text is not editable.", offset);
 		}
 
-		DocumentElement paraE = 
-			(DocumentElement) doc.getParagraphMLElement(offset, false);
-		if (paraE.getStartOffset() == offset
-				|| offset == paraE.getEndOffset() - 1) {
-			//Create a new empty paragraph
+		DocumentElement paraE = (DocumentElement) doc.getParagraphMLElement(offset, false);
+		if (paraE.getStartOffset() == offset || offset == paraE.getEndOffset() - 1) {
+			// Create a new empty paragraph
 			boolean before = (paraE.getStartOffset() == offset);
-			insertNewEmptyParagraph(paraE, before);
-			doc.refreshParagraphs(paraE.getStartOffset(), 1);		
-		
+			insertNewEmptyParagraph(paraE, before, doc.getElementMLFactory());
+			doc.refreshParagraphs(paraE.getStartOffset(), 1);
+
 		} else if (DocUtil.canSplitElementML(paraE, offset - paraE.getStartOffset())) {
-			//Split paragraph
+			// Split paragraph
 			DocUtil.splitElementML(paraE, offset - paraE.getStartOffset());
-			doc.refreshParagraphs(paraE.getStartOffset(), 1);		
-			
+			doc.refreshParagraphs(paraE.getStartOffset(), 1);
+
 		} else {
 			throw new BadLocationException("Cannot split Paragraph.", offset);
-		}		
+		}
 	}
 
-	private void insertNewEmptyParagraph(DocumentElement paraE, boolean before) {
+	private void insertNewEmptyParagraph(DocumentElement paraE, boolean before, ElementMLFactory factory) {
 		Style pStyleFromAttrs = getPStyle(this.attrs);
-		
+
 		ParagraphML paraML = (ParagraphML) paraE.getElementML();
-		ParagraphPropertiesML pPr = (ParagraphPropertiesML) paraML
-				.getParagraphProperties();
+		ParagraphPropertiesML pPr = (ParagraphPropertiesML) paraML.getParagraphProperties();
 		Style pStyleFromParaE = (pPr != null) ? getPStyle(pPr.getAttributeSet()) : null;
-		
+
 		if (pStyleFromAttrs != null && pStyleFromAttrs != pStyleFromParaE) {
-			pPr = ElementMLFactory.createParagraphPropertiesML(pStyleFromAttrs);
+			pPr = factory.createParagraphPropertiesML(pStyleFromAttrs);
 		} else if (pPr != null) {
 			pPr = (ParagraphPropertiesML) pPr.clone();
 		}
 
-		ParagraphML newParaML = ElementMLFactory.createParagraphML(null, pPr,
-				null);
-		paraML.addSibling(newParaML, !before);		
+		ParagraphML newParaML = factory.createParagraphML(null, pPr, null);
+		paraML.addSibling(newParaML, !before);
 	}
 
 	private Style getPStyle(AttributeSet attrs) {
 		Style theStyle = null;
-		
+
 		WordMLDocument doc = (WordMLDocument) filterBypass.getDocument();
 		StyleSheet styleSheet = doc.getStyleSheet();
 		if (styleSheet != null) {
-			String styleId = (String) attrs
-					.getAttribute(WordMLStyleConstants.PStyleAttribute);
+			String styleId = (String) attrs.getAttribute(WordMLStyleConstants.PStyleAttribute);
 			if (styleId != null) {
 				theStyle = styleSheet.getIDStyle(styleId);
-				String type = (theStyle == null) ? null : (String) theStyle
-						.getAttribute(WordMLStyleConstants.StyleTypeAttribute);
+				String type = (theStyle == null) ? null : (String) theStyle.getAttribute(WordMLStyleConstants.StyleTypeAttribute);
 				if (!StyleSheet.PARAGRAPH_ATTR_VALUE.equals(type)) {
 					theStyle = null;
 				}
 			}
 		}
-		
+
 		return theStyle;
 	}
-	
+
 }// TextInserter class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

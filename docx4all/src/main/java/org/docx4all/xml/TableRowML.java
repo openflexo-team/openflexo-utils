@@ -29,36 +29,35 @@ import org.docx4j.jaxb.Context;
 import org.docx4j.wml.TrPr;
 
 /**
- *	@author Jojada Tirtowidjojo - 03/06/2008
+ * @author Jojada Tirtowidjojo - 03/06/2008
  */
 public class TableRowML extends ElementML {
 	private TableRowPropertiesML trPr;
-	
-	public TableRowML(Object docxObject) {
-		this(docxObject, false);
+
+	public TableRowML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
-	
-	public TableRowML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+
+	public TableRowML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
-	
+
 	/**
 	 * Gets table row properties of this row.
 	 * 
-	 * @return a PropertiesContainerML, if any
-	 *         null, otherwise 
+	 * @return a PropertiesContainerML, if any null, otherwise
 	 */
 	public PropertiesContainerML getTableRowProperties() {
 		return this.trPr;
 	}
-	
+
 	public void setTableRowProperties(TableRowPropertiesML trPr) {
 		if (trPr != null && trPr.getParent() != null) {
 			throw new IllegalArgumentException("Not an orphan.");
 		}
-		
+
 		this.trPr = trPr;
-		
+
 		org.docx4j.wml.TrPr newDocxPr = null;
 		if (trPr != null) {
 			trPr.setParent(TableRowML.this);
@@ -69,28 +68,31 @@ public class TableRowML extends ElementML {
 			newDocxPr.setParent(this.docxObject);
 		}
 	}
-	
+
+	@Override
 	public Object clone() {
 		Object obj = null;
 		if (this.docxObject != null) {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
-		
-		return new TableRowML(obj, this.isDummy);
+
+		return new TableRowML(obj, getElementMLFactory(), this.isDummy);
 	}
 
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		boolean canAdd = true;
-		
+
 		if (!(child instanceof TableCellML)) {
 			canAdd = false;
 		} else {
 			canAdd = super.canAddChild(idx, child);
 		}
-		
+
 		return canAdd;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		if (!(child instanceof TableCellML)) {
 			throw new IllegalArgumentException("NOT a TableCellML");
@@ -100,49 +102,50 @@ public class TableRowML extends ElementML {
 		}
 		super.addChild(idx, child, adopt);
 	}
-		
+
+	@Override
 	public void setParent(ElementML parent) {
-		if (parent != null 
-			&& !(parent instanceof TableML)) {
+		if (parent != null && !(parent instanceof TableML)) {
 			throw new IllegalArgumentException("Parent type = " + parent.getClass().getSimpleName());
 		}
 		this.parent = parent;
 	}
-	
+
+	@Override
 	protected List<Object> getDocxChildren() {
 		List<Object> theChildren = null;
 
 		if (this.docxObject == null) {
-			;//do nothing
+			;// do nothing
 		} else {
-			org.docx4j.wml.Tr row = 
-				(org.docx4j.wml.Tr) JAXBIntrospector.getValue(this.docxObject);
+			org.docx4j.wml.Tr row = (org.docx4j.wml.Tr) JAXBIntrospector.getValue(this.docxObject);
 			theChildren = row.getEGContentCellContent();
 		}
 
 		return theChildren;
 	}
-	
+
+	@Override
 	protected void init(Object docxObject) {
 		org.docx4j.wml.Tr row = null;
-		
+
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		
+
 		if (docxObject == null) {
-			;//implied TableML
-			
+			;// implied TableML
+
 		} else if (inspector.isElement(docxObject)) {
 			Object value = JAXBIntrospector.getValue(docxObject);
 			if (value instanceof org.docx4j.wml.Tr) {
 				row = (org.docx4j.wml.Tr) value;
 				this.isDummy = false;
 			} else {
-				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 			}
 		} else {
-			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
-		
+
 		if (row != null) {
 			initTableRowProperties(row);
 			initChildren(row);
@@ -151,51 +154,33 @@ public class TableRowML extends ElementML {
 
 	private void initTableRowProperties(org.docx4j.wml.Tr row) {
 		this.trPr = null;
-		
+
 		TrPr trowPr = row.getTrPr();
 		if (trowPr != null) {
-			this.trPr = new TableRowPropertiesML(trowPr);
+			this.trPr = new TableRowPropertiesML(trowPr, getElementMLFactory());
 			this.trPr.setParent(TableRowML.this);
 		}
 	}
-	
+
 	private void initChildren(org.docx4j.wml.Tr row) {
 		this.children = null;
-		
+
 		List<Object> list = row.getEGContentCellContent();
 		if (!list.isEmpty()) {
 			this.children = new ArrayList<ElementML>(list.size());
 			for (Object obj : list) {
 				Object value = JAXBIntrospector.getValue(obj);
-				
+
 				if (value instanceof org.docx4j.wml.Tc) {
-					ElementML ml = new TableCellML(value);
+					ElementML ml = new TableCellML(value, getElementMLFactory());
 					ml.setParent(TableRowML.this);
 					this.children.add(ml);
 				} else {
-					//Ignore this at the moment.
+					// Ignore this at the moment.
 				}
 			}
 		}
 	}// initChildren()
 
 }// TableRowML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

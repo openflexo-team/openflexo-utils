@@ -23,31 +23,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  This ImpliedContainerML is used for collecting a group
- *  of ElementML(s). Those collected ElementML(s) becomes its children
- *  but not its adopted children meaning they still have their own parents.
- *  
- *	@author Jojada Tirtowidjojo - 08/02/2008
+ * This ImpliedContainerML is used for collecting a group of ElementML(s). Those collected ElementML(s) becomes its children but not its
+ * adopted children meaning they still have their own parents.
+ * 
+ * @author Jojada Tirtowidjojo - 08/02/2008
  */
 public class ImpliedContainerML extends ElementML {
-	public ImpliedContainerML() {
-		super();
+	public ImpliedContainerML(ElementMLFactory elementMLFactory) {
+		super(elementMLFactory);
 	}
-	
+
+	@Override
 	public boolean canAddSibling(ElementML elem, boolean after) {
 		return false;
 	}
-	
+
+	@Override
 	public void setParent(ElementML parent) {
 		this.parent = parent;
 	}
-	
+
+	@Override
 	public void setDocxParent(Object docxParent) {
 		throw new UnsupportedOperationException();
 	}
-	
+
+	@Override
 	public Object clone() {
-		ImpliedContainerML ml = new ImpliedContainerML();
+		ImpliedContainerML ml = new ImpliedContainerML(getElementMLFactory());
 		if (this.children != null) {
 			ml.children = new ArrayList<ElementML>(this.children);
 			ml.isDummy = this.isDummy;
@@ -55,39 +58,25 @@ public class ImpliedContainerML extends ElementML {
 		return ml;
 	}
 
+	@Override
 	public boolean isBlockElement() {
 		return true;
 	}
-	
+
+	@Override
 	public boolean breaksFlow() {
 		return true;
 	}
-	
+
+	@Override
 	protected void init(Object docxObject) {
-		;//not implemented
+		;// not implemented
 	}
-	
+
+	@Override
 	protected List<Object> getDocxChildren() {
 		return null;
 	}
-	
+
 } // ImpliedContainerML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -21,12 +21,11 @@ package org.plutext.client.wrappedTransforms;
 
 import java.util.HashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.swing.text.DocumentElement;
 import org.docx4all.swing.text.WordMLDocument;
 import org.docx4all.util.XmlUtil;
 import org.docx4all.xml.ElementML;
+import org.docx4all.xml.ElementMLFactory;
 import org.docx4all.xml.SdtBlockML;
 import org.docx4j.XmlUtils;
 import org.plutext.client.Mediator;
@@ -34,32 +33,30 @@ import org.plutext.client.Util;
 import org.plutext.client.state.StateChunk;
 import org.plutext.transforms.Changesets.Changeset;
 import org.plutext.transforms.Transforms.T;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TransformInsert extends TransformAbstract {
 
 	private static Logger log = LoggerFactory.getLogger(TransformInsert.class);
-	
-	public TransformInsert(T t) {
-		super(t);
+
+	public TransformInsert(T t, ElementMLFactory factory) {
+		super(t, factory);
 	}
 
 	/* Markup the existing sdt with one containing w:ins or w:del*/
 	@Override
-    public String markupChanges(String original, Changeset changeset) {
-		log.debug("markupChanges(): Marking up SdtBlock = " 
-			+ getSdt() 
-			+ " - ID="
-			+ getPlutextId() );
+	public String markupChanges(String original, Changeset changeset) {
+		log.debug("markupChanges(): Marking up SdtBlock = " + getSdt() + " - ID=" + getPlutextId());
 		log.debug("markupChanges(): 'original' param = " + original);
-		
-    	try {
-    		if (original == null) {
-    			this.markedUpSdt = XmlUtil.markupAsInsertion(getSdt(), changeset);
-    		} else {
-    			org.docx4j.wml.SdtBlock origSdt = 
-    				(org.docx4j.wml.SdtBlock) XmlUtils.unmarshalString(original);
-    			this.markedUpSdt = XmlUtil.markupDifference(getSdt(), origSdt, changeset);
-    		}
+
+		try {
+			if (original == null) {
+				this.markedUpSdt = XmlUtil.markupAsInsertion(getSdt(), changeset);
+			} else {
+				org.docx4j.wml.SdtBlock origSdt = (org.docx4j.wml.SdtBlock) XmlUtils.unmarshalString(original);
+				this.markedUpSdt = XmlUtil.markupDifference(getSdt(), origSdt, changeset, getElementMLFactory().getObjectFactory());
+			}
 		} catch (Exception exc) {
 			log.error("markupChanges(): Exception caught during marking up:");
 			exc.printStackTrace();
@@ -70,58 +67,56 @@ public class TransformInsert extends TransformAbstract {
 		if (this.markedUpSdt != null) {
 			result = XmlUtils.marshaltoString(this.markedUpSdt, true);
 		}
-		
-        log.debug("markupChanges(): Result = " + result);
-        
-        return result;
-    }
-    
-    public long apply(Mediator mediator, HashMap<String, StateChunk> stateChunks) {
+
+		log.debug("markupChanges(): Result = " + result);
+
+		return result;
+	}
+
+	@Override
+	public long apply(Mediator mediator, HashMap<String, StateChunk> stateChunks) {
 		String idStr = getPlutextId();
 
-		log.debug("apply(): Inserting SdtBlock = " + getSdt() + " - ID="
-				+ idStr);
+		log.debug("apply(): Inserting SdtBlock = " + getSdt() + " - ID=" + idStr);
 
-    	if (this.markedUpSdt == null) {
-    		//Sdt has not been marked up or there was an error during marking up.
-    		//See: markupChanges().
-    		//Silently ignore.
-    		log.error("apply(): No marked up Sdt.");
-    		return -1;
-    	}
-    	
-    	// If a Delete is followed by Insert (reinstate),
-        // the server will not transmit the Delete.
-        // So here we test whether the sdt is already present
-        /* Testing this case requires three clients:
-         * 
-         * Client 1, 2, 3 all open.
-         * 
-         * Client 1 deletes an sdt; transmits
-         * 
-         * Client 2 fetches; rejects change (and optionally moves or edits); transmits
-         * 
-         * Client 3 fetches
-         * 
-         */
-		WordMLDocument doc = 
-			(WordMLDocument) mediator.getWordMLTextPane().getDocument();
+		if (this.markedUpSdt == null) {
+			// Sdt has not been marked up or there was an error during marking up.
+			// See: markupChanges().
+			// Silently ignore.
+			log.error("apply(): No marked up Sdt.");
+			return -1;
+		}
+
+		// If a Delete is followed by Insert (reinstate),
+		// the server will not transmit the Delete.
+		// So here we test whether the sdt is already present
+		/* Testing this case requires three clients:
+		 * 
+		 * Client 1, 2, 3 all open.
+		 * 
+		 * Client 1 deletes an sdt; transmits
+		 * 
+		 * Client 2 fetches; rejects change (and optionally moves or edits); transmits
+		 * 
+		 * Client 3 fetches
+		 * 
+		 */
+		WordMLDocument doc = mediator.getWordMLTextPane().getDocument();
 		DocumentElement elem = Util.getDocumentElement(doc, idStr);
 		if (elem != null) {
-			//Treat this element as being moved.
-            log.debug("apply(): Detected reinstatement.");
-            log.debug("apply(): Document element=" + elem + " is deleted.");
+			// Treat this element as being moved.
+			log.debug("apply(): Detected reinstatement.");
+			log.debug("apply(): Document element=" + elem + " is deleted.");
 			elem.getElementML().delete();
 			updateRefreshOffsets(mediator, elem.getStartOffset(), elem.getEndOffset());
 			mediator.getDivergences().delete(idStr);
 		}
-    	    	
+
 		// Plutext server is trying to use absolute index position for
 		// locating the insert positon.
 		Long insertAtIndex = null;
 		if (this.t.getPosition() == null || this.t.getPosition() < 0) {
-			log.error("apply(): Invalid insertion location t.getPosition()="
-					+ t.getPosition());
+			log.error("apply(): Invalid insertion location t.getPosition()=" + t.getPosition());
 			insertAtIndex = null;
 
 		} else {
@@ -130,8 +125,7 @@ public class TransformInsert extends TransformAbstract {
 			Long pos = t.getPosition();
 			insertAtIndex = pos + mediator.getDivergences().getOffset(pos);
 
-			log.debug("apply(): Insertion location " + pos + " adjusted to "
-					+ insertAtIndex);
+			log.debug("apply(): Insertion location " + pos + " adjusted to " + insertAtIndex);
 		}
 
 		if (insertAtIndex == null || insertAtIndex < 0) {
@@ -143,66 +137,38 @@ public class TransformInsert extends TransformAbstract {
 		DocumentElement root = (DocumentElement) doc.getDefaultRootElement();
 
 		ElementML bodyML = root.getElementML().getChild(0);
-		int idx = Math.min(bodyML.getChildrenCount() - 1, insertAtIndex
-				.intValue());
+		int idx = Math.min(bodyML.getChildrenCount() - 1, insertAtIndex.intValue());
 
 		log.debug("apply(): SdtBlock will be inserted at idx=" + idx);
 
 		ElementML ml = bodyML.getChild(idx);
-		
+
 		log.debug("apply(): Currently, ElementML at idx=" + idx + " is " + ml);
 
-		SdtBlockML markedUpML = 
-			new SdtBlockML(
-				(org.docx4j.wml.SdtBlock) 
-				XmlUtils.deepCopy(this.markedUpSdt));
+		SdtBlockML markedUpML = new SdtBlockML(XmlUtils.deepCopy(this.markedUpSdt), doc.getElementMLFactory());
 		ml.addSibling(markedUpML, false);
 
 		elem = (DocumentElement) root.getElement(idx);
 		if (elem.getElementML() != ml) {
-			//Just in case.
-			//hint to refresh the whole document.
-			updateRefreshOffsets(mediator, 0, doc.getLength());			
+			// Just in case.
+			// hint to refresh the whole document.
+			updateRefreshOffsets(mediator, 0, doc.getLength());
 		} else {
 			updateRefreshOffsets(mediator, elem.getStartOffset(), elem.getEndOffset());
 		}
 
-        //What goes in stateChunks is the *non-marked up* 
-		//sdt that we got from the server.
-        StateChunk sc = new StateChunk(getSdt());
-        stateChunks.put(sc.getIdAsString(), sc);
+		// What goes in stateChunks is the *non-marked up*
+		// sdt that we got from the server.
+		StateChunk sc = new StateChunk(getSdt());
+		stateChunks.put(sc.getIdAsString(), sc);
 
-        // But also record the marked up version
-        sc.setMarkedUpSdt(XmlUtils.marshaltoString(this.markedUpSdt, true));
+		// But also record the marked up version
+		sc.setMarkedUpSdt(XmlUtils.marshaltoString(this.markedUpSdt, true));
 
 		mediator.getDivergences().insert(idStr, Long.valueOf(idx));
-		
+
 		return sequenceNumber;
 	}
 
 } // TransformInsert class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

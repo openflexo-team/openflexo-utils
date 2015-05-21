@@ -31,34 +31,37 @@ import org.docx4j.jaxb.Context;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 
 /**
- *	@author Jojada Tirtowidjojo - 30/11/2007
+ * @author Jojada Tirtowidjojo - 30/11/2007
  */
 public abstract class ElementML implements Cloneable {
 	public final static ParagraphML IMPLIED_PARAGRAPH;
 	public final static RunML IMPLIED_RUN;
 	public final static RunContentML IMPLIED_NEWLINE;
-	
+
 	static {
-		IMPLIED_PARAGRAPH = new ParagraphML(null);
-		IMPLIED_RUN = new RunML(null);
-		IMPLIED_NEWLINE = new RunContentML(null, true);
+		IMPLIED_PARAGRAPH = new ParagraphML(null, null);
+		IMPLIED_RUN = new RunML(null, null);
+		IMPLIED_NEWLINE = new RunContentML(null, null, true);
 		IMPLIED_NEWLINE.setTextContent(Constants.NEWLINE);
 	}
-	
+
 	protected Object docxObject;
 	protected boolean isDummy;
 	protected WordML.Tag tag;
 	protected ElementML parent, godParent;
 	protected List<ElementML> children;
-	
-	public ElementML() {
-		;//do nothing
+
+	private final ElementMLFactory elementMLFactory;
+
+	public ElementML(ElementMLFactory elementMLFactory) {
+		this.elementMLFactory = elementMLFactory;
 	}
-	
-	public ElementML(Object docxObject, boolean isDummy) {
+
+	public ElementML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
 		this.docxObject = docxObject;
+		this.elementMLFactory = elementMLFactory;
 		this.isDummy = isDummy;
-		
+
 		if (this.docxObject != null) {
 			QName name = Context.jc.createJAXBIntrospector().getElementName(docxObject);
 			if (name != null) {
@@ -67,59 +70,71 @@ public abstract class ElementML implements Cloneable {
 		}
 		init(docxObject);
 	}
-	
+
+	public ElementMLFactory getElementMLFactory() {
+		return elementMLFactory;
+	}
+
+	public IObjectFactory getObjectFactory() {
+		if (getElementMLFactory() != null) {
+			return getElementMLFactory().getObjectFactory();
+		}
+		return null;
+	}
+
 	public void setGodParent(ElementML parent) {
 		this.godParent = parent;
 	}
-	
+
 	public abstract void setParent(ElementML parent);
+
+	@Override
 	public abstract Object clone();
 
 	protected abstract void init(Object docxObject);
+
 	protected abstract List<Object> getDocxChildren();
-	
+
 	/**
-	 * The real (direct) parent of those docx children 
-	 * listed in getDocxChildren().
+	 * The real (direct) parent of those docx children listed in getDocxChildren().
 	 * 
 	 * @return docxObject
 	 */
 	protected Object getDocxChildParent() {
 		return getDocxObject();
 	}
-	
+
 	public void setDocxParent(Object docxParent) {
 		if (this.docxObject == null) {
-			;//do nothing
+			;// do nothing
 		} else {
 			try {
-				this.docxObject.getClass().getMethod("setParent", Object.class)
-					.invoke(this.docxObject, docxParent);
+				this.docxObject.getClass().getMethod("setParent", Object.class).invoke(this.docxObject, docxParent);
 			} catch (NoSuchMethodException exc) {
-				;//ignore
+				;// ignore
 			} catch (IllegalAccessException exc) {
-				;//ignore
+				;// ignore
 			} catch (InvocationTargetException exc) {
-				;//ignore
+				;// ignore
 			}
 		}
 	}// setDocxParent()
 
 	public boolean canAddChild(int idx, ElementML child) {
 		boolean canAdd = true;
-		
+
 		if (child.getParent() != null) {
 			canAdd = false;
 		} else if (this.children == null) {
 			canAdd = (idx == 0);
 		}
-		
+
 		return canAdd;
 	}
-	
+
 	public boolean canAddSibling(ElementML elem, boolean after) {
 		boolean canAdd = true;
-		
+
 		if (elem.getParent() != null) {
 			canAdd = false;
 		} else if (getParent() == null) {
@@ -135,75 +150,74 @@ public abstract class ElementML implements Cloneable {
 				canAdd = getParent().canAddChild(idx, elem);
 			}
 		}
-		
+
 		return canAdd;
 	}
-	
-	public void addSibling(ElementML elem, boolean after) {		
+
+	public void addSibling(ElementML elem, boolean after) {
 		if (elem.getParent() != null) {
 			throw new IllegalArgumentException("Not an orphan.");
 		}
-		
+
 		if (getParent() == null) {
 			throw new IllegalStateException("Parent is NULL.");
 		}
-		
+
 		int idx = getParent().getChildIndex(this);
 		if (idx < 0) {
 			throw new IllegalStateException("Index position not found.");
 		}
-		
+
 		if (after) {
 			idx++;
 		}
-		
+
 		getParent().addChild(idx, elem);
 	}
-	
+
 	public boolean canAddChild(ElementML child) {
 		int idx = (getChildren() == null) ? 0 : getChildren().size();
-		return canAddChild(idx, child);		
+		return canAddChild(idx, child);
 	}
-	
+
 	public void addChild(ElementML child) {
 		addChild(child, true);
 	}
-	
+
 	public void addChild(ElementML child, boolean adopt) {
 		int idx = (getChildren() == null) ? 0 : getChildren().size();
 		addChild(idx, child, adopt);
 	}
-	
+
 	public void addChild(int idx, ElementML child) {
 		addChild(idx, child, true);
 	}
-	
+
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		if (this.children == null) {
 			if (idx == 0) {
-				//Add to this ElementML's children
+				// Add to this ElementML's children
 				this.children = new ArrayList<ElementML>();
 				this.children.add(child);
-				
+
 				if (adopt) {
 					child.setParent(ElementML.this);
 
 					// Add to Docx structure
-					if (getDocxChildParent() != null
-							&& child.getDocxObject() != null) {
+					if (getDocxChildParent() != null && child.getDocxObject() != null) {
 						List<Object> list = getDocxChildren();
 						list.add(child.getDocxObject());
 						child.setDocxParent(getDocxChildParent());
 					}
 				}
 			} else {
-				throw new IndexOutOfBoundsException("Index: "+idx+", Size: 0");
+				throw new IndexOutOfBoundsException("Index: " + idx + ", Size: 0");
 			}
-			
+
 		} else {
-			//Add to this ElementML's children
+			// Add to this ElementML's children
 			this.children.add(idx, child);
-			
+
 			if (adopt) {
 				child.setParent(ElementML.this);
 
@@ -220,8 +234,7 @@ public abstract class ElementML implements Cloneable {
 					int siblingIndex = -1;
 					if (idx > 0) {
 						for (int i = idx - 1; 0 <= i && siblingIndex == -1; i--) {
-							Object obj = ((ElementML) this.children.get(i))
-									.getDocxObject();
+							Object obj = this.children.get(i).getDocxObject();
 							siblingIndex = list.indexOf(obj);
 						}
 					}
@@ -232,10 +245,8 @@ public abstract class ElementML implements Cloneable {
 
 					} else if (idx < this.children.size() - 1) {
 						// Browse younger siblings for index position
-						for (int i = idx + 1; i < this.children.size()
-								&& siblingIndex == -1; i++) {
-							Object obj = ((ElementML) this.children.get(i))
-									.getDocxObject();
+						for (int i = idx + 1; i < this.children.size() && siblingIndex == -1; i++) {
+							Object obj = this.children.get(i).getDocxObject();
 							siblingIndex = list.indexOf(obj);
 						}
 
@@ -251,20 +262,20 @@ public abstract class ElementML implements Cloneable {
 						child.setDocxParent(getDocxChildParent());
 					}
 				}
-			} //if (adopt)
+			} // if (adopt)
 		}
-	} //addChild()
-	
+	} // addChild()
+
 	public void delete() {
 		if (getParent() == null) {
 			return;
 		}
 		getParent().deleteChild(ElementML.this);
 	}
-	
+
 	public void deleteChild(ElementML child) {
 		if (this.children == null) {
-			//delete from Docx structure
+			// delete from Docx structure
 			if (getDocxObject() != null && child.getDocxObject() != null) {
 				List<Object> list = getDocxChildren();
 				if (list != null) {
@@ -273,11 +284,11 @@ public abstract class ElementML implements Cloneable {
 				child.setDocxParent(null);
 			}
 		} else {
-			//Delete from this ElementML's children
+			// Delete from this ElementML's children
 			this.children.remove(child);
 			child.setParent(null);
-			
-			//delete from Docx structure
+
+			// delete from Docx structure
 			if (getDocxObject() != null && child.getDocxObject() != null) {
 				List<Object> list = getDocxChildren();
 				if (list != null) {
@@ -287,11 +298,11 @@ public abstract class ElementML implements Cloneable {
 			}
 		}
 	}
-	
+
 	public int getChildIndex(ElementML elem) {
 		return (this.children != null && elem != null) ? this.children.indexOf(elem) : -1;
 	}
-	
+
 	/**
 	 * The DOM element associated with this ElementML.
 	 * 
@@ -300,72 +311,70 @@ public abstract class ElementML implements Cloneable {
 	public Object getDocxObject() {
 		return this.docxObject;
 	}
-	
+
 	/**
-	 * An implied ElementML is an ElementML that
-	 * does not have a DOM element associated with it.
+	 * An implied ElementML is an ElementML that does not have a DOM element associated with it.
 	 * 
-	 * @return true, if this is an implied ElementML
-	 *         false, otherwise
+	 * @return true, if this is an implied ElementML false, otherwise
 	 * @see getDocxObject()
 	 */
 	public boolean isImplied() {
 		return this.docxObject == null;
 	}
-	
+
 	/**
 	 * A dummy ElementML is an ElementML that is declared as dummy.
 	 * 
-	 * @return true, if this ElementML has been declared as dummy.
-	 *         false, otherwise
+	 * @return true, if this ElementML has been declared as dummy. false, otherwise
 	 */
 	public boolean isDummy() {
 		return isDummy;
 	}
-	
+
 	public WordML.Tag getTag() {
 		return this.tag;
 	}
-	
+
 	public ElementML getParent() {
 		return this.parent;
 	}
-	
+
 	public ElementML getGodParent() {
 		return this.godParent;
 	}
-	
+
 	public List<ElementML> getChildren() {
 		return this.children;
 	}
-	
+
 	public int getChildrenCount() {
 		return (this.children == null) ? 0 : this.children.size();
 	}
-	
+
 	public ElementML getChild(int idx) {
 		if (this.children != null && !this.children.isEmpty()) {
 			return this.children.get(idx);
 		}
 		return null;
 	}
-	
+
 	public boolean isBlockElement() {
 		return getTag().isBlockTag();
 	}
-	
+
 	public boolean breaksFlow() {
 		return getTag().breaksFlow();
 	}
-	
+
 	public StyleSheet getStyleSheet() {
 		return (getParent() != null) ? getParent().getStyleSheet() : null;
 	}
-	
+
 	public WordprocessingMLPackage getWordprocessingMLPackage() {
 		return (getParent() != null) ? getParent().getWordprocessingMLPackage() : null;
 	}
-	
+
+	@Override
 	public String toString() {
 		String dummy = "";
 		if (isImplied()) {
@@ -373,35 +382,14 @@ public abstract class ElementML implements Cloneable {
 		} else if (isDummy()) {
 			dummy = "DUMMY_";
 		}
-		
+
 		StringBuffer sb = new StringBuffer(dummy);
 		sb.append(getClass().getSimpleName());
 		sb.append("@");
 		sb.append(hashCode());
-		
+
 		return sb.toString();
 	}
-	
-} //ElementML class
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} // ElementML class
 

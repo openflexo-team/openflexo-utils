@@ -19,29 +19,30 @@
 
 package org.plutext.client.wrappedTransforms;
 
+import org.docx4all.xml.ElementMLFactory;
+import org.plutext.transforms.Transforms.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.plutext.transforms.Transforms.T;
 
 public class TransformHelper {
 	private static Logger log = LoggerFactory.getLogger(TransformHelper.class);
 
-	public static TransformAbstract construct(T t) {
+	public static TransformAbstract construct(T t, ElementMLFactory factory) {
 
 		String operation = t.getOp();
 
 		if (operation.equals("update")) {
-			return new TransformUpdate(t);
+			return new TransformUpdate(t, factory);
 		} else if (operation.equals("delete")) {
-			return new TransformDelete(t);
+			return new TransformDelete(t, factory);
 		} else if (operation.equals("insert")) {
-			return new TransformInsert(t);
+			return new TransformInsert(t, factory);
 		} else if (operation.equals("move")) {
-			return new TransformMove(t);
+			return new TransformMove(t, factory);
 		} else if (operation.equals("style")) {
-			return new TransformStyle(t);
+			return new TransformStyle(t, factory);
 		} else if (operation.equals("failed")) {
-			return new TransformFailed(t);
+			return new TransformFailed(t, factory);
 		} else {
 			log.error("Unrecognised transform!!!");
 			// TODO - throw exception

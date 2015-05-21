@@ -43,18 +43,18 @@ public class RunML extends ElementML {
 	private RunPropertiesML rPr;
 	private org.docx4j.wml.FldChar fldChar;
 
-	public RunML(Object docxObject) {
-		this(docxObject, false);
+	public RunML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
 
-	public RunML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+	public RunML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
 
 	public void addAttributes(AttributeSet attrs, boolean replace) {
 		if (this.rPr == null) {
 			if (attrs.getAttributeCount() > 0) {
-				RunPropertiesML ml = ElementMLFactory.createRunPropertiesML(attrs);
+				RunPropertiesML ml = getElementMLFactory().createRunPropertiesML(attrs);
 				setRunProperties(ml);
 			}
 		} else {
@@ -101,7 +101,7 @@ public class RunML extends ElementML {
 		if (this.docxObject != null) {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
-		return new RunML(obj, this.isDummy);
+		return new RunML(obj, getElementMLFactory(), this.isDummy);
 	}
 
 	@Override
@@ -186,7 +186,7 @@ public class RunML extends ElementML {
 					renderedText = "<w:unknownTag></w:unknownTag>";
 					log.warn("init(): Unknown tag was detected for a JAXBElement = " + XmlUtils.marshaltoString(docxObject, true));
 				}
-				run = ObjectFactory.createR(renderedText);
+				run = getObjectFactory().createR(renderedText);
 				this.isDummy = true;
 			}
 
@@ -195,7 +195,7 @@ public class RunML extends ElementML {
 			// If Xerces is on the path, this will be a org.apache.xerces.dom.NodeImpl;
 			// otherwise, it will be com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
 			String renderedText = XmlUtil.getEnclosingTagPair((Node) docxObject);
-			run = ObjectFactory.createR(renderedText);
+			run = getObjectFactory().createR(renderedText);
 			this.isDummy = true;
 
 		} else {
@@ -211,7 +211,7 @@ public class RunML extends ElementML {
 		if (run != null) {
 			RPr rPr = run.getRPr();
 			if (rPr != null) {
-				this.rPr = new RunPropertiesML(rPr);
+				this.rPr = new RunPropertiesML(rPr, getElementMLFactory());
 				this.rPr.setParent(RunML.this);
 			}
 		}
@@ -237,12 +237,12 @@ public class RunML extends ElementML {
 					List<Object> list = drawing.getAnchorOrInline();
 					for (Object item : list) {
 						if (item instanceof org.docx4j.dml.wordprocessingDrawing.Inline) {
-							child = new InlineDrawingML(drawing, this.isDummy);
+							child = new InlineDrawingML(drawing, getElementMLFactory(), this.isDummy);
 						} else {
 							// Anchor is not supported yet.
 							// Let Drawing object be rendered as RunContentML.
 							// TODO: Support Drawing's Anchor element.
-							child = new RunContentML(drawing, this.isDummy);
+							child = new RunContentML(drawing, getElementMLFactory(), this.isDummy);
 						}
 						child.setParent(RunML.this);
 						this.children.add(child);
@@ -254,7 +254,7 @@ public class RunML extends ElementML {
 						this.fldChar = (org.docx4j.wml.FldChar) value;
 					}
 
-					child = new RunContentML(o, this.isDummy);
+					child = new RunContentML(o, getElementMLFactory(), this.isDummy);
 					child.setParent(RunML.this);
 					this.children.add(child);
 				}

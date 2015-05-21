@@ -41,18 +41,18 @@ public class ParagraphML extends ElementML {
 
 	private ParagraphPropertiesML pPr;
 
-	public ParagraphML(Object docxObject) {
-		this(docxObject, false);
+	public ParagraphML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
 
-	public ParagraphML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+	public ParagraphML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
 
 	public void addAttributes(AttributeSet attrs, boolean replace) {
 		if (this.pPr == null) {
 			if (attrs.getAttributeCount() > 0) {
-				ParagraphPropertiesML ml = ElementMLFactory.createParagraphPropertiesML(attrs);
+				ParagraphPropertiesML ml = getElementMLFactory().createParagraphPropertiesML(attrs);
 				setParagraphProperties(ml);
 			}
 		} else {
@@ -101,7 +101,7 @@ public class ParagraphML extends ElementML {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
 
-		return new ParagraphML(obj, this.isDummy);
+		return new ParagraphML(obj, getElementMLFactory(), this.isDummy);
 	}
 
 	@Override
@@ -185,7 +185,7 @@ public class ParagraphML extends ElementML {
 					renderedText = "<w:unknownTag></w:unknownTag>";
 					log.warn("init(): Unknown tag was detected for a JAXBElement = " + XmlUtils.marshaltoString(docxObject, true));
 				}
-				para = ObjectFactory.createP(renderedText);
+				para = getObjectFactory().createP(renderedText);
 				this.isDummy = true;
 			}
 
@@ -203,7 +203,7 @@ public class ParagraphML extends ElementML {
 			// if not an implied ParagraphML
 			PPr pProp = para.getPPr();
 			if (pProp != null) {
-				this.pPr = new ParagraphPropertiesML(pProp);
+				this.pPr = new ParagraphPropertiesML(pProp, getElementMLFactory());
 				this.pPr.setParent(ParagraphML.this);
 			}
 		}
@@ -225,20 +225,20 @@ public class ParagraphML extends ElementML {
 				Object value = JAXBIntrospector.getValue(o);
 
 				if (value instanceof org.docx4j.wml.RunIns) {
-					ml = new RunInsML(value, this.isDummy);
+					ml = new RunInsML(value, getElementMLFactory(), this.isDummy);
 					ml.setParent(ParagraphML.this);
 					this.children.add(ml);
 				} else if (value instanceof org.docx4j.wml.RunDel) {
-					ml = new RunDelML(value, this.isDummy);
+					ml = new RunDelML(value, getElementMLFactory(), this.isDummy);
 					ml.setParent(ParagraphML.this);
 					this.children.add(ml);
 				} else if (value instanceof org.docx4j.wml.P.Hyperlink) {
-					ml = new HyperlinkML(value, this.isDummy);
+					ml = new HyperlinkML(value, getElementMLFactory(), this.isDummy);
 					ml.setParent(ParagraphML.this);
 					this.children.add(ml);
 
 				} else if (value instanceof org.docx4j.wml.CTSmartTagRun) {
-					InlineTransparentML transparent = new InlineTransparentML(value, this.isDummy);
+					InlineTransparentML transparent = new InlineTransparentML(value, getElementMLFactory(), this.isDummy);
 					// Current implementation is using InlineTransparentML
 					// as surrogate container.
 					if (transparent.getChildrenCount() > 0) {
@@ -256,7 +256,7 @@ public class ParagraphML extends ElementML {
 					if (name != null && (name.getLocalPart() == "bookmarkStart" || name.getLocalPart() == "bookmarkEnd")) {
 						// suppress
 					} else {
-						ml = new RunML(o, this.isDummy);
+						ml = new RunML(o, getElementMLFactory(), this.isDummy);
 						ml.setParent(ParagraphML.this);
 						this.children.add(ml);
 					}
@@ -264,7 +264,7 @@ public class ParagraphML extends ElementML {
 					// Ignore those
 				} else {
 					// System.out.println("and about ??? : " + value + " of " + value.getClass());
-					ml = new RunML(o, this.isDummy);
+					ml = new RunML(o, getElementMLFactory(), this.isDummy);
 					ml.setParent(ParagraphML.this);
 					this.children.add(ml);
 				}

@@ -14,17 +14,14 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.plutext.client.wrappedTransforms;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.docx4j.wml.Id;
+import org.docx4all.xml.ElementMLFactory;
 import org.docx4j.wml.SdtBlock;
 import org.docx4j.wml.Tag;
 import org.plutext.client.Mediator;
@@ -32,6 +29,8 @@ import org.plutext.client.SdtWrapper;
 import org.plutext.client.state.StateChunk;
 import org.plutext.transforms.Changesets.Changeset;
 import org.plutext.transforms.Transforms.T;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class TransformAbstract {
 
@@ -39,9 +38,11 @@ public abstract class TransformAbstract {
 
 	protected SdtBlock sdt = null;
 	protected org.docx4j.wml.SdtBlock markedUpSdt = null;
-	
-    protected SdtWrapper sdtWrapper;	
-	
+
+	private ElementMLFactory factory;
+
+	protected SdtWrapper sdtWrapper;
+
 	public SdtBlock getSdt() {
 		return sdt;
 	}
@@ -51,38 +52,39 @@ public abstract class TransformAbstract {
 
 	public T t = null;
 
-	public TransformAbstract(T t) {
+	public TransformAbstract(T t, ElementMLFactory factory) {
 		this.t = t;
+
+		this.factory = factory;
 
 		sequenceNumber = t.getSnum();
 		changesetNumber = t.getChangeset();
-		
+
 		sdt = t.getSdt();
-		
 
 		if (t.getIdref() != null) {
 			// Case: Delete
-			//sdtWrapper = new SdtWrapper();
+			// sdtWrapper = new SdtWrapper();
 
 			// Convert the idref to an id object
-//			org.docx4j.wml.ObjectFactory factory = new org.docx4j.wml.ObjectFactory();
-//			id = factory.createId();
-//			id.setVal(BigInteger.valueOf(t.getIdref()));
-			
-			//sdtWrapper.setId( t.getIdref().toString() );
+			// org.docx4j.wml.ObjectFactory factory = new org.docx4j.wml.ObjectFactory();
+			// id = factory.createId();
+			// id.setVal(BigInteger.valueOf(t.getIdref()));
+
+			// sdtWrapper.setId( t.getIdref().toString() );
 
 		} else if (t.getOp().equals("style")) {
 
 			// No ID
-			//sdtWrapper = new SdtWrapper();
-			
+			// sdtWrapper = new SdtWrapper();
+
 		} else {
 
 			// Case: Update, Insert
 			sdtWrapper = new SdtWrapper(sdt);
-			
-//			id = sdt.getSdtPr().getId();
-//			tag = sdt.getSdtPr().getTag();
+
+			// id = sdt.getSdtPr().getId();
+			// tag = sdt.getSdtPr().getTag();
 
 		}
 
@@ -90,31 +92,32 @@ public abstract class TransformAbstract {
 
 	}
 
+	public ElementMLFactory getElementMLFactory() {
+		return factory;
+	}
 
 	public String getPlutextId() {
 		return sdtWrapper.getPlutextId();
 	}
 
-//	public void setId(Id id) {
-//		sdtWrapper.setId(id);
-////		this.id = id;
-//	}
+	// public void setId(Id id) {
+	// sdtWrapper.setId(id);
+	// // this.id = id;
+	// }
 
+	// public xxxTag getVersion() {
+	// return sdtWrapper.getVersionNumber();
+	// }
 
-//	public xxxTag getVersion() {
-//		return sdtWrapper.getVersionNumber();
-//	}
-
-//	public void setVersion(Tag tag) {
-//		//this.tag = tag;
-//		sdtWrapper.setVersionNumber(versionNumber);
-//	}
+	// public void setVersion(Tag tag) {
+	// //this.tag = tag;
+	// sdtWrapper.setVersionNumber(versionNumber);
+	// }
 
 	public Tag getTag() {
 		return sdtWrapper.getTag();
 	}
-	
-	
+
 	// Has this transform been applied to the document yet?
 	Boolean applied = false;
 
@@ -149,8 +152,9 @@ public abstract class TransformAbstract {
 	public void setSequenceNumber(long sequenceNumber) {
 		this.sequenceNumber = sequenceNumber;
 	}
-	
+
 	protected long changesetNumber = 0;
+
 	public long getChangesetNumber() {
 		return changesetNumber;
 	}
@@ -163,12 +167,12 @@ public abstract class TransformAbstract {
 	public abstract long apply(Mediator mediator, HashMap<String, StateChunk> stateChunks);
 
 	public abstract String markupChanges(String original, Changeset changeset);
-	
+
 	public org.docx4j.wml.SdtBlock getMarkedUpSdt() {
 		return this.markedUpSdt;
 	}
 
-    protected void updateRefreshOffsets(Mediator mediator, int start, int end) {
+	protected void updateRefreshOffsets(Mediator mediator, int start, int end) {
 		int offset = mediator.getUpdateStartOffset();
 		offset = Math.min(offset, start);
 		mediator.setUpdateStartOffset(offset);
@@ -176,36 +180,7 @@ public abstract class TransformAbstract {
 		offset = mediator.getUpdateEndOffset();
 		offset = Math.max(offset, end);
 		mediator.setUpdateEndOffset(offset);
-    }
+	}
 
 }// TransformAbstract class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -25,32 +25,31 @@ import java.util.List;
 import javax.xml.bind.JAXBIntrospector;
 import javax.xml.namespace.QName;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4j.XmlUtils;
 import org.docx4j.jaxb.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 16/04/2008
+ * @author Jojada Tirtowidjojo - 16/04/2008
  */
 public class SdtBlockML extends ElementML {
 	private static Logger log = LoggerFactory.getLogger(SdtBlockML.class);
 
 	private SdtPrML sdtPr;
-	
-	public SdtBlockML(Object docxObject) {
-		this(docxObject, false);
+
+	public SdtBlockML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
-	
-	public SdtBlockML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+
+	public SdtBlockML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
 
 	/**
 	 * Gets the paragraph property element of this paragraph.
 	 * 
-	 * @return a ParagraphPropertiesML, if any
-	 *         null, otherwise 
+	 * @return a ParagraphPropertiesML, if any null, otherwise
 	 */
 	public SdtPrML getSdtProperties() {
 		return this.sdtPr;
@@ -69,8 +68,7 @@ public class SdtBlockML extends ElementML {
 				sdtPr.setParent(SdtBlockML.this);
 				newDocxSdtPr = (org.docx4j.wml.SdtPr) sdtPr.getDocxObject();
 			}
-			org.docx4j.wml.SdtBlock sdtBlock = 
-				(org.docx4j.wml.SdtBlock) JAXBIntrospector.getValue(this.docxObject);
+			org.docx4j.wml.SdtBlock sdtBlock = (org.docx4j.wml.SdtBlock) JAXBIntrospector.getValue(this.docxObject);
 			sdtBlock.setSdtPr(newDocxSdtPr);
 
 			if (newDocxSdtPr != null) {
@@ -79,33 +77,33 @@ public class SdtBlockML extends ElementML {
 		}
 	}
 
+	@Override
 	public Object clone() {
 		Object obj = null;
 		if (this.docxObject != null) {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
 
-		return new SdtBlockML(obj, this.isDummy);
+		return new SdtBlockML(obj, getElementMLFactory(), this.isDummy);
 	}
 
+	@Override
 	public boolean canAddSibling(ElementML elem, boolean after) {
 		boolean canAdd = false;
-		
-		if (elem instanceof SdtBlockML
-			|| elem instanceof ParagraphML
-			|| elem instanceof TableML) {
-			//TODO:Current implementation disallows other types of sibling
+
+		if (elem instanceof SdtBlockML || elem instanceof ParagraphML || elem instanceof TableML) {
+			// TODO:Current implementation disallows other types of sibling
 			canAdd = super.canAddSibling(elem, after);
 		}
-		
+
 		return canAdd;
 	}
-	
+
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		boolean canAdd = true;
 
-		if (!(child instanceof ParagraphML
-				|| child instanceof TableML)) {
+		if (!(child instanceof ParagraphML || child instanceof TableML)) {
 			canAdd = false;
 		} else {
 			canAdd = super.canAddChild(idx, child);
@@ -114,9 +112,9 @@ public class SdtBlockML extends ElementML {
 		return canAdd;
 	}
 
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
-		if (!(child instanceof ParagraphML
-				|| child instanceof TableML)) {
+		if (!(child instanceof ParagraphML || child instanceof TableML)) {
 			throw new IllegalArgumentException("NOT a ParagraphML nor a TableML");
 		}
 		if (child.getParent() != null) {
@@ -125,6 +123,7 @@ public class SdtBlockML extends ElementML {
 		super.addChild(idx, child, adopt);
 	}
 
+	@Override
 	public void setParent(ElementML parent) {
 		if (parent != null && !(parent instanceof BodyML)) {
 			throw new IllegalArgumentException("NOT a BodyML.");
@@ -132,66 +131,67 @@ public class SdtBlockML extends ElementML {
 		this.parent = parent;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer(super.toString());
 		sb.append(" - Id=");
 		sb.append(getSdtProperties().getPlutextId());
 		sb.append(" - Tag=");
 		sb.append(getSdtProperties().getTagValue());
-		
+
 		return sb.toString();
 	}
-	
+
 	/**
-	 * The real (direct) parent of those docx children 
-	 * listed in getDocxChildren().
+	 * The real (direct) parent of those docx children listed in getDocxChildren().
 	 * 
 	 * @return docxObject
 	 */
+	@Override
 	public Object getDocxChildParent() {
 		if (this.docxObject == null) {
 			return null;
 		}
-		
-		org.docx4j.wml.SdtBlock sdtBlock = 
-			(org.docx4j.wml.SdtBlock) JAXBIntrospector.getValue(this.docxObject);
+
+		org.docx4j.wml.SdtBlock sdtBlock = (org.docx4j.wml.SdtBlock) JAXBIntrospector.getValue(this.docxObject);
 		return sdtBlock.getSdtContent();
 	}
-	
+
+	@Override
 	protected List<Object> getDocxChildren() {
 		List<Object> theChildren = null;
 
 		if (this.docxObject == null) {
-			;//do nothing
+			;// do nothing
 		} else {
-			org.docx4j.wml.SdtBlock sdtBlock = 
-				(org.docx4j.wml.SdtBlock) JAXBIntrospector.getValue(this.docxObject);
+			org.docx4j.wml.SdtBlock sdtBlock = (org.docx4j.wml.SdtBlock) JAXBIntrospector.getValue(this.docxObject);
 			theChildren = sdtBlock.getSdtContent().getContent();
 		}
 
 		return theChildren;
 	}
 
+	@Override
 	protected void init(Object docxObject) {
 		org.docx4j.wml.SdtBlock sdtBlock = null;
-		
+
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		
+
 		if (docxObject == null) {
-			;//implied SdtBlockML
-			
+			;// implied SdtBlockML
+
 		} else if (inspector.isElement(docxObject)) {
 			Object value = JAXBIntrospector.getValue(docxObject);
 			if (value instanceof org.docx4j.wml.SdtBlock) {
 				sdtBlock = (org.docx4j.wml.SdtBlock) value;
 				this.isDummy = false;
 			} else {
-				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 			}
 		} else {
-			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
-		
+
 		initSdtProperties(sdtBlock);
 		initChildren(sdtBlock);
 	}
@@ -199,10 +199,10 @@ public class SdtBlockML extends ElementML {
 	private void initSdtProperties(org.docx4j.wml.SdtBlock sdtBlock) {
 		this.sdtPr = null;
 		if (sdtBlock != null) {
-			//if not an implied SdtBlockML
+			// if not an implied SdtBlockML
 			org.docx4j.wml.SdtPr pr = sdtBlock.getSdtPr();
 			if (pr != null) {
-				this.sdtPr = new SdtPrML(pr);
+				this.sdtPr = new SdtPrML(pr, getElementMLFactory());
 				this.sdtPr.setParent(SdtBlockML.this);
 			}
 		}
@@ -220,29 +220,27 @@ public class SdtBlockML extends ElementML {
 			this.children = new ArrayList<ElementML>(list.size());
 			for (Object obj : list) {
 				Object value = JAXBIntrospector.getValue(obj);
-				
+
 				ElementML ml = null;
 				if (value instanceof org.docx4j.wml.Tbl) {
-					ml = new TableML(obj);
+					ml = new TableML(obj, getElementMLFactory());
 					ml.setParent(SdtBlockML.this);
 					this.children.add(ml);
-					
+
 				} else if (value instanceof org.docx4j.wml.CTMarkupRange) {
-					//suppress <w:bookmarkStart> and <w:bookmarkEnd>
+					// suppress <w:bookmarkStart> and <w:bookmarkEnd>
 					JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
 					QName name = inspector.getElementName(obj);
-					if (name != null 
-						&& (name.getLocalPart() == "bookmarkStart" 
-							|| name.getLocalPart() == "bookmarkEnd")) {
-						//suppress
+					if (name != null && (name.getLocalPart() == "bookmarkStart" || name.getLocalPart() == "bookmarkEnd")) {
+						// suppress
 					} else {
-						ml = new ParagraphML(obj);
+						ml = new ParagraphML(obj, getElementMLFactory());
 						ml.setParent(SdtBlockML.this);
 						this.children.add(ml);
 					}
-					
+
 				} else {
-					ml = new ParagraphML(obj);
+					ml = new ParagraphML(obj, getElementMLFactory());
 					ml.setParent(SdtBlockML.this);
 					this.children.add(ml);
 				}

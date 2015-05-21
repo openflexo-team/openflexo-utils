@@ -24,39 +24,38 @@ import java.util.List;
 import javax.xml.bind.JAXBIntrospector;
 import javax.xml.namespace.QName;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.ui.main.Constants;
 import org.docx4all.util.XmlUtil;
 import org.docx4j.XmlUtils;
 import org.docx4j.jaxb.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 06/12/2007
+ * @author Jojada Tirtowidjojo - 06/12/2007
  */
 public class RunContentML extends ElementML {
 	private static Logger log = LoggerFactory.getLogger(RunContentML.class);
-	
+
 	protected String textContent;
-	
-	public RunContentML(Object docxObject) {
-		this(docxObject, false);
+
+	public RunContentML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
-	
-	public RunContentML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+
+	public RunContentML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
-	
+
 	public String getTextContent() {
 		return this.textContent;
 	}
-	
+
 	public void setTextContent(String textContent) {
 		this.textContent = textContent;
-		
+
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		if (this.docxObject != null 
-			&& inspector.isElement(this.docxObject)) {
+		if (this.docxObject != null && inspector.isElement(this.docxObject)) {
 			Object value = JAXBIntrospector.getValue(this.docxObject);
 			if (value instanceof org.docx4j.wml.Text) {
 				org.docx4j.wml.Text t = (org.docx4j.wml.Text) value;
@@ -67,41 +66,47 @@ public class RunContentML extends ElementML {
 			}
 		}
 	}
-	
+
+	@Override
 	public Object clone() {
 		Object obj = null;
 		if (this.docxObject != null) {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
-		return new RunContentML(obj, this.isDummy);
+		return new RunContentML(obj, getElementMLFactory(), this.isDummy);
 	}
-	
+
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
-		//cannot have child
+		// cannot have child
 		return false;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		throw new UnsupportedOperationException("Cannot have a child.");
 	}
-	
+
+	@Override
 	public void setParent(ElementML parent) {
 		if (parent != null && !(parent instanceof RunML)) {
 			throw new IllegalArgumentException("NOT a RunML.");
 		}
 		this.parent = parent;
 	}
-	
+
+	@Override
 	public List<Object> getDocxChildren() {
-		return null;//do not have children
+		return null;// do not have children
 	}
-	
+
+	@Override
 	protected void init(Object docxObject) {
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		
+
 		if (docxObject == null) {
-			;//implied RunContentML
-			
+			;// implied RunContentML
+
 		} else if (inspector.isElement(docxObject)) {
 			Object value = JAXBIntrospector.getValue(docxObject);
 
@@ -128,23 +133,20 @@ public class RunContentML extends ElementML {
 
 			} else if (value instanceof org.docx4j.wml.R.Tab) {
 				this.textContent = Constants.TAB;
-			
+
 			} else if (value instanceof org.docx4j.wml.FldChar) {
-				org.docx4j.wml.FldChar fldChar = 
-					(org.docx4j.wml.FldChar) value;
-				if (fldChar.getFldCharType() 
-					== org.docx4j.wml.STFldCharType.BEGIN) {
+				org.docx4j.wml.FldChar fldChar = (org.docx4j.wml.FldChar) value;
+				if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.BEGIN) {
 					this.textContent = Constants.FLDCHAR_BEGIN;
-				} else if (fldChar.getFldCharType()
-					== org.docx4j.wml.STFldCharType.END) {
+				} else if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.END) {
 					this.textContent = Constants.FLDCHAR_END;
 				} else {
 					this.textContent = Constants.FLDCHAR_SEPARATE;
 				}
-			//} else if (value instanceof org.docx4j.wml.R.NoBreakHyphen) {
+				// } else if (value instanceof org.docx4j.wml.R.NoBreakHyphen) {
 				// Unsupported yet
 
-			//} else if (value instanceof org.docx4j.wml.R.SoftHyphen) {
+				// } else if (value instanceof org.docx4j.wml.R.SoftHyphen) {
 				// Unsupported yet
 
 			} else {
@@ -155,37 +157,17 @@ public class RunContentML extends ElementML {
 					this.textContent = XmlUtil.getEnclosingTagPair(name);
 					this.isDummy = true;
 				} else {
-					//Should not happen but it could.
-					this.textContent="<w:unknownTag></w:unknownTag>";
+					// Should not happen but it could.
+					this.textContent = "<w:unknownTag></w:unknownTag>";
 					this.isDummy = true;
-					log.warn("init(): Unknown tag was detected for a JAXBElement = "
-							+ XmlUtils.marshaltoString(docxObject, true));
+					log.warn("init(): Unknown tag was detected for a JAXBElement = " + XmlUtils.marshaltoString(docxObject, true));
 				}
 			}
 		} else {
-			throw new IllegalArgumentException(
-					"Unsupported Docx Object = " + docxObject);
+			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
-		
+
 	}// init()
-	
+
 }// RunContentML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

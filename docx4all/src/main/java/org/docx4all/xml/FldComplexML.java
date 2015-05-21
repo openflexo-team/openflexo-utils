@@ -22,33 +22,38 @@ package org.docx4all.xml;
 import java.util.List;
 
 /**
- *	@author Jojada Tirtowidjojo - 17/08/2009
+ * @author Jojada Tirtowidjojo - 17/08/2009
  */
 public class FldComplexML extends ElementML {
-	public FldComplexML() {
-		super(null, false);
+
+	public FldComplexML(ElementMLFactory elementMLFactory) {
+		super(null, elementMLFactory, false);
 	}
-	
+
+	@Override
 	public Object clone() {
-		return new FldComplexML();
+		return new FldComplexML(getElementMLFactory());
 	}
-	
+
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		boolean canAdd = true;
-		
+
 		if (!(child instanceof RunML)) {
 			canAdd = false;
 		} else {
 			canAdd = super.canAddChild(idx, child);
 		}
-		
+
 		return canAdd;
 	}
-	
+
+	@Override
 	public void addChild(ElementML child) {
 		addChild(child, false);
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		if (adopt) {
 			throw new IllegalArgumentException("Cannot adopt.");
@@ -59,51 +64,52 @@ public class FldComplexML extends ElementML {
 		super.addChild(idx, child, adopt);
 		child.setGodParent(this);
 	}
-	
+
+	@Override
 	public boolean canAddSibling(ElementML elem, boolean after) {
 		Boolean canAdd = false;
-		
+
 		int idx = after ? getChildrenCount() : 0;
 		ElementML child = getChild(idx);
 		if (child != null) {
-			canAdd = child.canAddSibling(elem, after);		
+			canAdd = child.canAddSibling(elem, after);
 		}
-		
+
 		return canAdd;
 	}
-	
+
+	@Override
 	public void addSibling(ElementML elem, boolean after) {
 		int idx = after ? getChildrenCount() : 0;
-		getChild(idx).addSibling(elem, after);		
+		getChild(idx).addSibling(elem, after);
 	}
-	
+
+	@Override
 	public void delete() {
 		if (this.children != null) {
-			for (ElementML ml: this.children) {
+			for (ElementML ml : this.children) {
 				ml.setGodParent(null);
 			}
 			this.children = null;
 		}
 	}
-	
+
+	@Override
 	public void deleteChild(ElementML child) {
 		if (this.children != null) {
 			this.children.remove(child);
 			child.setGodParent(null);
 		}
 	}
-	
+
 	public RunML getSeparate() {
 		RunML theRun = null;
 		if (this.children != null) {
-			for (ElementML ml: this.children) {
+			for (ElementML ml : this.children) {
 				if (ml instanceof RunML) {
 					RunML run = (RunML) ml;
-					org.docx4j.wml.FldChar fldChar =
-						run.getFldChar();
-					if (fldChar != null
-						&& fldChar.getFldCharType() 
-							== org.docx4j.wml.STFldCharType.SEPARATE) {
+					org.docx4j.wml.FldChar fldChar = run.getFldChar();
+					if (fldChar != null && fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.SEPARATE) {
 						theRun = run;
 					}
 				}
@@ -111,40 +117,26 @@ public class FldComplexML extends ElementML {
 		}
 		return theRun;
 	}
-	
+
+	@Override
 	protected List<Object> getDocxChildren() {
 		return null;
 	}
-	
+
+	@Override
 	protected void init(Object docxObject) {
-		//do nothing
+		// do nothing
 	}
-	
+
+	@Override
 	public void setParent(ElementML parent) {
 		throw new UnsupportedOperationException("Cannot have parent.");
 	}
-	
+
+	@Override
 	public void setDocxParent(Object docxParent) {
 		throw new UnsupportedOperationException("Cannot have parent.");
 	}
-	
+
 }// FldComplexML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

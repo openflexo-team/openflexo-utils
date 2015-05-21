@@ -25,54 +25,51 @@ import java.util.List;
 import javax.xml.bind.JAXBIntrospector;
 import javax.xml.namespace.QName;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.util.XmlUtil;
 import org.docx4j.XmlUtils;
 import org.docx4j.jaxb.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 11/07/2009
+ * @author Jojada Tirtowidjojo - 11/07/2009
  */
 public class InlineTransparentML extends ElementML {
 	private static Logger log = LoggerFactory.getLogger(InlineTransparentML.class);
 
-	public InlineTransparentML(Object docxObject) {
-		this(docxObject, false);
+	public InlineTransparentML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
-	
-	public InlineTransparentML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+
+	public InlineTransparentML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
-	
+
+	@Override
 	public Object clone() {
 		Object obj = null;
 		if (this.docxObject != null) {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
-		return new InlineTransparentML(obj, this.isDummy);
+		return new InlineTransparentML(obj, getElementMLFactory(), this.isDummy);
 	}
-	
+
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		boolean canAdd = true;
-		
-		if (!(child instanceof RunML)
-			&& !(child instanceof RunInsML)
-			&& !(child instanceof RunDelML)
-			&& !(child instanceof HyperlinkML)) {
+
+		if (!(child instanceof RunML) && !(child instanceof RunInsML) && !(child instanceof RunDelML) && !(child instanceof HyperlinkML)) {
 			canAdd = false;
 		} else {
 			canAdd = super.canAddChild(idx, child);
 		}
-		
+
 		return canAdd;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
-		if (!(child instanceof RunML)
-			&& !(child instanceof RunInsML)
-			&& !(child instanceof RunDelML)
-			&& !(child instanceof HyperlinkML)) {
+		if (!(child instanceof RunML) && !(child instanceof RunInsML) && !(child instanceof RunDelML) && !(child instanceof HyperlinkML)) {
 			throw new IllegalArgumentException("Cannot become a child.");
 		}
 		if (child.getParent() != null) {
@@ -80,53 +77,56 @@ public class InlineTransparentML extends ElementML {
 		}
 		super.addChild(idx, child, adopt);
 	}
-		
+
+	@Override
 	public void setParent(ElementML parent) {
-		//Subject to future implementation.
+		// Subject to future implementation.
 		throw new UnsupportedOperationException();
 	}
-	
+
+	@Override
 	protected List<Object> getDocxChildren() {
 		List<Object> theChildren = null;
-		
+
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		
+
 		if (this.docxObject == null) {
-			;//do nothing
-			
+			;// do nothing
+
 		} else if (inspector.isElement(docxObject)) {
 			Object value = JAXBIntrospector.getValue(docxObject);
 			if (value instanceof org.docx4j.wml.CTSmartTagRun) {
-				theChildren = ((org.docx4j.wml.CTSmartTagRun)value).getParagraphContent();
+				theChildren = ((org.docx4j.wml.CTSmartTagRun) value).getParagraphContent();
 			}
-			
+
 		} else {
-			;//should not come here. See init().
+			;// should not come here. See init().
 		}
-		
+
 		return theChildren;
 	}
-	
+
+	@Override
 	protected void init(Object docxObject) {
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		
+
 		if (docxObject == null) {
-			;//implied ParagraphML
-			
+			;// implied ParagraphML
+
 		} else if (inspector.isElement(docxObject)) {
-			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);	
-			
+			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
+
 		} else {
 			org.docx4j.wml.CTSmartTagRun smartTag = null;
-			
+
 			Object value = JAXBIntrospector.getValue(docxObject);
 			if (value instanceof org.docx4j.wml.CTSmartTagRun) {
 				smartTag = (org.docx4j.wml.CTSmartTagRun) value;
 				this.isDummy = false;
-				
+
 			} else {
-				//Create a dummy ParagraphML for this unsupported element
-				//TODO: A more informative text content in dummy ParagraphML
+				// Create a dummy ParagraphML for this unsupported element
+				// TODO: A more informative text content in dummy ParagraphML
 				QName name = inspector.getElementName(docxObject);
 				String renderedText;
 				if (name != null) {
@@ -134,24 +134,23 @@ public class InlineTransparentML extends ElementML {
 				} else {
 					// Should not happen but it could.
 					renderedText = "<w:unknownTag></w:unknownTag>";
-					log.warn("init(): Unknown tag was detected for a JAXBElement = "
-						+ XmlUtils.marshaltoString(docxObject, true));
+					log.warn("init(): Unknown tag was detected for a JAXBElement = " + XmlUtils.marshaltoString(docxObject, true));
 				}
-				smartTag = ObjectFactory.createCTSmartTagRun(renderedText);
+				smartTag = getObjectFactory().createCTSmartTagRun(renderedText);
 				this.isDummy = true;
 			}
-			
+
 			initChildren(smartTag);
 		}
 	}
-	
+
 	private void initChildren(org.docx4j.wml.CTSmartTagRun smartTag) {
 		this.children = null;
-		
+
 		if (smartTag == null) {
 			return;
 		}
-		
+
 		List<Object> pKids = smartTag.getParagraphContent();
 		if (!pKids.isEmpty()) {
 			this.children = new ArrayList<ElementML>(pKids.size());
@@ -159,62 +158,40 @@ public class InlineTransparentML extends ElementML {
 			ElementML ml = null;
 			for (Object o : pKids) {
 				Object value = JAXBIntrospector.getValue(o);
-								
+
 				if (value instanceof org.docx4j.wml.RunIns) {
-					ml = new RunInsML(value, this.isDummy);
+					ml = new RunInsML(value, getElementMLFactory(), this.isDummy);
 					ml.setParent(InlineTransparentML.this);
 					this.children.add(ml);
 				} else if (value instanceof org.docx4j.wml.RunDel) {
-					ml = new RunDelML(value, this.isDummy);
+					ml = new RunDelML(value, getElementMLFactory(), this.isDummy);
 					ml.setParent(InlineTransparentML.this);
 					this.children.add(ml);
 				} else if (value instanceof org.docx4j.wml.P.Hyperlink) {
-					ml = new HyperlinkML(value, this.isDummy);
+					ml = new HyperlinkML(value, getElementMLFactory(), this.isDummy);
 					ml.setParent(InlineTransparentML.this);
 					this.children.add(ml);
 				} else if (value instanceof org.docx4j.wml.CTSmartTagRun) {
-					InlineTransparentML transparent =
-						new InlineTransparentML(value, this.isDummy);
-					//Current implementation is using InlineTransparentML
-					//as surrogate container.
+					InlineTransparentML transparent = new InlineTransparentML(value, getElementMLFactory(), this.isDummy);
+					// Current implementation is using InlineTransparentML
+					// as surrogate container.
 					if (transparent.getChildrenCount() > 0) {
-						List<ElementML> list = 
-							new ArrayList<ElementML>(
-								transparent.getChildren());
-						for (ElementML elem: list) {
+						List<ElementML> list = new ArrayList<ElementML>(transparent.getChildren());
+						for (ElementML elem : list) {
 							elem.delete();
 							elem.setParent(InlineTransparentML.this);
 							this.children.add(elem);
 						}
 					}
 				} else {
-					ml = new RunML(o, this.isDummy);
+					ml = new RunML(o, getElementMLFactory(), this.isDummy);
 					ml.setParent(InlineTransparentML.this);
 					this.children.add(ml);
 				}
-				
+
 			}
 		}
 	}// initChildren()
-	
 
 }// InlineTransparentML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

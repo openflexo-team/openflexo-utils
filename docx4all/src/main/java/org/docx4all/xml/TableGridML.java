@@ -25,72 +25,60 @@ import org.docx4j.XmlUtils;
 import org.docx4j.wml.TblGrid;
 
 /**
- *	@author Jojada Tirtowidjojo - 11/06/2008
+ * @author Jojada Tirtowidjojo - 11/06/2008
  */
 public class TableGridML extends ElementML {
-	
-	public TableGridML(TblGrid grid) {
-		super(grid, false);
+
+	public TableGridML(TblGrid grid, ElementMLFactory elementMLFactory) {
+		super(grid, elementMLFactory, false);
 	}
-	
+
+	@Override
 	public Object clone() {
 		TblGrid obj = null;
 		if (this.docxObject != null) {
 			obj = (TblGrid) XmlUtils.deepCopy(this.docxObject);
 		}
-		return new TableGridML(obj);
+		return new TableGridML(obj, getElementMLFactory());
 	}
-	
+
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
-		//Although in docx hierarchy, TblGrid may have <w:gridCol>
-		//elements as children but we do not perform cut-n-paste operation
-		//to <w:gridCol> elements.
+		// Although in docx hierarchy, TblGrid may have <w:gridCol>
+		// elements as children but we do not perform cut-n-paste operation
+		// to <w:gridCol> elements.
 		return false;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		throw new UnsupportedOperationException("Cannot have a child.");
 	}
-		
+
+	@Override
 	public void setParent(ElementML parent) {
 		if (parent != null && !(parent instanceof TableML)) {
 			throw new IllegalArgumentException("NOT a TableML.");
 		}
 		this.parent = parent;
 	}
-	
+
+	@Override
 	public List<Object> getDocxChildren() {
-		//Although in docx hierarchy, TblGrid may have <w:gridCol>
-		//elements as children but we do not perform cut-n-paste operation
-		//to <w:gridCol> elements.
+		// Although in docx hierarchy, TblGrid may have <w:gridCol>
+		// elements as children but we do not perform cut-n-paste operation
+		// to <w:gridCol> elements.
 		return null;
 	}
-		
+
+	@Override
 	protected void init(Object docxObject) {
-		//TODO: Implement this.
-		//I am thinking of treating TableGrid as a kind of property container
-		//from which we can specify/query the number of column grids and their 
-		//individual size.
-		//Feel free to provide your own property field(s) and its setter/getter methods 
+		// TODO: Implement this.
+		// I am thinking of treating TableGrid as a kind of property container
+		// from which we can specify/query the number of column grids and their
+		// individual size.
+		// Feel free to provide your own property field(s) and its setter/getter methods
 	}
-	
+
 }// TableGridML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

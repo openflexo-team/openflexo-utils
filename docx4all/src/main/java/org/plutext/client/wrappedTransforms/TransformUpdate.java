@@ -21,48 +21,43 @@ package org.plutext.client.wrappedTransforms;
 
 import java.util.HashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4all.swing.text.DocumentElement;
 import org.docx4all.swing.text.WordMLDocument;
 import org.docx4all.util.XmlUtil;
-import org.docx4all.xml.DocumentML;
+import org.docx4all.xml.ElementMLFactory;
 import org.docx4all.xml.SdtBlockML;
 import org.docx4j.XmlUtils;
-import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.plutext.client.Mediator;
 import org.plutext.client.Util;
 import org.plutext.client.state.StateChunk;
 import org.plutext.transforms.Changesets.Changeset;
 import org.plutext.transforms.Transforms.T;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TransformUpdate extends TransformAbstract {
 
 	private static Logger log = LoggerFactory.getLogger(TransformUpdate.class);
 
-	public TransformUpdate(T t) {
-		super(t);
+	public TransformUpdate(T t, ElementMLFactory factory) {
+		super(t, factory);
 	}
 
 	/* Compare the updated sdt to the original, replacing the
-     * updated one with containing w:ins and w:del 
-     */
+	 * updated one with containing w:ins and w:del 
+	 */
 	@Override
-    public String markupChanges(String original, Changeset changeset) {
-		log.debug("markupChanges(): Marking up SdtBlock = " 
-			+ getSdt() 
-			+ " - ID="
-			+ getPlutextId() );
+	public String markupChanges(String original, Changeset changeset) {
+		log.debug("markupChanges(): Marking up SdtBlock = " + getSdt() + " - ID=" + getPlutextId());
 		log.debug("markupChanges(): 'original' param = " + original);
-		
-    	try {
-    		if (original == null) {
-    			this.markedUpSdt = XmlUtil.markupAsInsertion(getSdt(), changeset);
-    		} else {
-    			org.docx4j.wml.SdtBlock origSdt = 
-    				(org.docx4j.wml.SdtBlock) XmlUtils.unmarshalString(original);
-    			this.markedUpSdt = XmlUtil.markupDifference(getSdt(), origSdt, changeset);
-    		}
+
+		try {
+			if (original == null) {
+				this.markedUpSdt = XmlUtil.markupAsInsertion(getSdt(), changeset);
+			} else {
+				org.docx4j.wml.SdtBlock origSdt = (org.docx4j.wml.SdtBlock) XmlUtils.unmarshalString(original);
+				this.markedUpSdt = XmlUtil.markupDifference(getSdt(), origSdt, changeset, getElementMLFactory().getObjectFactory());
+			}
 		} catch (Exception exc) {
 			log.error("markupChanges(): Exception caught during marking up:");
 			exc.printStackTrace();
@@ -73,17 +68,18 @@ public class TransformUpdate extends TransformAbstract {
 		if (this.markedUpSdt != null) {
 			result = XmlUtils.marshaltoString(this.markedUpSdt, true);
 		}
-		
-        log.debug("markupChanges(): Result = " + result);
-        
-        return result;
-    }
-    
+
+		log.debug("markupChanges(): Result = " + result);
+
+		return result;
+	}
+
+	@Override
 	public long apply(Mediator mediator, HashMap<String, StateChunk> stateChunks) {
 		String idStr = getPlutextId();
 
-		log.debug("apply(): Updating SdtBlock = " + getSdt() + " - ID=" + idStr );
-//				+ " - TAG=" + getVersion().getVal());
+		log.debug("apply(): Updating SdtBlock = " + getSdt() + " - ID=" + idStr);
+		// + " - TAG=" + getVersion().getVal());
 
 		if (stateChunks.get(idStr) == null) {
 			log.error("apply(): Could not find SDT Id=" + idStr + " snapshot.");
@@ -91,8 +87,7 @@ public class TransformUpdate extends TransformAbstract {
 			return -1;
 		}
 
-		WordMLDocument doc = 
-			(WordMLDocument) mediator.getWordMLTextPane().getDocument();
+		WordMLDocument doc = mediator.getWordMLTextPane().getDocument();
 		DocumentElement elem = Util.getDocumentElement(doc, idStr);
 		if (elem == null) {
 			// should not happen.
@@ -101,24 +96,24 @@ public class TransformUpdate extends TransformAbstract {
 			return -1;
 		}
 
-    	if (this.markedUpSdt == null) {
-    		//Sdt has not been marked up or there was an error during marking up.
-    		//See: markupChanges().
-    		//Silently ignore.
-    		log.error("apply(): No marked up Sdt.");
-    		return -1;
-    	}
-    	
-		SdtBlockML newSdt = new SdtBlockML(this.markedUpSdt);
+		if (this.markedUpSdt == null) {
+			// Sdt has not been marked up or there was an error during marking up.
+			// See: markupChanges().
+			// Silently ignore.
+			log.error("apply(): No marked up Sdt.");
+			return -1;
+		}
+
+		SdtBlockML newSdt = new SdtBlockML(this.markedUpSdt, doc.getElementMLFactory());
 		elem.getElementML().addSibling(newSdt, false);
 		elem.getElementML().delete();
 
 		updateRefreshOffsets(mediator, elem.getStartOffset(), elem.getEndOffset());
 
-        //What goes in stateChunks is the *non-marked up* 
-		//sdt that we got from the server.
+		// What goes in stateChunks is the *non-marked up*
+		// sdt that we got from the server.
 		StateChunk newsc = new StateChunk(getSdt());
-        // But also record the marked up version
+		// But also record the marked up version
 		newsc.setMarkedUpSdt(XmlUtils.marshaltoString(this.markedUpSdt, true));
 		stateChunks.put(idStr, newsc);
 

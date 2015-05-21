@@ -30,36 +30,35 @@ import org.docx4j.jaxb.Context;
 import org.docx4j.wml.TcPr;
 
 /**
- *	@author Jojada Tirtowidjojo - 03/06/2008
+ * @author Jojada Tirtowidjojo - 03/06/2008
  */
 public class TableCellML extends ElementML {
 	private TableCellPropertiesML tcPr;
-	
-	public TableCellML(Object docxObject) {
-		this(docxObject, false);
+
+	public TableCellML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
-	
-	public TableCellML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+
+	public TableCellML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
-	
+
 	/**
 	 * Gets table cell properties of this cell.
 	 * 
-	 * @return a PropertiesContainerML, if any
-	 *         null, otherwise 
+	 * @return a PropertiesContainerML, if any null, otherwise
 	 */
 	public PropertiesContainerML getTableCellProperties() {
 		return this.tcPr;
 	}
-	
+
 	public void setTableCellProperties(TableCellPropertiesML tcPr) {
 		if (tcPr != null && tcPr.getParent() != null) {
 			throw new IllegalArgumentException("Not an orphan.");
 		}
-		
+
 		this.tcPr = tcPr;
-		
+
 		org.docx4j.wml.TcPr newDocxPr = null;
 		if (tcPr != null) {
 			tcPr.setParent(TableCellML.this);
@@ -70,31 +69,33 @@ public class TableCellML extends ElementML {
 			newDocxPr.setParent(this.docxObject);
 		}
 	}
-	
+
+	@Override
 	public Object clone() {
 		Object obj = null;
 		if (this.docxObject != null) {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
-		
-		return new TableCellML(obj, this.isDummy);
+
+		return new TableCellML(obj, getElementMLFactory(), this.isDummy);
 	}
 
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		boolean canAdd = true;
-		
-		//Currently only supporting nested TableML and ParagraphML.
-		//See: initChildren()
-		if (!(child instanceof TableML)
-			&& !(child instanceof ParagraphML)) {
+
+		// Currently only supporting nested TableML and ParagraphML.
+		// See: initChildren()
+		if (!(child instanceof TableML) && !(child instanceof ParagraphML)) {
 			canAdd = false;
 		} else {
 			canAdd = super.canAddChild(idx, child);
 		}
-		
+
 		return canAdd;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		if (!(child instanceof ParagraphML)) {
 			throw new IllegalArgumentException("NOT a ParagraphML");
@@ -104,49 +105,50 @@ public class TableCellML extends ElementML {
 		}
 		super.addChild(idx, child, adopt);
 	}
-		
+
+	@Override
 	public void setParent(ElementML parent) {
-		if (parent != null 
-			&& !(parent instanceof TableRowML)) {
+		if (parent != null && !(parent instanceof TableRowML)) {
 			throw new IllegalArgumentException("Parent type = " + parent.getClass().getSimpleName());
 		}
 		this.parent = parent;
 	}
-	
+
+	@Override
 	protected List<Object> getDocxChildren() {
 		List<Object> theChildren = null;
 
 		if (this.docxObject == null) {
-			;//do nothing
+			;// do nothing
 		} else {
-			org.docx4j.wml.Tc cell = 
-				(org.docx4j.wml.Tc) JAXBIntrospector.getValue(this.docxObject);
+			org.docx4j.wml.Tc cell = (org.docx4j.wml.Tc) JAXBIntrospector.getValue(this.docxObject);
 			theChildren = cell.getEGBlockLevelElts();
 		}
 
 		return theChildren;
 	}
-	
+
+	@Override
 	protected void init(Object docxObject) {
 		org.docx4j.wml.Tc cell = null;
-		
+
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		
+
 		if (docxObject == null) {
-			;//implied TableML
-			
+			;// implied TableML
+
 		} else if (inspector.isElement(docxObject)) {
 			Object value = JAXBIntrospector.getValue(docxObject);
 			if (value instanceof org.docx4j.wml.Tc) {
 				cell = (org.docx4j.wml.Tc) value;
 				this.isDummy = false;
 			} else {
-				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 			}
 		} else {
-			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
-		
+
 		if (cell != null) {
 			initTableCellProperties(cell);
 			initChildren(cell);
@@ -155,48 +157,46 @@ public class TableCellML extends ElementML {
 
 	private void initTableCellProperties(org.docx4j.wml.Tc cell) {
 		this.tcPr = null;
-		
+
 		TcPr tcellPr = cell.getTcPr();
 		if (tcellPr != null) {
-			this.tcPr = new TableCellPropertiesML(tcellPr);
+			this.tcPr = new TableCellPropertiesML(tcellPr, getElementMLFactory());
 			this.tcPr.setParent(TableCellML.this);
 		}
 	}
-	
+
 	private void initChildren(org.docx4j.wml.Tc cell) {
 		this.children = null;
-		
+
 		List<Object> list = cell.getEGBlockLevelElts();
 		if (!list.isEmpty()) {
 			this.children = new ArrayList<ElementML>(list.size());
-			
+
 			ElementML ml = null;
 			for (Object obj : list) {
 				Object value = JAXBIntrospector.getValue(obj);
-				
-				//if (value instanceof org.docx4j.wml.SdtBlock) {
-					//ml = new SdtBlockML(obj);
-				//} else
+
+				// if (value instanceof org.docx4j.wml.SdtBlock) {
+				// ml = new SdtBlockML(obj);
+				// } else
 				if (value instanceof org.docx4j.wml.Tbl) {
-					ml = new TableML(obj);
+					ml = new TableML(obj, getElementMLFactory());
 					ml.setParent(TableCellML.this);
 					this.children.add(ml);
-					
+
 				} else if (value instanceof org.docx4j.wml.CTMarkupRange) {
-					//suppress <w:bookmarkStart> and <w:bookmarkEnd>
+					// suppress <w:bookmarkStart> and <w:bookmarkEnd>
 					JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
 					QName name = inspector.getElementName(obj);
-					if (name != null 
-						&& (name.getLocalPart() == "bookmarkStart" 
-							|| name.getLocalPart() == "bookmarkEnd")) {
-						//suppress
+					if (name != null && (name.getLocalPart() == "bookmarkStart" || name.getLocalPart() == "bookmarkEnd")) {
+						// suppress
 					} else {
-						ml = new ParagraphML(obj);
+						ml = new ParagraphML(obj, getElementMLFactory());
 						ml.setParent(TableCellML.this);
 						this.children.add(ml);
 					}
 				} else {
-					ml = new ParagraphML(obj);
+					ml = new ParagraphML(obj, getElementMLFactory());
 					ml.setParent(TableCellML.this);
 					this.children.add(ml);
 				}
@@ -205,22 +205,4 @@ public class TableCellML extends ElementML {
 	}// initChildren()
 
 }// TableCellML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -21,41 +21,38 @@ package org.plutext.client.wrappedTransforms;
 
 import java.util.HashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.docx4all.xml.ElementMLFactory;
 import org.plutext.client.Mediator;
 import org.plutext.client.state.StateChunk;
 import org.plutext.transforms.Changesets.Changeset;
 import org.plutext.transforms.Transforms.T;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
-    /* This class allows the server to return the details of an
-     * update which was attempted, but which failed. */
-public class TransformFailed extends TransformAbstract
-{
+/* This class allows the server to return the details of an
+ * update which was attempted, but which failed. */
+public class TransformFailed extends TransformAbstract {
 	private static Logger log = LoggerFactory.getLogger(TransformFailed.class);
 
-    public TransformFailed(T t)
-    {
-    	super(t);
-    }
+	public TransformFailed(T t, ElementMLFactory factory) {
+		super(t, factory);
+	}
 
-	 /* Compare the updated sdt to the original, replacing the
-     * updated one with containing w:ins and w:del */
+	/* Compare the updated sdt to the original, replacing the
+	* updated one with containing w:ins and w:del */
 	@Override
-    public String markupChanges(String original, Changeset changeset) {
-        // Do nothing.
-        // How best to indicate to the user that something
-        // has moved?  Just in a dialog box?
+	public String markupChanges(String original, Changeset changeset) {
+		// Do nothing.
+		// How best to indicate to the user that something
+		// has moved? Just in a dialog box?
 		return null;
-    }
+	}
 
-    public long apply(Mediator mediator, HashMap<String, StateChunk> stateChunks)
-    {
-        log.debug("TransformFailed not fully implemented!");
+	@Override
+	public long apply(Mediator mediator, HashMap<String, StateChunk> stateChunks) {
+		log.debug("TransformFailed not fully implemented!");
 
-        return sequenceNumber;
-    }
-
+		return sequenceNumber;
+	}
 
 }

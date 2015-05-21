@@ -23,7 +23,6 @@ import java.math.BigInteger;
 
 import javax.swing.text.StyleConstants;
 
-import org.docx4all.swing.text.WordMLDocument;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.openpackaging.parts.WordprocessingML.StyleDefinitionsPart;
@@ -35,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Jojada Tirtowidjojo - 02/01/2008
  */
-public class ObjectFactory {
+public class ObjectFactory implements IObjectFactory {
 
 	protected static Logger log = LoggerFactory.getLogger(ObjectFactory.class);
 
@@ -46,11 +45,15 @@ public class ObjectFactory {
 	// return _jaxbFactory.createP(p);
 	// }
 
-	public ObjectFactory(WordMLDocument document) {
+	public ObjectFactory() {
 
 	}
 
-	public final org.docx4j.wml.P createP(String textContent) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createP(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.P createP(String textContent) {
 		org.docx4j.wml.P p = _jaxbFactory.createP();
 		if (textContent != null) {
 			org.docx4j.wml.R r = createR(textContent);
@@ -60,7 +63,11 @@ public class ObjectFactory {
 		return p;
 	}
 
-	public final static org.docx4j.wml.CTSmartTagRun createCTSmartTagRun(String textContent) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createCTSmartTagRun(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.CTSmartTagRun createCTSmartTagRun(String textContent) {
 		org.docx4j.wml.CTSmartTagRun ct = _jaxbFactory.createCTSmartTagRun();
 		if (textContent != null) {
 			org.docx4j.wml.R r = createR(textContent);
@@ -70,17 +77,29 @@ public class ObjectFactory {
 		return ct;
 	}
 
-	public final static org.docx4j.wml.PPr createPPr() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createPPr()
+	 */
+	@Override
+	public org.docx4j.wml.PPr createPPr() {
 		return _jaxbFactory.createPPr();
 	}
 
-	public final static org.docx4j.wml.PPr.PStyle createPStyle(String styleId) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createPStyle(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.PPr.PStyle createPStyle(String styleId) {
 		org.docx4j.wml.PPr.PStyle pStyle = _jaxbFactory.createPPrBasePStyle();
 		pStyle.setVal(styleId);
 		return pStyle;
 	}
 
-	public final static org.docx4j.wml.R createR(String textContent) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createR(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.R createR(String textContent) {
 		org.docx4j.wml.R r = _jaxbFactory.createR();
 
 		if (org.docx4all.ui.main.Constants.NEWLINE.equals(textContent)) {
@@ -97,11 +116,19 @@ public class ObjectFactory {
 		return r;
 	}
 
-	public final static org.docx4j.wml.RPr createRPr() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createRPr()
+	 */
+	@Override
+	public org.docx4j.wml.RPr createRPr() {
 		return _jaxbFactory.createRPr();
 	}
 
-	public final static org.docx4j.wml.RStyle createRStyle(String styleId) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createRStyle(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.RStyle createRStyle(String styleId) {
 		org.docx4j.wml.RStyle rStyle = _jaxbFactory.createRStyle();
 		rStyle.setVal(styleId);
 		return rStyle;
@@ -113,14 +140,22 @@ public class ObjectFactory {
 	// return _jaxbFactory.createT(text);
 	// }
 
-	public final static org.docx4j.wml.Text createT(String textContent) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createT(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.Text createT(String textContent) {
 		org.docx4j.wml.Text text = _jaxbFactory.createText();
 		text.setValue(textContent);
 		text.setSpace("preserve");
 		return text;
 	}
 
-	public static WordprocessingMLPackage createDocumentPackage(org.docx4j.wml.Document doc) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createDocumentPackage(org.docx4j.wml.Document)
+	 */
+	@Override
+	public WordprocessingMLPackage createDocumentPackage(org.docx4j.wml.Document doc) {
 		// Create a package
 		WordprocessingMLPackage wmlPack = new WordprocessingMLPackage();
 
@@ -155,12 +190,20 @@ public class ObjectFactory {
 
 	}
 
-	public final static WordprocessingMLPackage createEmptyDocumentPackage() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createEmptyDocumentPackage()
+	 */
+	@Override
+	public WordprocessingMLPackage createEmptyDocumentPackage() {
 		org.docx4j.wml.Document doc = createEmptyDocument();
 		return createDocumentPackage(doc);
 	}
 
-	public final static org.docx4j.wml.Document createEmptyDocument() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createEmptyDocument()
+	 */
+	@Override
+	public org.docx4j.wml.Document createEmptyDocument() {
 		org.docx4j.wml.P para = createP("");
 
 		org.docx4j.wml.Body body = _jaxbFactory.createBody();
@@ -175,7 +218,11 @@ public class ObjectFactory {
 		return doc;
 	}
 
-	public final static org.docx4j.wml.Document createEmptySharedDocument() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createEmptySharedDocument()
+	 */
+	@Override
+	public org.docx4j.wml.Document createEmptySharedDocument() {
 		org.docx4j.wml.P para = createP("");
 
 		org.docx4j.wml.SdtContentBlock sdtContent = createSdtContentBlock();
@@ -197,7 +244,11 @@ public class ObjectFactory {
 		return doc;
 	}
 
-	public final static org.docx4j.wml.Jc createJc(Integer align) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createJc(java.lang.Integer)
+	 */
+	@Override
+	public org.docx4j.wml.Jc createJc(Integer align) {
 		org.docx4j.wml.Jc theJc = null;
 
 		if (align != null) {
@@ -218,13 +269,21 @@ public class ObjectFactory {
 		return theJc;
 	}
 
-	public final static org.docx4j.wml.BooleanDefaultTrue createBooleanDefaultTrue(Boolean b) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createBooleanDefaultTrue(java.lang.Boolean)
+	 */
+	@Override
+	public org.docx4j.wml.BooleanDefaultTrue createBooleanDefaultTrue(Boolean b) {
 		BooleanDefaultTrue bdt = _jaxbFactory.createBooleanDefaultTrue();
 		bdt.setVal(b);
 		return bdt;
 	}
 
-	public final static org.docx4j.wml.U createUnderline(String value, String color) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createUnderline(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.U createUnderline(String value, String color) {
 		org.docx4j.wml.U u = _jaxbFactory.createU();
 		org.docx4j.wml.UnderlineEnumeration ue = org.docx4j.wml.UnderlineEnumeration.fromValue(value);
 		u.setVal(ue);
@@ -232,46 +291,78 @@ public class ObjectFactory {
 		return u;
 	}
 
-	public final static org.docx4j.wml.RFonts createRPrRFonts(String ascii) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createRPrRFonts(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.RFonts createRPrRFonts(String ascii) {
 		org.docx4j.wml.RFonts rfonts = _jaxbFactory.createRFonts();
 		rfonts.setAscii(ascii);
 		return rfonts;
 	}
 
-	public final static org.docx4j.wml.HpsMeasure createHpsMeasure(Integer value) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createHpsMeasure(java.lang.Integer)
+	 */
+	@Override
+	public org.docx4j.wml.HpsMeasure createHpsMeasure(Integer value) {
 		org.docx4j.wml.HpsMeasure sz = _jaxbFactory.createHpsMeasure();
 		sz.setVal(new BigInteger(value.toString()));
 		return sz;
 	}
 
-	public final static org.docx4j.wml.Id createId(BigInteger val) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createId(java.math.BigInteger)
+	 */
+	@Override
+	public org.docx4j.wml.Id createId(BigInteger val) {
 		org.docx4j.wml.Id id = _jaxbFactory.createId();
 		id.setVal(val);
 		return id;
 	}
 
-	public final static org.docx4j.wml.Tag createTag(String val) {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createTag(java.lang.String)
+	 */
+	@Override
+	public org.docx4j.wml.Tag createTag(String val) {
 		org.docx4j.wml.Tag tag = _jaxbFactory.createTag();
 		tag.setVal(val);
 		return tag;
 	}
 
-	public final static org.docx4j.wml.SdtBlock createSdtBlock() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createSdtBlock()
+	 */
+	@Override
+	public org.docx4j.wml.SdtBlock createSdtBlock() {
 		org.docx4j.wml.SdtBlock sdtBlock = _jaxbFactory.createSdtBlock();
 		return sdtBlock;
 	}
 
-	public final static org.docx4j.wml.SdtPr createSdtPr() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createSdtPr()
+	 */
+	@Override
+	public org.docx4j.wml.SdtPr createSdtPr() {
 		org.docx4j.wml.SdtPr sdtPr = _jaxbFactory.createSdtPr();
 		return sdtPr;
 	}
 
-	public final static org.docx4j.wml.SdtContentBlock createSdtContentBlock() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createSdtContentBlock()
+	 */
+	@Override
+	public org.docx4j.wml.SdtContentBlock createSdtContentBlock() {
 		org.docx4j.wml.SdtContentBlock sdtContentBlock = _jaxbFactory.createSdtContentBlock();
 		return sdtContentBlock;
 	}
 
-	public final static org.docx4j.wml.P.Hyperlink createHyperlink() {
+	/* (non-Javadoc)
+	 * @see org.docx4all.xml.IObjectFactory#createHyperlink()
+	 */
+	@Override
+	public org.docx4j.wml.P.Hyperlink createHyperlink() {
 		org.docx4j.wml.P.Hyperlink hyperlink = _jaxbFactory.createPHyperlink();
 		return hyperlink;
 	}

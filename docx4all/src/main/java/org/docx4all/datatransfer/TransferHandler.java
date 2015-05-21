@@ -36,70 +36,79 @@ import org.docx4all.swing.text.WordMLDocument;
 import org.docx4all.swing.text.WordMLFragment;
 
 /**
- *	@author Jojada Tirtowidjojo - 16/01/2008
+ * @author Jojada Tirtowidjojo - 16/01/2008
  */
 public class TransferHandler extends javax.swing.TransferHandler {
-    public TransferHandler() {
-    }
 
-    public boolean importData(JComponent c, Transferable t) {
-    	DataFlavor[] flavors = t.getTransferDataFlavors();
-    	
-        if (!canImport(c, flavors)
-        	|| !(c instanceof WordMLTextPane)) {
-            return false;
-        }
-        
-        WordMLFragment wmlFragment = getFragment(t, flavors);        
-        if (wmlFragment != null) {
-        	((WordMLTextPane) c).replaceSelection(wmlFragment);
-        }
-        
-        //Do not worry about the returned value for now
-        return true;
-    }
+	private final WordMLDocument doc;
 
-    protected void exportDone(JComponent c, Transferable data, int action) {
-        if (action == MOVE) {
-        	final JEditorPane editor = (JEditorPane) c;
+	public TransferHandler(WordMLDocument doc) {
+		this.doc = doc;
+	}
+
+	@Override
+	public boolean importData(JComponent c, Transferable t) {
+		DataFlavor[] flavors = t.getTransferDataFlavors();
+
+		if (!canImport(c, flavors) || !(c instanceof WordMLTextPane)) {
+			return false;
+		}
+
+		WordMLFragment wmlFragment = getFragment(t, flavors);
+		if (wmlFragment != null) {
+			((WordMLTextPane) c).replaceSelection(wmlFragment);
+		}
+
+		// Do not worry about the returned value for now
+		return true;
+	}
+
+	@Override
+	protected void exportDone(JComponent c, Transferable data, int action) {
+		if (action == MOVE) {
+			final JEditorPane editor = (JEditorPane) c;
 			WordMLDocument doc = (WordMLDocument) editor.getDocument();
 			final int start = editor.getSelectionStart();
 			int length = editor.getSelectionEnd() - start;
 			try {
 				doc.remove(start, length);
-				
+
 				Runnable r = new Runnable() {
+					@Override
 					public void run() {
 						editor.setCaretPosition(start);
 					}
 				};
 				SwingUtilities.invokeLater(r);
-				
+
 			} catch (BadLocationException exc) {
-				;//ignore
+				;// ignore
 			}
-        }
-    }
+		}
+	}
 
-    public boolean canImport(JComponent c, DataFlavor[] flavors) {
-    	boolean canImport = false;
-    	for (int i=0; i < flavors.length && !canImport; i++) {
-    		canImport = WordMLTransferable.isSupported(flavors[i]);
-    	}
-    	
-    	return canImport;
-    }
+	@Override
+	public boolean canImport(JComponent c, DataFlavor[] flavors) {
+		boolean canImport = false;
+		for (int i = 0; i < flavors.length && !canImport; i++) {
+			canImport = WordMLTransferable.isSupported(flavors[i]);
+		}
 
-    public int getSourceActions(JComponent c) {
-        return COPY_OR_MOVE;
-    }
-    
-    protected Transferable createTransferable(JComponent c) {
-    	Transferable theObj = null;    	
-    	if (c instanceof WordMLTextPane) {
-    		WordMLTextPane editor = (WordMLTextPane) c;
+		return canImport;
+	}
+
+	@Override
+	public int getSourceActions(JComponent c) {
+		return COPY_OR_MOVE;
+	}
+
+	@Override
+	protected Transferable createTransferable(JComponent c) {
+		Transferable theObj = null;
+		if (c instanceof WordMLTextPane) {
+			WordMLTextPane editor = (WordMLTextPane) c;
 			editor.saveCaretText();
-			WordMLDocument doc = (WordMLDocument) editor.getDocument();
+			WordMLDocument doc = editor.getDocument();
 			int start = editor.getSelectionStart();
 			int length = editor.getSelectionEnd() - start;
 			try {
@@ -109,59 +118,37 @@ public class TransferHandler extends javax.swing.TransferHandler {
 			} catch (BadSelectionException exc) {
 				;// ignore
 			}
-    	}
-        return theObj;
-    }
+		}
+		return theObj;
+	}
 
-    private boolean contains(DataFlavor[] flavors, DataFlavor checkee) {
-    	boolean contained = false;
-    	
-        for (int i = 0; i < flavors.length && !contained; i++) {
-            if (flavors[i].equals(checkee)) {
-            	contained = true;
-            }
-        }
-        return contained;
-    }
+	private boolean contains(DataFlavor[] flavors, DataFlavor checkee) {
+		boolean contained = false;
 
-    private WordMLFragment getFragment(Transferable t, DataFlavor[] flavors) {
-        WordMLFragment wmlFragment = null;
-        try {
-            if (contains(flavors, WordMLTransferable.WORDML_FRAGMENT_FLAVOR)) {
-            	wmlFragment = 
-            		(WordMLFragment) 
-            			t.getTransferData(
-            				WordMLTransferable.WORDML_FRAGMENT_FLAVOR);
-            } else if (contains(flavors, WordMLTransferable.STRING_FLAVOR)) {
-				String s = 
-					(String) t.getTransferData(WordMLTransferable.STRING_FLAVOR);
-            	wmlFragment = new WordMLFragment(s);
-            }
-        } catch (UnsupportedFlavorException exc) {
-            exc.printStackTrace();
-        } catch (IOException exc) {
-            exc.printStackTrace();
-        }
+		for (int i = 0; i < flavors.length && !contained; i++) {
+			if (flavors[i].equals(checkee)) {
+				contained = true;
+			}
+		}
+		return contained;
+	}
 
-        return wmlFragment;
-    }
+	private WordMLFragment getFragment(Transferable t, DataFlavor[] flavors) {
+		WordMLFragment wmlFragment = null;
+		try {
+			if (contains(flavors, WordMLTransferable.WORDML_FRAGMENT_FLAVOR)) {
+				wmlFragment = (WordMLFragment) t.getTransferData(WordMLTransferable.WORDML_FRAGMENT_FLAVOR);
+			} else if (contains(flavors, WordMLTransferable.STRING_FLAVOR)) {
+				String s = (String) t.getTransferData(WordMLTransferable.STRING_FLAVOR);
+				wmlFragment = new WordMLFragment(s, doc);
+			}
+		} catch (UnsupportedFlavorException exc) {
+			exc.printStackTrace();
+		} catch (IOException exc) {
+			exc.printStackTrace();
+		}
+
+		return wmlFragment;
+	}
 }// TransferHandler class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

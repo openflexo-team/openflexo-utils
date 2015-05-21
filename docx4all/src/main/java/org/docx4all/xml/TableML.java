@@ -30,38 +30,37 @@ import org.docx4j.wml.TblGrid;
 import org.docx4j.wml.TblPr;
 
 /**
- *	@author Jojada Tirtowidjojo - 03/06/2008
+ * @author Jojada Tirtowidjojo - 03/06/2008
  */
 public class TableML extends ElementML {
-	
+
 	private TablePropertiesML tblPr;
 	private TableGridML tblGrid;
-	
-	public TableML(Object docxObject) {
-		this(docxObject, false);
+
+	public TableML(Object docxObject, ElementMLFactory elementMLFactory) {
+		this(docxObject, elementMLFactory, false);
 	}
-	
-	public TableML(Object docxObject, boolean isDummy) {
-		super(docxObject, isDummy);
+
+	public TableML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(docxObject, elementMLFactory, isDummy);
 	}
-	
+
 	/**
 	 * Gets table properties of this table.
 	 * 
-	 * @return a PropertiesContainerML, if any
-	 *         null, otherwise 
+	 * @return a PropertiesContainerML, if any null, otherwise
 	 */
 	public PropertiesContainerML getTableProperties() {
 		return this.tblPr;
 	}
-	
+
 	public void setTableProperties(TablePropertiesML tblPr) {
 		if (tblPr != null && tblPr.getParent() != null) {
 			throw new IllegalArgumentException("Not an orphan.");
 		}
-		
+
 		this.tblPr = tblPr;
-		
+
 		org.docx4j.wml.TblPr newDocxPr = null;
 		if (tblPr != null) {
 			tblPr.setParent(TableML.this);
@@ -72,24 +71,23 @@ public class TableML extends ElementML {
 			newDocxPr.setParent(this.docxObject);
 		}
 	}
-	
+
 	/**
 	 * Gets table grid of this table.
 	 * 
-	 * @return a TableGridML, if any
-	 *         null, otherwise 
+	 * @return a TableGridML, if any null, otherwise
 	 */
 	public TableGridML getTableGrid() {
 		return this.tblGrid;
 	}
-	
+
 	public void setTableGrid(TableGridML tblGrid) {
 		if (tblGrid != null && tblGrid.getParent() != null) {
 			throw new IllegalArgumentException("Not an orphan.");
 		}
-		
+
 		this.tblGrid = tblGrid;
-		
+
 		org.docx4j.wml.TblGrid newDocxGrid = null;
 		if (tblGrid != null) {
 			tblGrid.setParent(TableML.this);
@@ -100,28 +98,31 @@ public class TableML extends ElementML {
 			newDocxGrid.setParent(this.docxObject);
 		}
 	}
-	
+
+	@Override
 	public Object clone() {
 		Object obj = null;
 		if (this.docxObject != null) {
 			obj = XmlUtils.deepCopy(this.docxObject);
 		}
-		
-		return new TableML(obj, this.isDummy);
+
+		return new TableML(obj, getElementMLFactory(), this.isDummy);
 	}
 
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		boolean canAdd = true;
-		
+
 		if (!(child instanceof TableRowML)) {
 			canAdd = false;
 		} else {
 			canAdd = super.canAddChild(idx, child);
 		}
-		
+
 		return canAdd;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		if (!(child instanceof TableRowML)) {
 			throw new IllegalArgumentException("NOT a TableRowML");
@@ -131,50 +132,50 @@ public class TableML extends ElementML {
 		}
 		super.addChild(idx, child, adopt);
 	}
-		
+
+	@Override
 	public void setParent(ElementML parent) {
-		if (parent != null 
-			&& !(parent instanceof BodyML)
-			&& !(parent instanceof SdtBlockML)) {
+		if (parent != null && !(parent instanceof BodyML) && !(parent instanceof SdtBlockML)) {
 			throw new IllegalArgumentException("Parent type = " + parent.getClass().getSimpleName());
 		}
 		this.parent = parent;
 	}
-	
+
+	@Override
 	protected List<Object> getDocxChildren() {
 		List<Object> theChildren = null;
 
 		if (this.docxObject == null) {
-			;//do nothing
+			;// do nothing
 		} else {
-			org.docx4j.wml.Tbl table = 
-				(org.docx4j.wml.Tbl) JAXBIntrospector.getValue(this.docxObject);
+			org.docx4j.wml.Tbl table = (org.docx4j.wml.Tbl) JAXBIntrospector.getValue(this.docxObject);
 			theChildren = table.getEGContentRowContent();
 		}
 
 		return theChildren;
 	}
-	
+
+	@Override
 	protected void init(Object docxObject) {
 		org.docx4j.wml.Tbl table = null;
-		
+
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
-		
+
 		if (docxObject == null) {
-			;//implied TableML
-			
+			;// implied TableML
+
 		} else if (inspector.isElement(docxObject)) {
 			Object value = JAXBIntrospector.getValue(docxObject);
 			if (value instanceof org.docx4j.wml.Tbl) {
 				table = (org.docx4j.wml.Tbl) value;
 				this.isDummy = false;
 			} else {
-				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+				throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 			}
 		} else {
-			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);			
+			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
-		
+
 		if (table != null) {
 			initTableProperties(table);
 			initTableGrid(table);
@@ -187,57 +188,38 @@ public class TableML extends ElementML {
 
 		TblPr prop = table.getTblPr();
 		if (prop != null) {
-			this.tblPr = new TablePropertiesML(prop);
+			this.tblPr = new TablePropertiesML(prop, getElementMLFactory());
 			this.tblPr.setParent(TableML.this);
 		}
 	}
-	
+
 	private void initTableGrid(org.docx4j.wml.Tbl table) {
 		this.tblGrid = null;
-		
+
 		TblGrid grid = table.getTblGrid();
 		if (grid != null) {
-			this.tblGrid = new TableGridML(grid);
+			this.tblGrid = new TableGridML(grid, getElementMLFactory());
 			this.tblGrid.setParent(TableML.this);
 		}
 	}
-	
+
 	private void initChildren(org.docx4j.wml.Tbl table) {
 		this.children = null;
-		
+
 		List<Object> list = table.getEGContentRowContent();
 		if (!list.isEmpty()) {
 			this.children = new ArrayList<ElementML>(list.size());
 			for (Object obj : list) {
 				if (obj instanceof org.docx4j.wml.Tr) {
-					ElementML ml = new TableRowML(obj);
+					ElementML ml = new TableRowML(obj, getElementMLFactory());
 					ml.setParent(TableML.this);
 					this.children.add(ml);
 				} else {
-					//Ignore this at the moment.
+					// Ignore this at the moment.
 				}
 			}
 		}
 	}// initChildren()
 
-
 }// TableML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

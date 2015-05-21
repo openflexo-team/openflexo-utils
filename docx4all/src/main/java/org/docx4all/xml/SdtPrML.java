@@ -22,24 +22,24 @@ package org.docx4all.xml;
 import java.math.BigInteger;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.docx4j.XmlUtils;
 import org.docx4j.wml.Id;
 import org.plutext.client.SdtWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 16/04/2008
+ * @author Jojada Tirtowidjojo - 16/04/2008
  */
-public class SdtPrML  extends ElementML {
+public class SdtPrML extends ElementML {
 	private static Logger log = LoggerFactory.getLogger(SdtPrML.class);
 
-	public SdtPrML(org.docx4j.wml.SdtPr sdtPr) {
-		this(sdtPr, false);
+	public SdtPrML(org.docx4j.wml.SdtPr sdtPr, ElementMLFactory elementMLFactory) {
+		this(sdtPr, elementMLFactory, false);
 	}
 
-	public SdtPrML(org.docx4j.wml.SdtPr sdtPr, boolean isDummy) {
-		super(sdtPr, isDummy);
+	public SdtPrML(org.docx4j.wml.SdtPr sdtPr, ElementMLFactory elementMLFactory, boolean isDummy) {
+		super(sdtPr, elementMLFactory, isDummy);
 	}
 
 	public String getPlutextId() {
@@ -50,7 +50,7 @@ public class SdtPrML  extends ElementML {
 		}
 		return id;
 	}
-	
+
 	public void setPlutextId(String id) {
 		org.docx4j.wml.SdtPr sdtPr = getDocxSdtPr();
 		String version = SdtWrapper.getVersionNumber(sdtPr);
@@ -58,49 +58,52 @@ public class SdtPrML  extends ElementML {
 		Id sdtId = new Id();
 		sdtId.setVal(BigInteger.valueOf(Long.valueOf(id).longValue()));
 		sdtPr.setId(sdtId);
-		
+
 		String tagValue = SdtWrapper.generateTag(id, version);
-		sdtPr.setTag(ObjectFactory.createTag(tagValue));
+		sdtPr.setTag(getObjectFactory().createTag(tagValue));
 	}
-	
+
 	public String getTagValue() {
 		org.docx4j.wml.SdtPr sdtPr = getDocxSdtPr();
 		org.docx4j.wml.Tag tag = sdtPr.getTag();
 		String value = (tag == null) ? null : tag.getVal();
 		return value;
 	}
-	
+
 	public void setTagValue(String val) {
 		org.docx4j.wml.SdtPr sdtPr = getDocxSdtPr();
 		org.docx4j.wml.Tag tag = sdtPr.getTag();
 		if (tag == null) {
-			tag = ObjectFactory.createTag(val);
+			tag = getObjectFactory().createTag(val);
 			sdtPr.setTag(tag);
 		} else {
 			tag.setVal(val);
 		}
 	}
-	
+
+	@Override
 	public Object clone() {
 		org.docx4j.wml.SdtPr obj = null;
 		if (this.docxObject != null) {
 			obj = (org.docx4j.wml.SdtPr) XmlUtils.deepCopy(this.docxObject);
 		}
 
-		return new SdtPrML(obj, this.isDummy);
+		return new SdtPrML(obj, getElementMLFactory(), this.isDummy);
 	}
 
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
-		//Cannot add child to this SdtPrML object.
-		//Properties are set by calling its corresponding setter method.
+		// Cannot add child to this SdtPrML object.
+		// Properties are set by calling its corresponding setter method.
 		return false;
 	}
 
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
-		throw new UnsupportedOperationException(
-			"Properties should be set by calling its corresponding setter method.");
+		throw new UnsupportedOperationException("Properties should be set by calling its corresponding setter method.");
 	}
 
+	@Override
 	public void setParent(ElementML parent) {
 		if (parent != null && !(parent instanceof SdtBlockML)) {
 			throw new IllegalArgumentException("NOT a SdtBlockML.");
@@ -108,34 +111,18 @@ public class SdtPrML  extends ElementML {
 		this.parent = parent;
 	}
 
+	@Override
 	protected List<Object> getDocxChildren() {
 		return null;
 	}
 
+	@Override
 	protected void init(Object docxObject) {
-		;//do nothing
+		;// do nothing
 	}
 
 	private org.docx4j.wml.SdtPr getDocxSdtPr() {
 		return (org.docx4j.wml.SdtPr) getDocxObject();
 	}
 }// SdtPrML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

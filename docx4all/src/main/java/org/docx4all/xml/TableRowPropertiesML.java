@@ -30,95 +30,89 @@ import org.docx4j.XmlUtils;
 import org.docx4j.wml.TrPr;
 
 /**
- *	@author Jojada Tirtowidjojo - 05/06/2008
+ * @author Jojada Tirtowidjojo - 05/06/2008
  */
 public class TableRowPropertiesML extends ElementML implements PropertiesContainerML {
 	private MutableAttributeSet attrs;
-	
-	public TableRowPropertiesML(TrPr trPr) {
-		super(trPr, false);
+
+	public TableRowPropertiesML(TrPr trPr, ElementMLFactory elementMLFactory) {
+		super(trPr, elementMLFactory, false);
 	}
-	
-    public void addAttribute(Object name, Object value) {
-    	this.attrs.addAttribute(name, value);
-    }
-    
+
+	@Override
+	public void addAttribute(Object name, Object value) {
+		this.attrs.addAttribute(name, value);
+	}
+
+	@Override
 	public void addAttributes(AttributeSet attrs) {
 		this.attrs.addAttributes(attrs);
 	}
-	
+
+	@Override
 	public MutableAttributeSet getAttributeSet() {
 		return new SimpleAttributeSet(this.attrs);
 	}
-	
-    public void removeAttributes(AttributeSet attributes) {
-    	attrs.removeAttributes(attributes);
+
+	@Override
+	public void removeAttributes(AttributeSet attributes) {
+		attrs.removeAttributes(attributes);
 	}
 
-    public void removeAttribute(Object name) {
-    	attrs.removeAttribute(name);
-    }
+	@Override
+	public void removeAttribute(Object name) {
+		attrs.removeAttribute(name);
+	}
 
+	@Override
 	public void save() {
 		if (this.docxObject == null) {
 			return;
 		}
-		
-    	//TODO:Save TableRowPropertiesML attributes to TrPr child elements
+
+		// TODO:Save TableRowPropertiesML attributes to TrPr child elements
 	}
-	
+
+	@Override
 	public Object clone() {
 		TrPr obj = null;
 		if (this.docxObject != null) {
 			obj = (TrPr) XmlUtils.deepCopy(this.docxObject);
 		}
-		return new TableRowPropertiesML(obj);
+		return new TableRowPropertiesML(obj, getElementMLFactory());
 	}
-	
+
+	@Override
 	public boolean canAddChild(int idx, ElementML child) {
 		return false;
 	}
-	
+
+	@Override
 	public void addChild(int idx, ElementML child, boolean adopt) {
 		throw new UnsupportedOperationException("Cannot have a child.");
 	}
-		
+
+	@Override
 	public void setParent(ElementML parent) {
 		if (parent != null && !(parent instanceof TableRowML)) {
 			throw new IllegalArgumentException("NOT a TableRowML.");
 		}
 		this.parent = parent;
 	}
-	
+
+	@Override
 	public List<Object> getDocxChildren() {
-		return null;//do not have children
+		return null;// do not have children
 	}
-		
+
+	@Override
 	protected void init(Object docxObject) {
 		this.attrs = new SimpleAttributeSet();
-		
+
 		if (docxObject != null) {
 			StyleSheet.addAttributes(this.attrs, (TrPr) docxObject);
 		}
 	}
 
 }// TableRowPropertiesML class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

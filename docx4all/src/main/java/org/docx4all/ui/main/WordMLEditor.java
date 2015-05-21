@@ -68,6 +68,9 @@ import javax.swing.text.PlainDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
+import net.sf.vfsjfilechooser.utils.VFSURIParser;
+import net.sf.vfsjfilechooser.utils.VFSUtils;
+
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.provider.webdav.WebdavFileObject;
@@ -98,6 +101,8 @@ import org.docx4all.util.SwingUtil;
 import org.docx4all.xml.BodyML;
 import org.docx4all.xml.DocumentML;
 import org.docx4all.xml.ElementML;
+import org.docx4all.xml.IObjectFactory;
+import org.docx4all.xml.ObjectFactory;
 import org.docx4all.xml.SdtBlockML;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.jdesktop.application.ResourceMap;
@@ -105,9 +110,6 @@ import org.jdesktop.application.SingleFrameApplication;
 import org.plutext.client.Mediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.sf.vfsjfilechooser.utils.VFSURIParser;
-import net.sf.vfsjfilechooser.utils.VFSUtils;
 
 /**
  * @author Jojada Tirtowidjojo - 13/11/2007
@@ -302,6 +304,8 @@ public class WordMLEditor extends SingleFrameApplication {
 			return;
 		}
 
+		IObjectFactory factory = new ObjectFactory();
+
 		log.info(VFSUtils.getFriendlyName(f.getName().getURI()));
 
 		JInternalFrame iframe = _iframeMap.get(f.getName().getURI());
@@ -331,7 +335,7 @@ public class WordMLEditor extends SingleFrameApplication {
 				northPane.addMouseMotionListener(_titleBarMouseListener);
 			}
 
-			JEditorPane editorView = createEditorView(f);
+			JEditorPane editorView = createEditorView(f, factory);
 			JPanel panel = FxScriptUIHelper.getInstance().createEditorPanel(editorView);
 
 			iframe.getContentPane().add(panel);
@@ -516,7 +520,7 @@ public class WordMLEditor extends SingleFrameApplication {
 
 		sourceView.setEditorKit(kit);
 
-		WordMLDocument editorViewDoc = (WordMLDocument) editorView.getDocument();
+		WordMLDocument editorViewDoc = editorView.getDocument();
 
 		try {
 			editorViewDoc.readLock();
@@ -566,7 +570,7 @@ public class WordMLEditor extends SingleFrameApplication {
 		editorView.saveCaretText();
 
 		int pos = editorView.getCaretPosition();
-		WordMLDocument editorViewDoc = (WordMLDocument) editorView.getDocument();
+		WordMLDocument editorViewDoc = editorView.getDocument();
 
 		Mediator plutextClient = editorView.getWordMLEditorKit().getPlutextClient();
 
@@ -581,9 +585,9 @@ public class WordMLEditor extends SingleFrameApplication {
 			WordprocessingMLPackage wp = plutextClient.getVersionHistory(sdtId);
 			org.docx4j.wml.Document wmlDoc = wp.getMainDocumentPart().getJaxbElement();
 
-			WordMLDocument historyDoc = (WordMLDocument) theView.getDocument();
+			WordMLDocument historyDoc = theView.getDocument();
 			historyDoc.setDocumentFilter(new WordMLDocumentFilter());
-			historyDoc.replaceBodyML(new BodyML(wmlDoc.getBody()));
+			historyDoc.replaceBodyML(new BodyML(wmlDoc.getBody(), historyDoc.getElementMLFactory()));
 
 		} catch (Exception exc) {
 			exc.printStackTrace();
@@ -611,9 +615,9 @@ public class WordMLEditor extends SingleFrameApplication {
 			WordprocessingMLPackage wp = plutextClient.getRecentChangesReport();
 			org.docx4j.wml.Document wmlDoc = wp.getMainDocumentPart().getJaxbElement();
 
-			WordMLDocument doc = (WordMLDocument) theView.getDocument();
+			WordMLDocument doc = theView.getDocument();
 			doc.setDocumentFilter(new WordMLDocumentFilter());
-			doc.replaceBodyML(new BodyML(wmlDoc.getBody()));
+			doc.replaceBodyML(new BodyML(wmlDoc.getBody(), doc.getElementMLFactory()));
 
 		} catch (Exception exc) {
 			exc.printStackTrace();
@@ -628,13 +632,12 @@ public class WordMLEditor extends SingleFrameApplication {
 		return theView;
 	}
 
-	private JEditorPane createEditorView(FileObject f) {
+	private JEditorPane createEditorView(FileObject f, IObjectFactory factory) {
 		String fileUri = f.getName().getURI();
 
 		WordMLTextPane editorView = new WordMLTextPane();
 		editorView.addFocusListener(_toolbarStates);
 		editorView.addCaretListener(_toolbarStates);
-		editorView.setTransferHandler(new TransferHandler());
 
 		WordMLEditorKit editorKit = (WordMLEditorKit) editorView.getEditorKit();
 		editorKit.addInputAttributeListener(_toolbarStates);
@@ -643,7 +646,7 @@ public class WordMLEditor extends SingleFrameApplication {
 
 		try {
 			if (f.exists()) {
-				doc = editorKit.read(f);
+				doc = editorKit.read(f, factory);
 			}
 		} catch (Exception exc) {
 			exc.printStackTrace();
@@ -661,6 +664,8 @@ public class WordMLEditor extends SingleFrameApplication {
 		if (doc == null) {
 			doc = (WordMLDocument) editorKit.createDefaultDocument();
 		}
+
+		editorView.setTransferHandler(new TransferHandler(doc));
 
 		doc.putProperty(WordMLDocument.FILE_PATH_PROPERTY, fileUri);
 		doc.addDocumentListener(_toolbarStates);
@@ -1002,7 +1007,7 @@ public class WordMLEditor extends SingleFrameApplication {
 		private void synchEditorView(WordMLTextPane editorView, JEditorPane sourceView) {
 			int caretPos = editorView.getCaretPosition();
 
-			WordMLDocument editorViewDoc = (WordMLDocument) editorView.getDocument();
+			WordMLDocument editorViewDoc = editorView.getDocument();
 			EditorKit kit = sourceView.getEditorKit();
 			AbstractDocument sourceViewDoc = (AbstractDocument) sourceView.getDocument();
 			try {
@@ -1012,14 +1017,14 @@ public class WordMLEditor extends SingleFrameApplication {
 				// Firstly, save source view content into WordprocessingMLPackage
 				WordprocessingMLPackage wmlPackage = (WordprocessingMLPackage) sourceViewDoc
 						.getProperty(WordMLDocument.WML_PACKAGE_PROPERTY);
-				DocUtil.write(kit, sourceViewDoc, wmlPackage);
+				DocUtil.write(kit, sourceViewDoc, wmlPackage, editorViewDoc.getElementMLFactory().getObjectFactory());
 
 				// Now editorView's content has become invalid because
 				// its WordprocessingMLPackage's main document part was
 				// updated by DocUtil.write() above.
 				// Need to refresh editor view.
 				org.docx4j.wml.Document wmlDoc = wmlPackage.getMainDocumentPart().getJaxbElement();
-				editorViewDoc.replaceBodyML(new BodyML(wmlDoc.getBody()));
+				editorViewDoc.replaceBodyML(new BodyML(wmlDoc.getBody(), editorViewDoc.getElementMLFactory()));
 
 				log.debug("stateChanged(): NEW Document Structure...");
 				DocUtil.displayStructure(editorViewDoc);
@@ -1223,8 +1228,8 @@ public class WordMLEditor extends SingleFrameApplication {
 				}
 			} else {
 				tabbedPane.setSelectedIndex(tabIdx);
-				view = (JEditorPane) SwingUtil.getDescendantOfClass(JEditorPane.class, (Container) tabbedPane.getComponentAt(tabIdx),
-						false);
+				view = (JEditorPane) SwingUtil
+						.getDescendantOfClass(JEditorPane.class, (Container) tabbedPane.getComponentAt(tabIdx), false);
 
 			}
 
