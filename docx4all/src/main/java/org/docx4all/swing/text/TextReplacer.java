@@ -21,14 +21,14 @@ package org.docx4all.swing.text;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.DocumentFilter.FilterBypass;
+import javax.swing.text.SimpleAttributeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 12/02/2008
+ * @author Jojada Tirtowidjojo - 12/02/2008
  */
 public class TextReplacer implements TextProcessor {
 	private static Logger log = LoggerFactory.getLogger(TextReplacer.class);
@@ -37,24 +37,26 @@ public class TextReplacer implements TextProcessor {
 	private final int offset;
 	private final String text;
 	private final AttributeSet attrs;
-	
+
 	private final TextRemover textRemover;
-	
-	public TextReplacer(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) 
-		throws BadSelectionException {
-		
+
+	public TextReplacer(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadSelectionException {
+
+		System.out.println("TextReplacer with " + text);
+
 		if (length > 0 && offset < fb.getDocument().getLength()) {
 			this.textRemover = new TextRemover(fb, offset, length);
 		} else {
 			this.textRemover = null;
 		}
-		
+
 		this.filterBypass = fb;
 		this.offset = offset;
 		this.text = text;
 		this.attrs = (attrs == null) ? SimpleAttributeSet.EMPTY : attrs;
 	}
 
+	@Override
 	public void doAction() throws BadLocationException {
 		if (textRemover != null) {
 			textRemover.doAction();
@@ -65,24 +67,6 @@ public class TextReplacer implements TextProcessor {
 			tr.doAction();
 		}
 	}
-	
+
 }// TextReplacer class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

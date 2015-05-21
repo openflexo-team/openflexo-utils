@@ -23,13 +23,10 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
 
-import javax.swing.event.DocumentEvent;
 import javax.swing.text.CompositeView;
 import javax.swing.text.Element;
 import javax.swing.text.View;
-import javax.swing.text.ViewFactory;
 
-import org.docx4all.swing.text.WordMLDocument.BlockElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,32 +100,6 @@ public class RunView extends CompositeView {
 	@Override
 	protected View getViewAtPoint(int x, int y, Rectangle alloc) {
 		return null;
-	}
-
-	@Override
-	public void insertUpdate(DocumentEvent e, Shape a, ViewFactory f) {
-		System.out.println("hop, insertUpdate with " + e + " shape=" + a + " element=" + getElement());
-		System.out.println("element=" + getElement());
-		if (getElement() instanceof BlockElement) {
-			BlockElement blockElement = (BlockElement) getElement();
-			System.out.println("blockElement elementML=" + blockElement.getElementML());
-		}
-		super.insertUpdate(e, a, f);
-		prout = true;
-	}
-
-	private boolean prout = false;
-
-	@Override
-	public void removeUpdate(DocumentEvent e, Shape a, ViewFactory f) {
-		System.out.println("hop, removeUpdate with " + e + " shape=" + a + " element=" + getElement());
-		super.removeUpdate(e, a, f);
-	}
-
-	@Override
-	public void changedUpdate(DocumentEvent e, Shape a, ViewFactory f) {
-		System.out.println("hop, changedUpdate with " + e + " shape=" + a + " element=" + getElement());
-		super.changedUpdate(e, a, f);
 	}
 
 }// RunView class

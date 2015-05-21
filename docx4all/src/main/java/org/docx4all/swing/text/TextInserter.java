@@ -49,6 +49,9 @@ public class TextInserter implements TextProcessor {
 	private final AttributeSet attrs;
 
 	public TextInserter(FilterBypass fb, int offset, String text, AttributeSet attrs) {
+
+		System.out.println("TextInserter with " + text);
+
 		this.filterBypass = fb;
 		this.offset = offset;
 		this.text = text;
