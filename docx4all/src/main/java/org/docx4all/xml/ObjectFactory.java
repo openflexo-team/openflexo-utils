@@ -23,31 +23,34 @@ import java.math.BigInteger;
 
 import javax.swing.text.StyleConstants;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.docx4all.swing.text.WordMLDocument;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.openpackaging.parts.WordprocessingML.StyleDefinitionsPart;
 import org.docx4j.wml.BooleanDefaultTrue;
 import org.docx4j.wml.JcEnumeration;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *	@author Jojada Tirtowidjojo - 02/01/2008
+ * @author Jojada Tirtowidjojo - 02/01/2008
  */
 public class ObjectFactory {
-	
-	protected static Logger log = LoggerFactory.getLogger(ObjectFactory.class);
-	
-	private final static org.docx4j.wml.ObjectFactory _jaxbFactory = 
-		new org.docx4j.wml.ObjectFactory();
 
-//	public final static JAXBElement<P> createPara(String textContent) {
-//		org.docx4j.wml.P p = createP(textContent);
-//		return _jaxbFactory.createP(p);
-//	}
-	
-	public final static org.docx4j.wml.P createP(String textContent) {
+	protected static Logger log = LoggerFactory.getLogger(ObjectFactory.class);
+
+	private final org.docx4j.wml.ObjectFactory _jaxbFactory = new org.docx4j.wml.ObjectFactory();
+
+	// public final static JAXBElement<P> createPara(String textContent) {
+	// org.docx4j.wml.P p = createP(textContent);
+	// return _jaxbFactory.createP(p);
+	// }
+
+	public ObjectFactory(WordMLDocument document) {
+
+	}
+
+	public final org.docx4j.wml.P createP(String textContent) {
 		org.docx4j.wml.P p = _jaxbFactory.createP();
 		if (textContent != null) {
 			org.docx4j.wml.R r = createR(textContent);
@@ -56,7 +59,7 @@ public class ObjectFactory {
 		}
 		return p;
 	}
-	
+
 	public final static org.docx4j.wml.CTSmartTagRun createCTSmartTagRun(String textContent) {
 		org.docx4j.wml.CTSmartTagRun ct = _jaxbFactory.createCTSmartTagRun();
 		if (textContent != null) {
@@ -66,20 +69,20 @@ public class ObjectFactory {
 		}
 		return ct;
 	}
-	
+
 	public final static org.docx4j.wml.PPr createPPr() {
 		return _jaxbFactory.createPPr();
 	}
-	
+
 	public final static org.docx4j.wml.PPr.PStyle createPStyle(String styleId) {
 		org.docx4j.wml.PPr.PStyle pStyle = _jaxbFactory.createPPrBasePStyle();
 		pStyle.setVal(styleId);
 		return pStyle;
 	}
-	
+
 	public final static org.docx4j.wml.R createR(String textContent) {
 		org.docx4j.wml.R r = _jaxbFactory.createR();
-		
+
 		if (org.docx4all.ui.main.Constants.NEWLINE.equals(textContent)) {
 			org.docx4j.wml.R.Cr cr = _jaxbFactory.createRCr();
 			r.getRunContent().add(cr);
@@ -93,113 +96,112 @@ public class ObjectFactory {
 		}
 		return r;
 	}
-	
+
 	public final static org.docx4j.wml.RPr createRPr() {
 		return _jaxbFactory.createRPr();
 	}
-	
+
 	public final static org.docx4j.wml.RStyle createRStyle(String styleId) {
 		org.docx4j.wml.RStyle rStyle = _jaxbFactory.createRStyle();
 		rStyle.setVal(styleId);
 		return rStyle;
 	}
-	
-//	public final static JAXBElement<Text> createT(String textContent) {
-//		org.docx4j.wml.Text text = _jaxbFactory.createText();
-//		text.setValue(textContent);
-//		return _jaxbFactory.createT(text);
-//	}
+
+	// public final static JAXBElement<Text> createT(String textContent) {
+	// org.docx4j.wml.Text text = _jaxbFactory.createText();
+	// text.setValue(textContent);
+	// return _jaxbFactory.createT(text);
+	// }
 
 	public final static org.docx4j.wml.Text createT(String textContent) {
 		org.docx4j.wml.Text text = _jaxbFactory.createText();
 		text.setValue(textContent);
-		text.setSpace("preserve");		
+		text.setSpace("preserve");
 		return text;
 	}
-	
-	
+
 	public static WordprocessingMLPackage createDocumentPackage(org.docx4j.wml.Document doc) {
 		// Create a package
 		WordprocessingMLPackage wmlPack = new WordprocessingMLPackage();
 
 		try {
-		// Create main document part
-		MainDocumentPart wordDocumentPart = new MainDocumentPart();		
-		
-		// Put the content in the part
-		wordDocumentPart.setJaxbElement(doc);
-						
-		// Add the main document part to the package relationships
-		// (creating it if necessary)
-		wmlPack.addTargetPart(wordDocumentPart);
-				
-		// Create a styles part
-		StyleDefinitionsPart stylesPart = new StyleDefinitionsPart();
-		log.debug("Unmarshalling default styles..");
+			// Create main document part
+			MainDocumentPart wordDocumentPart = new MainDocumentPart();
+
+			// Put the content in the part
+			wordDocumentPart.setJaxbElement(doc);
+
+			// Add the main document part to the package relationships
+			// (creating it if necessary)
+			wmlPack.addTargetPart(wordDocumentPart);
+
+			// Create a styles part
+			StyleDefinitionsPart stylesPart = new StyleDefinitionsPart();
+			log.debug("Unmarshalling default styles..");
 			stylesPart.unmarshalDefaultStyles();
-			
+
 			// Add the styles part to the main document part relationships
 			// (creating it if necessary)
-			wordDocumentPart.addTargetPart(stylesPart); // NB - add it to main doc part, not package!			
-			
+			wordDocumentPart.addTargetPart(stylesPart); // NB - add it to main doc part, not package!
+
 		} catch (Exception e) {
 			// TODO: Synch with WordprocessingMLPackage.createTestPackage()
-			e.printStackTrace();	
+			e.printStackTrace();
 			wmlPack = null;
 		}
-		
+
 		// Return the new package
 		return wmlPack;
-		
+
 	}
-	
+
 	public final static WordprocessingMLPackage createEmptyDocumentPackage() {
 		org.docx4j.wml.Document doc = createEmptyDocument();
 		return createDocumentPackage(doc);
 	}
-	
+
 	public final static org.docx4j.wml.Document createEmptyDocument() {
-		org.docx4j.wml.P  para = createP("");
-		
-		org.docx4j.wml.Body  body = _jaxbFactory.createBody();
+		org.docx4j.wml.P para = createP("");
+
+		org.docx4j.wml.Body body = _jaxbFactory.createBody();
 		body.getEGBlockLevelElts().add(para);
-		
+
 		org.docx4j.wml.SectPr sectPr = _jaxbFactory.createSectPr();
 		body.setSectPr(sectPr);
-		
+
 		org.docx4j.wml.Document doc = _jaxbFactory.createDocument();
 		doc.setBody(body);
-		
+
 		return doc;
 	}
-	
+
 	public final static org.docx4j.wml.Document createEmptySharedDocument() {
-		org.docx4j.wml.P  para = createP("");
-		
+		org.docx4j.wml.P para = createP("");
+
 		org.docx4j.wml.SdtContentBlock sdtContent = createSdtContentBlock();
 		sdtContent.getEGContentBlockContent().add(para);
-		
+
 		org.docx4j.wml.SdtBlock sdtBlock = createSdtBlock();
 		org.docx4j.wml.SdtPr sdtPr = createSdtPr();
 		sdtPr.setId();
 		sdtPr.setTag(createTag("0"));
 		sdtBlock.setSdtPr(sdtPr);
 		sdtBlock.setSdtContent(sdtContent);
-		
-		org.docx4j.wml.Body  body = _jaxbFactory.createBody();
+
+		org.docx4j.wml.Body body = _jaxbFactory.createBody();
 		body.getEGBlockLevelElts().add(sdtBlock);
-		
+
 		org.docx4j.wml.Document doc = _jaxbFactory.createDocument();
 		doc.setBody(body);
-		
+
 		return doc;
 	}
-	
+
 	public final static org.docx4j.wml.Jc createJc(Integer align) {
 		org.docx4j.wml.Jc theJc = null;
-		
-        if (align != null) {
-        	theJc = _jaxbFactory.createJc();
+
+		if (align != null) {
+			theJc = _jaxbFactory.createJc();
 			if (align.intValue() == StyleConstants.ALIGN_LEFT) {
 				theJc.setVal(JcEnumeration.LEFT);
 			} else if (align.intValue() == StyleConstants.ALIGN_RIGHT) {
@@ -213,87 +215,65 @@ public class ObjectFactory {
 			}
 		}
 
-        return theJc;
+		return theJc;
 	}
-	
+
 	public final static org.docx4j.wml.BooleanDefaultTrue createBooleanDefaultTrue(Boolean b) {
 		BooleanDefaultTrue bdt = _jaxbFactory.createBooleanDefaultTrue();
 		bdt.setVal(b);
 		return bdt;
 	}
-	
+
 	public final static org.docx4j.wml.U createUnderline(String value, String color) {
 		org.docx4j.wml.U u = _jaxbFactory.createU();
-		org.docx4j.wml.UnderlineEnumeration ue = org.docx4j.wml.UnderlineEnumeration.fromValue(value); 
+		org.docx4j.wml.UnderlineEnumeration ue = org.docx4j.wml.UnderlineEnumeration.fromValue(value);
 		u.setVal(ue);
 		u.setColor(color);
 		return u;
 	}
-	
+
 	public final static org.docx4j.wml.RFonts createRPrRFonts(String ascii) {
 		org.docx4j.wml.RFonts rfonts = _jaxbFactory.createRFonts();
 		rfonts.setAscii(ascii);
 		return rfonts;
 	}
-	
+
 	public final static org.docx4j.wml.HpsMeasure createHpsMeasure(Integer value) {
 		org.docx4j.wml.HpsMeasure sz = _jaxbFactory.createHpsMeasure();
 		sz.setVal(new BigInteger(value.toString()));
 		return sz;
 	}
-	
+
 	public final static org.docx4j.wml.Id createId(BigInteger val) {
 		org.docx4j.wml.Id id = _jaxbFactory.createId();
 		id.setVal(val);
 		return id;
 	}
-	
+
 	public final static org.docx4j.wml.Tag createTag(String val) {
 		org.docx4j.wml.Tag tag = _jaxbFactory.createTag();
 		tag.setVal(val);
 		return tag;
 	}
-	
+
 	public final static org.docx4j.wml.SdtBlock createSdtBlock() {
 		org.docx4j.wml.SdtBlock sdtBlock = _jaxbFactory.createSdtBlock();
 		return sdtBlock;
 	}
-	
+
 	public final static org.docx4j.wml.SdtPr createSdtPr() {
 		org.docx4j.wml.SdtPr sdtPr = _jaxbFactory.createSdtPr();
 		return sdtPr;
 	}
-	
+
 	public final static org.docx4j.wml.SdtContentBlock createSdtContentBlock() {
 		org.docx4j.wml.SdtContentBlock sdtContentBlock = _jaxbFactory.createSdtContentBlock();
 		return sdtContentBlock;
 	}
-	
+
 	public final static org.docx4j.wml.P.Hyperlink createHyperlink() {
 		org.docx4j.wml.P.Hyperlink hyperlink = _jaxbFactory.createPHyperlink();
 		return hyperlink;
 	}
-	
-	private ObjectFactory() {
-		;//uninstantiable
-	}
+
 }// ObjectFactory class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -82,10 +82,21 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 	public static final Color SELECTION_COLOR = Color.YELLOW;
 
+	private ObjectFactory documentFactory;
+
 	public WordMLDocument() {
 		super();
 		this.snapshotFireBan = false;
 		selectedElements = new ArrayList<DocumentElement>();
+		documentFactory = new ObjectFactory(this);
+	}
+
+	public ObjectFactory getDocumentFactory() {
+		return documentFactory;
+	}
+
+	public void setDocumentFactory(ObjectFactory documentFactory) {
+		this.documentFactory = documentFactory;
 	}
 
 	public synchronized final void lockWrite() {
@@ -258,8 +269,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -328,8 +339,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -407,8 +418,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -527,8 +538,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			} // if (StyleSheet.CHARACTER_ATTR_VALUE.equals(type))
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -767,8 +778,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -1257,8 +1268,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			setSnapshotFireBan(origFireBanState);
 
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -1521,8 +1532,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			super.create(specs);
 
 			DocumentElement root = (DocumentElement) getDefaultRootElement();
-			StyleConstants.setFontFamily((MutableAttributeSet) root.getAttributes(), FontManager.getInstance()
-					.getDocx4AllDefaultFontFamilyName());
+			StyleConstants.setFontFamily((MutableAttributeSet) root.getAttributes(),
+					FontManager.getInstance().getDocx4AllDefaultFontFamilyName());
 
 			StyleConstants.setFontSize((MutableAttributeSet) root.getAttributes(), FontManager.getInstance().getDocx4AllDefaultFontSize());
 
