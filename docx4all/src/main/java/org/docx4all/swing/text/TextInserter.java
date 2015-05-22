@@ -129,6 +129,8 @@ public class TextInserter implements TextProcessor {
 			// Keep input attribute element which is a WordMLDocument.TextElement
 			elem = DocUtil.getInputAttributeElement(doc, offset, null);
 
+			System.out.println("******** On change le texte de " + elem);
+
 			if (attrs.getAttributeCount() > 0 && elem != null && elem.getAttributes().containsAttributes(attrs)) {
 				// Normal typing
 				filterBypass.insertString(offset, text, attrs);
@@ -254,4 +256,3 @@ public class TextInserter implements TextProcessor {
 	}
 
 }// TextInserter class
-
