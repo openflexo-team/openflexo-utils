@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.docx4all.xml;
@@ -24,10 +24,14 @@ import java.io.InputStream;
 import java.util.List;
 
 import javax.swing.text.AttributeSet;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.vfs.FileObject;
+import org.docx4all.swing.text.DocumentElement;
+import org.docx4all.swing.text.WordMLDocument.TextElement;
 import org.docx4all.ui.main.Constants;
+import org.docx4all.util.DocUtil;
 import org.docx4all.util.XmlUtil;
 import org.docx4j.convert.in.FlatOpcXmlImporter;
 import org.docx4j.jaxb.Context;
@@ -35,6 +39,7 @@ import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.io.LoadFromVFSZipFile;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.wml.Document;
+import org.docx4j.wml.Text;
 import org.plutext.client.Mediator;
 import org.plutext.client.SdtWrapper;
 import org.slf4j.Logger;
@@ -218,4 +223,21 @@ public class ElementMLFactory {
 		return theLink;
 	}
 
+	public void textChanged(DocumentElement element) {
+		Object o = element.getElementML().getDocxObject();
+		if (o instanceof JAXBElement) {
+			o = ((JAXBElement) o).getValue();
+		}
+
+		// First of all, we need to apply modification done in ElementML model to DocX model
+		if (element instanceof TextElement) {
+			DocUtil.saveTextContentToElementML((TextElement) element);
+		}
+
+		if (o instanceof Text) {
+			final Text t = (Text) o;
+			objectFactory.textChanged(t);
+		}
+
+	}
 }// ElementMLFactory class

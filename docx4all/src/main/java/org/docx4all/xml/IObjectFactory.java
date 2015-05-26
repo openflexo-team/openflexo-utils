@@ -3,6 +3,7 @@ package org.docx4all.xml;
 import java.math.BigInteger;
 
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.wml.Text;
 
 /**
  * This factory provides API used to handle DocX model
@@ -58,4 +59,5 @@ public interface IObjectFactory {
 
 	org.docx4j.wml.P.Hyperlink createHyperlink();
 
+	public void textChanged(Text text);
 }

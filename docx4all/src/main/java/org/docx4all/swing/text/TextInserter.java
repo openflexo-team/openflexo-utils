@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.docx4all.swing.text;
@@ -50,7 +50,7 @@ public class TextInserter implements TextProcessor {
 
 	public TextInserter(FilterBypass fb, int offset, String text, AttributeSet attrs) {
 
-		System.out.println("TextInserter with " + text);
+		// System.out.println("TextInserter with " + text);
 
 		this.filterBypass = fb;
 		this.offset = offset;
@@ -94,6 +94,7 @@ public class TextInserter implements TextProcessor {
 			doc.refreshParagraphs(elem.getStartOffset(), 1);
 
 		} else if (elem.getEndOffset() - elem.getStartOffset() == 1) {
+
 			// insert a string in an empty paragraph
 
 			// Need not Resolve Parent attribute
@@ -108,6 +109,7 @@ public class TextInserter implements TextProcessor {
 			doc.refreshParagraphs(elem.getStartOffset(), 1);
 
 		} else {
+
 			// insert a string in a non-empty paragraph
 			int paraStart = elem.getStartOffset();
 			int paraEnd = elem.getEndOffset();
@@ -129,13 +131,12 @@ public class TextInserter implements TextProcessor {
 			// Keep input attribute element which is a WordMLDocument.TextElement
 			elem = DocUtil.getInputAttributeElement(doc, offset, null);
 
-			System.out.println("******** On change le texte de " + elem);
-
 			if (attrs.getAttributeCount() > 0 && elem != null && elem.getAttributes().containsAttributes(attrs)) {
 				// Normal typing
 				filterBypass.insertString(offset, text, attrs);
 
 			} else {
+
 				// A new RunML needs to be created for the inserted string.
 				// Remember to save text content first.
 				DocUtil.saveTextContentToElementML((WordMLDocument.TextElement) elem);
@@ -188,6 +189,9 @@ public class TextInserter implements TextProcessor {
 				}
 			}
 		}
+
+		doc.getElementMLFactory().textChanged(elem);
+
 	}
 
 	private void doInsertNewlineAction() throws BadLocationException {

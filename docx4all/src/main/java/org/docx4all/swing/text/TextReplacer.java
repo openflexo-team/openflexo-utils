@@ -42,7 +42,7 @@ public class TextReplacer implements TextProcessor {
 
 	public TextReplacer(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadSelectionException {
 
-		System.out.println("TextReplacer with " + text);
+		// System.out.println("TextReplacer with " + text);
 
 		if (length > 0 && offset < fb.getDocument().getLength()) {
 			this.textRemover = new TextRemover(fb, offset, length);

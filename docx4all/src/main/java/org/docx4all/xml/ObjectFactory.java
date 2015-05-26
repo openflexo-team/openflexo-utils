@@ -28,6 +28,7 @@ import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.openpackaging.parts.WordprocessingML.StyleDefinitionsPart;
 import org.docx4j.wml.BooleanDefaultTrue;
 import org.docx4j.wml.JcEnumeration;
+import org.docx4j.wml.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -365,6 +366,10 @@ public class ObjectFactory implements IObjectFactory {
 	public org.docx4j.wml.P.Hyperlink createHyperlink() {
 		org.docx4j.wml.P.Hyperlink hyperlink = _jaxbFactory.createPHyperlink();
 		return hyperlink;
+	}
+
+	@Override
+	public void textChanged(Text text) {
 	}
 
 }// ObjectFactory class

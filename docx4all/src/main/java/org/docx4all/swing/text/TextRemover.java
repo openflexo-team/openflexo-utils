@@ -41,7 +41,7 @@ public class TextRemover implements TextProcessor {
 
 	public TextRemover(FilterBypass fb, int offset, int length) throws BadSelectionException {
 
-		System.out.println("TextRemover at offset=" + offset + " length=" + length);
+		// System.out.println("TextRemover at offset=" + offset + " length=" + length);
 
 		this.textSelector = new TextSelector((WordMLDocument) fb.getDocument(), offset, length);
 		this.filterBypass = fb;
@@ -62,6 +62,7 @@ public class TextRemover implements TextProcessor {
 
 		// Handle the first leaf element specially.
 		if (tempE.isLeaf() && !textSelector.isFullySelected(tempE)) {
+
 			if (list.size() == 1) {
 				// A single partially selected leaf element
 				// is treated as normal string deletion.
@@ -73,6 +74,9 @@ public class TextRemover implements TextProcessor {
 					log.debug("doAction(): Resulting Structure...");
 					DocUtil.displayStructure(doc);
 				}
+
+				doc.getElementMLFactory().textChanged(tempE);
+
 				return;
 			}
 
@@ -122,6 +126,9 @@ public class TextRemover implements TextProcessor {
 		offset = firstPara.getStartOffset();
 		length = lastPara.getEndOffset() - offset;
 		doc.refreshParagraphs(offset, length);
+
+		doc.getElementMLFactory().textChanged(tempE);
+
 	}
 
 	private void mergeElementML(DocumentElement para1, DocumentElement para2) {
