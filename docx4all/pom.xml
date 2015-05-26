@@ -216,7 +216,7 @@
 			<version>1.0.3</version>
 		</dependency>
 
-		<dependency>
+		 <dependency>
 			<groupId>alfresco.community</groupId>
 			<artifactId>alfresco-web-service-client-patched</artifactId>
 			<version>2.9.1</version>
@@ -243,25 +243,24 @@
 			<version>0.0.32</version>
 		</dependency>
 
-
 		<!-- mvn deploy:deploy-file -f wagon-svn-pom.xml -Dfile=VFSJFileChooser-patched.jar 
 			-DgroupId=net.sf.vfsjfilechooser -DartifactId=VFSJFileChooser-patched -Dversion=0.0.32 
 			-Dpackaging=jar -DrepositoryId=docx4all -Durl=svn:http://dev.plutext.org/svn/docx4all/trunk/docx4all/m2 -->
 
 
-		<dependency>
+		<!--  <dependency>
 			<groupId>xml-security</groupId>
 			<artifactId>xmlsec</artifactId>
 			<version>1.4.1</version>
-		</dependency>
+		</dependency> -->
 
-		<dependency>
 			<!-- Can't use this to build JNLP, since it is already signed. So use 
 				an unsigned copy of our own instead. -->
+		<!--  <dependency>
 			<groupId>bouncycastle</groupId>
 			<artifactId>bcprov-jdk16-unsigned</artifactId>
 			<version>136</version>
-		</dependency>
+		</dependency>-->
 
 		<!-- end svn:http://dev.plutext.org/svn/docx4all/trunk/docx4all/m2 -->
 
