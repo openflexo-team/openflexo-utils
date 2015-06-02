@@ -38,7 +38,7 @@
 	</developers>
 
 
-	<build>
+	<!--  <build>
 
 		<plugins>
 			<plugin>
@@ -62,8 +62,9 @@
 			</extension>
 		</extensions>
 
-	</build>
-	<repositories>
+	</build>-->
+	
+	<!--  <repositories>
 		<repository>
 			<id>Maven Snapshots</id>
 			<url>
@@ -99,7 +100,7 @@
 			<name>Java.net Repository for Maven</name>
 			<url>http://download.java.net/maven/2/</url>
 		</repository>
-	</repositories>
+	</repositories>-->
 	<dependencies>
 		<!-- <dependency> <groupId>javax.xml.bind</groupId> <artifactId>jaxb-api</artifactId> 
 			<version>2.1</version> </dependency> <dependency> <groupId>com.sun.xml.bind</groupId> 
@@ -324,13 +325,13 @@
 			<version>1.1.1</version> </dependency> -->
 
 	</dependencies>
-	<distributionManagement>
+	<!--  <distributionManagement>
 		<repository>
 			<uniqueVersion>false</uniqueVersion>
 			<id>docx4all</id>
 			<url>https://github.com/plutext/docx4all/tree/master/docx4all/m2</url>
 		</repository>
-	</distributionManagement>
+	</distributionManagement> -->
 
 	<!-- NB as at 20080521, docx4all can't be built using 1.5. Issues include: 
 		javafx.swing.SwingWorker is included in Java 6. For Java 5, we'd need to 
