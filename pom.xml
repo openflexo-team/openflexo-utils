@@ -13,6 +13,7 @@
        <artifactId>openflexo-utils</artifactId>
        <name>Openflexo-Utils</name>
        <packaging>pom</packaging>
+	<url>https://openflexo-utils.openflexo.org/</url>
        <scm>
               <connection>scm:git:ssh://git@github.com/openflexo-team/openflexo-utils.git</connection>
               <url>https://github.com/openflexo-team/openflexo-utils</url>
