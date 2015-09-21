@@ -212,10 +212,12 @@ public class WordMLDocument extends DefaultStyledDocument {
 				if (!runE.isEditable()) {
 					;// pass
 
-				} else if (offset <= runE.getStartOffset() && runE.getEndOffset() <= offset + length) {
+				}
+				else if (offset <= runE.getStartOffset() && runE.getEndOffset() <= offset + length) {
 					runML.addAttributes(attrs, replace);
 
-				} else if (runE.getStartOffset() < offset && offset + length < runE.getEndOffset()
+				}
+				else if (runE.getStartOffset() < offset && offset + length < runE.getEndOffset()
 						&& DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())
 						&& DocUtil.canSplitElementML(runE, (offset + length) - runE.getStartOffset())) {
 					try {
@@ -247,18 +249,21 @@ public class WordMLDocument extends DefaultStyledDocument {
 						;// ignore
 					}
 
-				} else if (runE.getStartOffset() < offset && DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())) {
+				}
+				else if (runE.getStartOffset() < offset && DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())) {
 					int idx = offset - runE.getStartOffset();
 					RunML newSibling = (RunML) DocUtil.splitElementML(runE, idx);
 					newSibling.addAttributes(attrs, replace);
 
-				} else if (DocUtil.canSplitElementML(runE, (offset + length) - runE.getStartOffset())) {
+				}
+				else if (DocUtil.canSplitElementML(runE, (offset + length) - runE.getStartOffset())) {
 					// ie: offset + length < runE.getEndOffset()
 					int idx = (offset + length) - runE.getStartOffset();
 					DocUtil.splitElementML(runE, idx);
 					runML.addAttributes(attrs, replace);
 
-				} else {
+				}
+				else {
 					;// pass
 				}
 
@@ -273,8 +278,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -343,8 +348,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -422,8 +427,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -479,10 +484,12 @@ public class WordMLDocument extends DefaultStyledDocument {
 					if (!runE.isEditable()) {
 						;// pass
 
-					} else if (offset <= runE.getStartOffset() && runE.getEndOffset() <= offset + length) {
+					}
+					else if (offset <= runE.getStartOffset() && runE.getEndOffset() <= offset + length) {
 						runML.addAttributes(newAttrs, true);
 
-					} else if (runE.getStartOffset() < offset && offset + length < runE.getEndOffset()
+					}
+					else if (runE.getStartOffset() < offset && offset + length < runE.getEndOffset()
 							&& DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())
 							&& DocUtil.canSplitElementML(runE, (offset + length) - runE.getStartOffset())) {
 						try {
@@ -515,18 +522,21 @@ public class WordMLDocument extends DefaultStyledDocument {
 							;// ignore
 						}
 
-					} else if (runE.getStartOffset() < offset && DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())) {
+					}
+					else if (runE.getStartOffset() < offset && DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())) {
 						int idx = offset - runE.getStartOffset();
 						RunML newSibling = (RunML) DocUtil.splitElementML(runE, idx);
 						newSibling.addAttributes(newAttrs, true);
 
-					} else if (DocUtil.canSplitElementML(runE, (offset + length) - runE.getStartOffset())) {
+					}
+					else if (DocUtil.canSplitElementML(runE, (offset + length) - runE.getStartOffset())) {
 						// ie: offset + length < runE.getEndOffset()
 						int idx = (offset + length) - runE.getStartOffset();
 						DocUtil.splitElementML(runE, idx);
 						runML.addAttributes(newAttrs, true);
 
-					} else {
+					}
+					else {
 						;// pass
 					}
 
@@ -542,8 +552,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			} // if (StyleSheet.CHARACTER_ATTR_VALUE.equals(type))
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -623,7 +633,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			if (targetE.getEndOffset() == rootE.getEndOffset()) {
 				insertAtLastParagraph(paraContentRecords, paragraphRecords);
 
-			} else if (paraContentRecords != null && paragraphRecords == null) {
+			}
+			else if (paraContentRecords != null && paragraphRecords == null) {
 				// Note that textE is a leaf/character element at Math.max(offset-1,0)
 				DocumentElement runE = (DocumentElement) textE.getParentElement();
 
@@ -644,7 +655,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 								targetML.addChild(rec.getElementML());
 							}
 
-						} else if (newlineRunML == runML) {
+						}
+						else if (newlineRunML == runML) {
 							// Paste after a soft break
 							RunContentML softBreak = (RunContentML) textE.getElementML();
 							// Split soft break before pasting.
@@ -665,35 +677,41 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 							pasteRecordsAfter(softBreak, paraContentRecords);
 
-						} else {
+						}
+						else {
 							// Paste after a common break.
 							// This is to paste before 'runML' which is
 							// the RunML at 'offset'
 							pasteRecordsBefore((RunML) runML, paraContentRecords);
 						}
-					} else {
+					}
+					else {
 						// paste at somewhere inside a paragraph
 						pasteRecordsAfter((RunContentML) textE.getElementML(), paraContentRecords);
 					}
-				} else if (runE.getStartOffset() == offset) {
+				}
+				else if (runE.getStartOffset() == offset) {
 					// paste at the start of runE.
 					// This should only happen when offset is 0 (zero).
 					// It is because runE is the parent of textE and
 					// textE is a text element at Math.max(offset - 1, 0).
 					pasteRecordsBefore((RunML) runE.getElementML(), paraContentRecords);
 
-				} else if (DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())) {
+				}
+				else if (DocUtil.canSplitElementML(runE, offset - runE.getStartOffset())) {
 					// paste at somewhere inside runE.
 					// This necessitates splitting runE.
 					DocUtil.splitElementML(runE, offset - runE.getStartOffset());
 					pasteRecordsAfter((RunContentML) textE.getElementML(), paraContentRecords);
 
-				} else {
+				}
+				else {
 					// Cannot paste
 					throw new BadLocationException("Cannot insert here", offset);
 				}
 
-			} else if (paraContentRecords != null && paragraphRecords != null) {
+			}
+			else if (paraContentRecords != null && paragraphRecords != null) {
 				// targetE is ParagraphML element at 'offset' position
 				if (targetE.getStartOffset() == offset) {
 					// Whether fragment can be pasted at 'offset' position or not
@@ -721,11 +739,13 @@ public class WordMLDocument extends DefaultStyledDocument {
 					ElementML targetML = targetE.getElementML();
 					if (targetML instanceof ParagraphML) {
 						targetML.addSibling(newParaML, false);
-					} else if (targetML instanceof SdtBlockML) {
+					}
+					else if (targetML instanceof SdtBlockML) {
 						SdtBlockML newSdtBlockML = getElementMLFactory().createSdtBlockML();
 						newSdtBlockML.addChild(newParaML, true);
 						targetML.addSibling(newSdtBlockML, false);
-					} else {
+					}
+					else {
 						// Do not know how to accommodate newParaML
 						// that contains paraContentRecords.
 						// Bail out.
@@ -748,12 +768,14 @@ public class WordMLDocument extends DefaultStyledDocument {
 						RunContentML rcml = XmlUtil.getLastRunContentML(rec.getElementML());
 						pasteElementMLsAfter(rcml, contents);
 					}
-				} else {
+				}
+				else {
 					// Pasting fragment here requires splitting the content of targetE
 					splitParagraphMLAndPaste(offset, paraContentRecords, paragraphRecords);
 				}
 
-			} else if (paraContentRecords == null && paragraphRecords != null) {
+			}
+			else if (paraContentRecords == null && paragraphRecords != null) {
 				// targetE is ParagraphML element at 'offset' position.
 				if (targetE.getStartOffset() == offset) {
 					// Check whether paragraphRecords can be pasted.
@@ -772,7 +794,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 						targetE.getElementML().addSibling(ml, false);
 					}
 
-				} else {
+				}
+				else {
 					// Pasting fragment here requires splitting the content of targetE
 					splitParagraphMLAndPaste(offset, paraContentRecords, paragraphRecords);
 				}
@@ -782,8 +805,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		} finally {
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -821,7 +844,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 					throw new BadLocationException("Cannot insert here", rootE.getEndOffset() - 1);
 				}
 				olderSibling.getElementML().addSibling(newParaML, true);
-			} else {
+			}
+			else {
 				lastParaE.getElementML().addSibling(newParaML, false);
 			}
 		}
@@ -893,7 +917,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		if (elem.getElementML().canAddSibling(record.getElementML(), pasteAfter)) {
 			theElem = elem;
-		} else {
+		}
+		else {
 			elem = (DocumentElement) elem.getParentElement();
 			if (elem != null && elem != getDefaultRootElement()) {
 				theElem = getElementToPasteAt(elem, record, pasteAfter);
@@ -913,7 +938,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 					canbe = false;
 					break;
 				}
-			} else {
+			}
+			else {
 				canbe = false;
 				break;
 			}
@@ -939,7 +965,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 				}
 				target.addSibling(ml, true);
 				target = ml;
-			} else if (ml instanceof RunML) {
+			}
+			else if (ml instanceof RunML) {
 				if (!(target instanceof RunML)) {
 					target = runContentML.getParent();
 				}
@@ -957,11 +984,13 @@ public class WordMLDocument extends DefaultStyledDocument {
 						child.delete();
 						targetRun.addChild(child);
 					}
-				} else {
+				}
+				else {
 					target.addSibling(ml, true);
 					target = ml;
 				}
-			} else if (ml instanceof HyperlinkML) {
+			}
+			else if (ml instanceof HyperlinkML) {
 				if (!(target instanceof RunML)) {
 					target = runContentML.getParent();
 				}
@@ -972,7 +1001,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 				}
 				target.addSibling(ml, true);
 				target = ml;
-			} else {
+			}
+			else {
 				// ml must be a block
 				if (!(target instanceof ParagraphML)) {
 					target = runContentML.getParent().getParent();
@@ -1004,7 +1034,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 				// keeps on collecting
 				tempRunML.addChild(0, ml);
 
-			} else if (ml instanceof RunML) {
+			}
+			else if (ml instanceof RunML) {
 				PropertiesContainerML targetRPr = ((RunML) target).getRunProperties();
 				AttributeSet targetAttrs = (targetRPr != null) ? targetRPr.getAttributeSet() : null;
 				PropertiesContainerML mlRPr = ((RunML) ml).getRunProperties();
@@ -1018,11 +1049,13 @@ public class WordMLDocument extends DefaultStyledDocument {
 						child.delete();
 						target.addChild(0, child);
 					}
-				} else {
+				}
+				else {
 					target.addSibling(ml, false);
 					target = ml;
 				}
-			} else {
+			}
+			else {
 				// must be those transparent nodes such as
 				// RunInsML, RunDelML, or HyperlinkML
 				target.addSibling(ml, false);
@@ -1134,7 +1167,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 					DocUtil.displayStructure(this);
 				}
 
-			} else {
+			}
+			else {
 				// Create ElementSpecs for closing the last paragraph selected
 				// in this refresh action.
 				idx = rootE.getElementIndex(endOffset - 1);
@@ -1247,7 +1281,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 				insertFragment(offset + length, frag, attrs);
 				remove(offset, length);
 
-			} else {
+			}
+			else {
 				remove(offset, length);
 
 				// The removed text may have been simply part of
@@ -1272,8 +1307,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			setSnapshotFireBan(origFireBanState);
 
 			if (!isSnapshotFireBan() && blockStart >= 0 && blockEnd >= 0) {
-				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart, (getLength() - blockEnd)
-						- blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
+				WordMLDocument.WordMLDefaultDocumentEvent evt = new WordMLDefaultDocumentEvent(blockStart,
+						(getLength() - blockEnd) - blockStart, null, WordMLDocumentEvent.SNAPSHOT_CHANGED_EVT_NAME);
 				evt.setInitialSnapshots(snapshots);
 				fireSnapshotChanged(evt);
 			}
@@ -1495,16 +1530,19 @@ public class WordMLDocument extends DefaultStyledDocument {
 				for (int i = newOpenSpecs.size() - 1; 0 <= i; i--) {
 					specs.add(newOpenSpecs.get(i));
 				}
-			} else {
+			}
+			else {
 				// Should never come here ?
 			}
-		} else if (attrs.getAttributeCount() > 0 && leftLeaf.getAttributes().containsAttributes(attrs)) {
+		}
+		else if (attrs.getAttributeCount() > 0 && leftLeaf.getAttributes().containsAttributes(attrs)) {
 
 			ElementSpec es = new ElementSpec(leftLeaf.getAttributes(), ElementSpec.ContentType, length);
 			es.setDirection(ElementSpec.JoinPreviousDirection);
 			specs.add(es);
 
-		} else if (attrs.getAttributeCount() > 0 && rightLeaf.getAttributes().containsAttributes(attrs)) {
+		}
+		else if (attrs.getAttributeCount() > 0 && rightLeaf.getAttributes().containsAttributes(attrs)) {
 
 			// Close RunML
 			specs.add(new ElementSpec(null, ElementSpec.EndTagType));
@@ -1536,8 +1574,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 			super.create(specs);
 
 			DocumentElement root = (DocumentElement) getDefaultRootElement();
-			StyleConstants.setFontFamily((MutableAttributeSet) root.getAttributes(), FontManager.getInstance()
-					.getDocx4AllDefaultFontFamilyName());
+			StyleConstants.setFontFamily((MutableAttributeSet) root.getAttributes(),
+					FontManager.getInstance().getDocx4AllDefaultFontFamilyName());
 
 			StyleConstants.setFontSize((MutableAttributeSet) root.getAttributes(), FontManager.getInstance().getDocx4AllDefaultFontSize());
 
@@ -1708,12 +1746,14 @@ public class WordMLDocument extends DefaultStyledDocument {
 			if (parent == null) {
 				Style defaultStyle = getStyleSheet().getStyle(StyleSheet.DEFAULT_STYLE);
 				styleName = (String) defaultStyle.getAttribute(WordMLStyleConstants.DefaultParagraphStyleNameAttribute);
-			} else {
+			}
+			else {
 				ElementML elemML = getElementML();
 				String styleId = null;
 				if (elemML instanceof RunML) {
 					styleId = (String) getAttribute(WordMLStyleConstants.RStyleAttribute);
-				} else if (elemML instanceof ParagraphML && !elemML.isImplied()) {
+				}
+				else if (elemML instanceof ParagraphML && !elemML.isImplied()) {
 					styleId = (String) getAttribute(WordMLStyleConstants.PStyleAttribute);
 				}
 				if (styleId != null) {
@@ -1790,7 +1830,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 				this.selected = selected;
 				if (selected) {
 					selectedElements.add(this);
-				} else {
+				}
+				else {
 					selectedElements.remove(this);
 				}
 				notifySelectionChanged();
@@ -1803,7 +1844,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 				Element child = getElement(i);
 				if (child instanceof BlockElement) {
 					((BlockElement) child).notifySelectionChanged();
-				} else if (child instanceof TextElement) {
+				}
+				else if (child instanceof TextElement) {
 					((TextElement) child).notifySelectionChanged();
 				}
 			}
@@ -1896,7 +1938,8 @@ public class WordMLDocument extends DefaultStyledDocument {
 				this.selected = selected;
 				if (selected) {
 					selectedElements.add(this);
-				} else {
+				}
+				else {
 					selectedElements.remove(this);
 				}
 				notifySelectionChanged();
@@ -1957,6 +2000,10 @@ public class WordMLDocument extends DefaultStyledDocument {
 	}
 
 	public DocumentElement getElement(Object docXObject) {
+
+		System.out.println("On me demande pour " + docXObject);
+		System.out.println("Je retourne " + docElementForDocObject.get(docXObject));
+
 		return docElementForDocObject.get(docXObject);
 	}
 
@@ -1969,13 +2016,18 @@ public class WordMLDocument extends DefaultStyledDocument {
 	}
 
 	public void setSelectedElements(List<DocumentElement> elements) {
+
+		System.out.println("Je dois selectionner " + elements);
+
 		for (DocumentElement e : new ArrayList<DocumentElement>(selectedElements)) {
 			if (!elements.contains(e)) {
+				System.out.println("ON VIRE: ");
 				e.setSelected(false);
 			}
 		}
 		for (DocumentElement e : elements) {
 			if (!selectedElements.contains(e)) {
+				System.out.println("ON AJOUTE: ");
 				e.setSelected(true);
 			}
 		}
