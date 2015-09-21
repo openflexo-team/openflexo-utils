@@ -1884,6 +1884,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		@Override
 		public boolean getSelected() {
+
 			if (getParentElement() instanceof DocumentElement && ((DocumentElement) getParentElement()).getSelected()) {
 				return true;
 			}
@@ -1969,14 +1970,29 @@ public class WordMLDocument extends DefaultStyledDocument {
 	}
 
 	public void setSelectedElements(List<DocumentElement> elements) {
+
+		// System.out.println("Selecting: " + elements);
+
 		for (DocumentElement e : new ArrayList<DocumentElement>(selectedElements)) {
+			/*ElementML elementML = e.getElementML();
+			Object docXObj = elementML.getDocxObject();
+			if (docXObj instanceof JAXBElement) {
+				docXObj = ((JAXBElement) docXObj).getValue();
+			}*/
 			if (!elements.contains(e)) {
 				e.setSelected(false);
+				// System.out.println(" > Deselecting " + e + " docXObject=" + docXObj);
 			}
 		}
 		for (DocumentElement e : elements) {
+			/*ElementML elementML = e.getElementML();
+			Object docXObj = elementML.getDocxObject();
+			if (docXObj instanceof JAXBElement) {
+				docXObj = ((JAXBElement) docXObj).getValue();
+			}*/
 			if (!selectedElements.contains(e)) {
 				e.setSelected(true);
+				// System.out.println(" > Selecting " + e + " docXObject=" + docXObj);
 			}
 		}
 	}

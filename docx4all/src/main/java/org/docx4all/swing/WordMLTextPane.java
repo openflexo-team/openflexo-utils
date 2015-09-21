@@ -250,6 +250,10 @@ public class WordMLTextPane extends JEditorPane {
 	}
 
 	public void scrollToElement(DocumentElement element) {
+		scrollToElement(element, true);
+	}
+
+	public void scrollToElement(DocumentElement element, boolean setCaretPosition) {
 		try {
 			int pos = element.getStartOffset();
 			Rectangle r = modelToView(pos);
@@ -260,7 +264,9 @@ public class WordMLTextPane extends JEditorPane {
 				// r.y -= (vis.height / 2);
 				r.height = vis.height;
 				scrollRectToVisible(r);
-				setCaretPosition(pos);
+				if (setCaretPosition) {
+					setCaretPosition(pos);
+				}
 			}
 		} catch (BadLocationException ble) {
 			ble.printStackTrace();
