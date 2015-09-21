@@ -662,7 +662,7 @@ public class WordMLEditor extends SingleFrameApplication {
 		}
 
 		if (doc == null) {
-			doc = (WordMLDocument) editorKit.createDefaultDocument();
+			doc = editorKit.createDefaultDocument();
 		}
 
 		editorView.setTransferHandler(new TransferHandler(doc));
