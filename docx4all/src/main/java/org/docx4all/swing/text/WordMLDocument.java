@@ -39,6 +39,7 @@ import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
+import javax.swing.tree.TreeNode;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBIntrospector;
 
@@ -1799,12 +1800,13 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		protected void notifySelectionChanged() {
 			pcSupport.firePropertyChange("selected", !getSelected(), getSelected());
-			for (int i = 0; i < getElementCount(); i++) {
-				Element child = getElement(i);
-				if (child instanceof BlockElement) {
-					((BlockElement) child).notifySelectionChanged();
-				} else if (child instanceof TextElement) {
-					((TextElement) child).notifySelectionChanged();
+			for (int i = 0; i < getChildCount(); i++) {
+				TreeNode c = getChildAt(i);
+				if (c instanceof BlockElement) {
+					((BlockElement) c).notifySelectionChanged();
+				}
+				if (c instanceof TextElement) {
+					((TextElement) c).notifySelectionChanged();
 				}
 			}
 		}
@@ -1980,7 +1982,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 			if (!elements.contains(e)) {
 				e.setSelected(false);
 				// refreshParagraphs(0, 15);
-				// System.out.println(" > Deselecting " + e + " docXObject=" + docXObj);
+				// System.out.println(" > Deselecting " + e);
 			}
 		}
 		for (DocumentElement e : elements) {
@@ -1992,9 +1994,11 @@ public class WordMLDocument extends DefaultStyledDocument {
 			if (!selectedElements.contains(e)) {
 				e.setSelected(true);
 				// refreshParagraphs(0, 15);
-				// System.out.println(" > Selecting " + e + " docXObject=" + docXObj);
+				// System.out.println(" > Selecting " + e);
 			}
 		}
+		// System.out.println("selectedElements=" + selectedElements);
+
 	}
 
 }// WordMLDocument class
