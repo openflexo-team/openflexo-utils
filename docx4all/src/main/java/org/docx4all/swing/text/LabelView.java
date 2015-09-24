@@ -183,8 +183,8 @@ public class LabelView extends javax.swing.text.LabelView implements PropertyCha
 		if (getElement() instanceof DocumentElement) {
 			if (((DocumentElement) getElement()).getSelected()) {
 				setBackground(WordMLDocument.SELECTION_COLOR);
-				preferenceChanged(this, true, true);
 			}
+			preferenceChanged(this, true, true);
 		}
 	}
 
