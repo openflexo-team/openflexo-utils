@@ -14,11 +14,12 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.docx4all.swing;
 
+import java.awt.Point;
 import java.awt.Rectangle;
 
 import javax.swing.JEditorPane;
@@ -249,11 +250,11 @@ public class WordMLTextPane extends JEditorPane {
 		super.scrollToReference(reference);
 	}
 
-	public void scrollToElement(DocumentElement element) {
-		scrollToElement(element, true);
+	public boolean scrollToElement(DocumentElement element) {
+		return scrollToElement(element, true);
 	}
 
-	public void scrollToElement(DocumentElement element, boolean setCaretPosition) {
+	public boolean scrollToElement(DocumentElement element, boolean setCaretPosition) {
 		try {
 			int pos = element.getStartOffset();
 			Rectangle r = modelToView(pos);
@@ -263,13 +264,21 @@ public class WordMLTextPane extends JEditorPane {
 				Rectangle vis = getVisibleRect();
 				// r.y -= (vis.height / 2);
 				r.height = vis.height;
-				scrollRectToVisible(r);
-				if (setCaretPosition) {
-					setCaretPosition(pos);
+
+				if (vis.contains(new Point(r.x, r.y))) {
+					// We are already inside
+				} else {
+					scrollRectToVisible(r);
+					if (setCaretPosition) {
+						setCaretPosition(pos);
+					}
 				}
+				return true;
 			}
+			return false;
 		} catch (BadLocationException ble) {
 			ble.printStackTrace();
+			return true;
 		}
 	}
 
