@@ -1230,8 +1230,8 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 			int adjustment = (targetSpan - currentSpan);
 			int spaceAddon = (extendableSpaces > 0) ? adjustment / extendableSpaces : 0;
 			int spaceAddonLeftoverEnd = -1;
-			for (int i = startJustifiableContent - rowStartOffset, leftover = adjustment - spaceAddon * extendableSpaces; leftover > 0; leftover -= (i < spaceMap.length ? spaceMap[i]
-					: 0), i++) {
+			for (int i = startJustifiableContent - rowStartOffset, leftover = adjustment - spaceAddon * extendableSpaces; leftover > 0; leftover -= (i >= 0
+					&& i < spaceMap.length ? spaceMap[i] : 0), i++) {
 				spaceAddonLeftoverEnd = i;
 			}
 			if (spaceAddon > 0 || spaceAddonLeftoverEnd >= 0) {
