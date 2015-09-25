@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.docx4all.xml;
@@ -186,7 +186,9 @@ public class RunML extends ElementML {
 					renderedText = "<w:unknownTag></w:unknownTag>";
 					log.warn("init(): Unknown tag was detected for a JAXBElement = " + XmlUtils.marshaltoString(docxObject, true));
 				}
-				run = getObjectFactory().createR(renderedText);
+				if (getObjectFactory() != null) {
+					run = getObjectFactory().createR(renderedText);
+				}
 				this.isDummy = true;
 			}
 
