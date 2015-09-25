@@ -33,6 +33,7 @@ import javax.swing.text.MutableAttributeSet;
 
 import org.docx4all.swing.text.DocumentElement;
 import org.docx4all.swing.text.WordMLDocument;
+import org.docx4all.swing.text.WordMLDocumentFragment;
 import org.docx4all.swing.text.WordMLEditorKit;
 import org.docx4all.swing.text.WordMLFragment;
 import org.docx4all.ui.main.WordMLEditor;
@@ -94,6 +95,9 @@ public class WordMLTextPane extends JEditorPane {
 			super.setDocument(doc);
 			// setSelectionColor(((WordMLDocument) doc).SELECTION_COLOR);
 			setSelectionColor(WordMLDocument.SELECTION_COLOR);
+			if (doc instanceof WordMLDocumentFragment) {
+				((WordMLDocumentFragment) doc).filterFragment();
+			}
 		} else {
 			throw new IllegalArgumentException("Model must be WordMLDocument");
 		}
