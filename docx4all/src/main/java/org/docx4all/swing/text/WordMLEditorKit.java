@@ -70,8 +70,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.vfsjfilechooser.utils.VFSUtils;
-
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.docx4all.swing.WordMLTextPane;
@@ -99,6 +97,8 @@ import org.plutext.client.Mediator;
 import org.plutext.client.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.sf.vfsjfilechooser.utils.VFSUtils;
 
 public class WordMLEditorKit extends DefaultEditorKit {
 	private static Logger log = LoggerFactory.getLogger(WordMLEditorKit.class);
@@ -276,6 +276,28 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 	}
 
+	public WordMLDocument openDocumentFragment(WordprocessingMLPackage document, IObjectFactory objectFactory, int startIndex,
+			int endIndex) {
+
+		elementMLFactory = makeElementMLFactory(objectFactory);
+
+		// Default WordMLDocument has to be created prior to
+		// unmarshalling docx4j Document so that StyleDefinitionsPart's
+		// liveStyles property will be populated correctly.
+		// See: StyleDefinitionsPart.unmarshall(java.io.InputStream)
+		WordMLDocumentFragment doc = createDefaultDocumentFragment(elementMLFactory, startIndex, endIndex);
+		List<ElementSpec> specs = DocUtil.getElementSpecs(new DocumentML(document, elementMLFactory));
+		doc.createElementStructure(specs);
+
+		if (log.isDebugEnabled()) {
+			DocUtil.displayStructure(specs);
+			DocUtil.displayStructure(doc);
+		}
+
+		return doc;
+
+	}
+
 	/**
 	 * Create an uninitialized text storage model that is appropriate for this type of editor.
 	 * 
@@ -298,6 +320,11 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			log.debug("createDefaultDocument():");
 			DocUtil.displayStructure(doc);
 		}
+		return doc;
+	}
+
+	public WordMLDocumentFragment createDefaultDocumentFragment(ElementMLFactory elementMLFactory, int startIndex, int endIndex) {
+		WordMLDocumentFragment doc = new WordMLDocumentFragment(elementMLFactory, startIndex, endIndex);
 		return doc;
 	}
 
@@ -364,7 +391,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 		if (doc instanceof WordMLDocument) {
 			// TODO: Later implementation
-		} else {
+		}
+		else {
 			super.write(out, doc, pos, len);
 		}
 	}
@@ -560,7 +588,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			HyperlinkML ml = getHyperlinkML(doc, pos);
 			if (ml != null && e.isControlDown()) {
 				editor.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			} else {
+			}
+			else {
 				editor.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 			}
 		}
@@ -590,7 +619,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					tipText.append(text);
 					tipText.append("</p></html>");
 				}
-			} else if (parent instanceof RunInsML) {
+			}
+			else if (parent instanceof RunInsML) {
 				String author = ((RunInsML) parent).getAuthor();
 				String text = getText(doc, elem);
 				if (author != null && author.length() > 0 && text != null && text.length() > 0) {
@@ -601,7 +631,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					tipText.append(text);
 					tipText.append("</p></html>");
 				}
-			} else if (parent instanceof HyperlinkML) {
+			}
+			else if (parent instanceof HyperlinkML) {
 				String text = ((HyperlinkML) parent).getTooltip();
 				if (text == null || text.length() == 0) {
 					FileObject srcFile = null;
@@ -620,7 +651,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 			if (tipText == null || tipText.length() == 0) {
 				editor.setToolTipText(null);
-			} else {
+			}
+			else {
 				editor.setToolTipText(tipText.toString());
 			}
 		}
@@ -649,7 +681,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 			if (lastHighlightedE != null && (lastHighlightedE.getStartOffset() <= pos && pos <= lastHighlightedE.getEndOffset())) {
 				;// do nothing
-			} else {
+			}
+			else {
 				clearLastHighlight(editor);
 				DocumentElement elem = (DocumentElement) doc.getSdtBlockMLElement(pos);
 				if (elem != null && !WordMLStyleConstants.getBorderVisible(elem.getAttributes())) {
@@ -714,12 +747,14 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 			if (start == end) {
 				selectSdtBlock(editor, start);
-			} else {
+			}
+			else {
 				View startV = SwingUtil.getSdtBlockView(editor, start);
 				View endV = SwingUtil.getSdtBlockView(editor, end - 1);
 				if (startV == endV && startV != null) {
 					selectSdtBlock(editor, start);
-				} else {
+				}
+				else {
 					resetLastSdtBlockPosition(editor);
 				}
 			}
@@ -832,7 +867,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 				if (caretElement != null) {
 					WordMLEditorKit.this.currentRunE = (DocumentElement) caretElement.getParentElement();
-				} else {
+				}
+				else {
 					WordMLEditorKit.this.currentRunE = null;
 				}
 				createInputAttributes(caretElement, getInputAttributesML(), editor);
@@ -972,7 +1008,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						doc.unlockWrite();
 						editor.setCaretPosition(caretPos);
 					}
-				} else {
+				}
+				else {
 					log.debug("AcceptNonConflictingRevisionsAction.actionPerformed():" + " NO plutextClient NOR non-conflicting changes");
 				} // if (plutextClient != null && plutextClient.hasNonConflictingChanges())
 			} // if (editor != null)
@@ -1056,7 +1093,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						doc.unlockWrite();
 						editor.setCaretPosition(caretPos);
 					}
-				} else {
+				}
+				else {
 					log.debug("RejectNonConflictingRevisionsAction.actionPerformed():" + " NO plutextClient NOR non-conflicting changes");
 				} // if (plutextClient != null && plutextClient.hasNonConflictingChanges())
 			} // if (editor != null)
@@ -1108,7 +1146,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								parent.addSibling(copy, false);
 							}
 							parent.delete();
-						} else if (parent instanceof RunDelML) {
+						}
+						else if (parent instanceof RunDelML) {
 							parent.delete();
 						}
 
@@ -1183,7 +1222,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								parent.addSibling(copy, false);
 							}
 							parent.delete();
-						} else if (parent instanceof RunInsML) {
+						}
+						else if (parent instanceof RunInsML) {
 							parent.delete();
 						}
 
@@ -1496,7 +1536,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					exc.printStackTrace();
 					;// ignore
 				}
-			} else {
+			}
+			else {
 				MutableAttributeSet inputAttributes = kit.getInputAttributesML();
 				if (replace) {
 					inputAttributes.removeAttributes(inputAttributes);
@@ -1567,7 +1608,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 				editor.setCaretPosition(mark);
 				editor.moveCaretPosition(dot);
 				kit.refreshCaretElement(editor);
-			} else {
+			}
+			else {
 				Style style = doc.getStyleSheet().getReferredStyle(styleId);
 				if (style != null) {
 					MutableAttributeSet inputAttributes = kit.getInputAttributesML();
@@ -1663,10 +1705,12 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					String type = (String) s.getAttribute(WordMLStyleConstants.StyleTypeAttribute);
 					if (StyleSheet.PARAGRAPH_ATTR_VALUE.equals(type)) {
 						setParagraphStyle((WordMLTextPane) editor, styleId);
-					} else if (StyleSheet.CHARACTER_ATTR_VALUE.equals(type)) {
+					}
+					else if (StyleSheet.CHARACTER_ATTR_VALUE.equals(type)) {
 						setRunStyle((WordMLTextPane) editor, styleId);
 					}
-				} else {
+				}
+				else {
 					UIManager.getLookAndFeel().provideErrorFeedback(editor);
 				}
 			}
@@ -1703,7 +1747,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					MutableAttributeSet attr = new SimpleAttributeSet();
 					StyleConstants.setFontFamily(attr, this.family);
 					setRunMLAttributes((WordMLTextPane) editor, attr, false);
-				} else {
+				}
+				else {
 					UIManager.getLookAndFeel().provideErrorFeedback(editor);
 				}
 			}
@@ -1740,7 +1785,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					MutableAttributeSet attr = new SimpleAttributeSet();
 					StyleConstants.setFontSize(attr, this.size);
 					setRunMLAttributes((WordMLTextPane) editor, attr, false);
-				} else {
+				}
+				else {
 					UIManager.getLookAndFeel().provideErrorFeedback(editor);
 				}
 			}
@@ -1854,10 +1900,12 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					if (runML.getParent() instanceof HyperlinkML) {
 						String path = (String) elem.getDocument().getProperty(WordMLDocument.FILE_PATH_PROPERTY);
 						openLinkedDocument((HyperlinkML) runML.getParent(), path, doc.getElementMLFactory().getObjectFactory());
-					} else {
+					}
+					else {
 						editor.replaceSelection(Constants.NEWLINE);
 					}
-				} else {
+				}
+				else {
 					editor.replaceSelection(Constants.NEWLINE);
 				}
 			}
@@ -1914,7 +1962,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 					if (dot != mark) {
 						doc.remove(Math.min(dot, mark), Math.abs(dot - mark));
 						dot = Math.min(dot, mark);
-					} else if (((RunML) elem.getElementML()).getFldChar() != null) {
+					}
+					else if (((RunML) elem.getElementML()).getFldChar() != null) {
 						org.docx4j.wml.FldChar fldChar = ((RunML) elem.getElementML()).getFldChar();
 						ElementML fldComplex = elem.getElementML().getGodParent();
 						if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.BEGIN) {
@@ -1924,7 +1973,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								ml = elem.getElementML().getGodParent();
 							}
 							selectLater(editor, dot, elem.getEndOffset());
-						} else if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.END) {
+						}
+						else if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.END) {
 							mark = elem.getEndOffset();
 							ElementML ml = null;
 							while (ml != fldComplex) {
@@ -1932,10 +1982,12 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								ml = elem.getElementML().getGodParent();
 							}
 							selectLater(editor, elem.getStartOffset(), mark);
-						} else {
+						}
+						else {
 							// do nothing
 						}
-					} else if (dot < doc.getLength()) {
+					}
+					else if (dot < doc.getLength()) {
 						int delChars = 1;
 
 						String dotChars = doc.getText(dot, 2);
@@ -2009,7 +2061,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						doc.remove(Math.min(dot, mark), Math.abs(dot - mark));
 						dot = Math.min(dot, mark);
 
-					} else if (((RunML) elem.getElementML()).getFldChar() != null) {
+					}
+					else if (((RunML) elem.getElementML()).getFldChar() != null) {
 						org.docx4j.wml.FldChar fldChar = ((RunML) elem.getElementML()).getFldChar();
 						ElementML fldComplex = elem.getElementML().getGodParent();
 						if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.BEGIN) {
@@ -2019,7 +2072,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								ml = elem.getElementML().getGodParent();
 							}
 							selectLater(editor, dot, elem.getEndOffset());
-						} else if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.END) {
+						}
+						else if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.END) {
 							mark = elem.getEndOffset();
 							ElementML ml = null;
 							while (ml != fldComplex) {
@@ -2027,11 +2081,13 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								ml = elem.getElementML().getGodParent();
 							}
 							selectLater(editor, elem.getStartOffset(), mark);
-						} else {
+						}
+						else {
 							// do nothing
 						}
 
-					} else if (0 < dot && dot < doc.getLength()) {
+					}
+					else if (0 < dot && dot < doc.getLength()) {
 						int delChars = 1;
 
 						if (dot > 1) {
@@ -2108,7 +2164,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						elem = (DocumentElement) doc.getParagraphMLElement(offs, false);
 						if (offs == doc.getLength()) {
 							;// do not change the last paragraph in the document
-						} else if (offs == elem.getStartOffset() && elem.getEndOffset() == end) {
+						}
+						else if (offs == elem.getStartOffset() && elem.getEndOffset() == end) {
 							// Search for the highest parent element
 							// that is NOT the only child.
 							DocumentElement parent = (DocumentElement) elem.getParentElement();
@@ -2135,13 +2192,15 @@ public class WordMLEditorKit extends DefaultEditorKit {
 							ml.delete();
 							sdt.addChild(ml);
 
-						} else if (end <= elem.getEndOffset()) {
+						}
+						else if (end <= elem.getEndOffset()) {
 							ElementML ml = elem.getElementML();
 							ml.addSibling(sdt, true);
 							ml.delete();
 							sdt.addChild(ml);
 
-						} else {
+						}
+						else {
 							DocumentElement parent = (DocumentElement) elem.getParentElement();
 							if (end <= parent.getEndOffset()) {
 								// [offs, offs + length] has to be within parent's span.
@@ -2156,7 +2215,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 									sdt.addChild(ml);
 									idx++;
 								}
-							} else {
+							}
+							else {
 								// unchangeable
 							}
 						}
@@ -2212,7 +2272,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								sdt.addSibling(kid, false);
 							}
 							sdt.delete();
-						} else {
+						}
+						else {
 							elem = (DocumentElement) doc.getParagraphMLElement(offset, false);
 						}
 
@@ -2277,13 +2338,15 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						pos += 1;
 						success = true;
 
-					} else if (offset == elem.getEndOffset() - 1) {
+					}
+					else if (offset == elem.getEndOffset() - 1) {
 						elem.getElementML().addSibling(sdt, true);
 
 						doc.refreshParagraphs(offset, 1);
 						success = true;
 
-					} else if (elem.getElementML() instanceof ParagraphML
+					}
+					else if (elem.getElementML() instanceof ParagraphML
 							&& DocUtil.canSplitElementML(elem, offset - elem.getStartOffset())) {
 						DocUtil.splitElementML(elem, (offset - elem.getStartOffset()));
 						elem.getElementML().addSibling(sdt, true);
@@ -2358,7 +2421,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 									ml.delete();
 									lastChild.addSibling(ml, true);
 								}
-							} else {
+							}
+							else {
 								lastChild.addSibling(ml, true);
 							}
 							endIdx--;
@@ -2426,7 +2490,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 							newSdt.addChild(doc.getElementMLFactory().createEmptyParagraphML());
 							sdt.addSibling(newSdt, false);
 
-						} else {
+						}
+						else {
 							sdt.addSibling(newSdt, true);
 
 							for (; idx < sdtBlockE.getElementCount(); idx++) {
@@ -2580,7 +2645,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								// elem.getElementML().
 								ml.delete();
 								sdt.addChild(ml);
-							} else {
+							}
+							else {
 								// create a new sdt
 								sdt = doc.getElementMLFactory().createSdtBlockML();
 								ml.addSibling(sdt, false);
@@ -2603,7 +2669,8 @@ public class WordMLEditorKit extends DefaultEditorKit {
 								listIdx++;
 								signedElemIdx = root.getElementIndex(this.signaturePositions.get(listIdx));
 							}
-						} else {
+						}
+						else {
 							ml.delete();
 							// put in sdt
 							sdt.addChild(ml);
