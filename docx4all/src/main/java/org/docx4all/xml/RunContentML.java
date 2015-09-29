@@ -54,13 +54,16 @@ public class RunContentML extends ElementML {
 	public void setTextContent(String textContent) {
 		this.textContent = textContent;
 
+		System.out.println("setTextContent with " + textContent);
+
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
 		if (this.docxObject != null && inspector.isElement(this.docxObject)) {
 			Object value = JAXBIntrospector.getValue(this.docxObject);
 			if (value instanceof org.docx4j.wml.Text) {
 				org.docx4j.wml.Text t = (org.docx4j.wml.Text) value;
 				t.setValue(textContent);
-			} else if (value instanceof org.docx4j.wml.DelText) {
+			}
+			else if (value instanceof org.docx4j.wml.DelText) {
 				org.docx4j.wml.DelText dt = (org.docx4j.wml.DelText) value;
 				dt.setValue(textContent);
 			}
@@ -107,40 +110,50 @@ public class RunContentML extends ElementML {
 		if (docxObject == null) {
 			;// implied RunContentML
 
-		} else if (inspector.isElement(docxObject)) {
+		}
+		else if (inspector.isElement(docxObject)) {
 			Object value = JAXBIntrospector.getValue(docxObject);
 
 			if (value instanceof org.docx4j.wml.Text) {
 				String s = ((org.docx4j.wml.Text) value).getValue();
 				if (s != null && s.length() > 0) {
 					this.textContent = s;
-				} else {
+				}
+				else {
 					this.textContent = Constants.TEXT_ELEMENT_EMPTY_VALUE;
 				}
-			} else if (value instanceof org.docx4j.wml.DelText) {
+			}
+			else if (value instanceof org.docx4j.wml.DelText) {
 				String s = ((org.docx4j.wml.DelText) value).getValue();
 				if (s != null && s.length() > 0) {
 					this.textContent = s;
-				} else {
+				}
+				else {
 					this.textContent = Constants.TEXT_ELEMENT_EMPTY_VALUE;
 				}
-			} else if (value instanceof org.docx4j.wml.Br) {
+			}
+			else if (value instanceof org.docx4j.wml.Br) {
 				// TODO: Full support of BR element
 				this.textContent = Constants.NEWLINE;
 
-			} else if (value instanceof org.docx4j.wml.R.Cr) {
+			}
+			else if (value instanceof org.docx4j.wml.R.Cr) {
 				this.textContent = Constants.NEWLINE;
 
-			} else if (value instanceof org.docx4j.wml.R.Tab) {
+			}
+			else if (value instanceof org.docx4j.wml.R.Tab) {
 				this.textContent = Constants.TAB;
 
-			} else if (value instanceof org.docx4j.wml.FldChar) {
+			}
+			else if (value instanceof org.docx4j.wml.FldChar) {
 				org.docx4j.wml.FldChar fldChar = (org.docx4j.wml.FldChar) value;
 				if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.BEGIN) {
 					this.textContent = Constants.FLDCHAR_BEGIN;
-				} else if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.END) {
+				}
+				else if (fldChar.getFldCharType() == org.docx4j.wml.STFldCharType.END) {
 					this.textContent = Constants.FLDCHAR_END;
-				} else {
+				}
+				else {
 					this.textContent = Constants.FLDCHAR_SEPARATE;
 				}
 				// } else if (value instanceof org.docx4j.wml.R.NoBreakHyphen) {
@@ -149,25 +162,27 @@ public class RunContentML extends ElementML {
 				// } else if (value instanceof org.docx4j.wml.R.SoftHyphen) {
 				// Unsupported yet
 
-			} else {
+			}
+			else {
 				// Create a dummy RunContentML for this unsupported element
 				// TODO: A more informative text content in dummy RunContentML
 				QName name = inspector.getElementName(docxObject);
 				if (name != null) {
 					this.textContent = XmlUtil.getEnclosingTagPair(name);
 					this.isDummy = true;
-				} else {
+				}
+				else {
 					// Should not happen but it could.
 					this.textContent = "<w:unknownTag></w:unknownTag>";
 					this.isDummy = true;
 					log.warn("init(): Unknown tag was detected for a JAXBElement = " + XmlUtils.marshaltoString(docxObject, true));
 				}
 			}
-		} else {
+		}
+		else {
 			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
 
 	}// init()
 
 }// RunContentML class
-

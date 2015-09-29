@@ -115,7 +115,8 @@ public class NumberingView extends View {
 		if (intersect) {
 			if (this.numbering != null && this.numbering.getBullet() != null && "Symbol".equalsIgnoreCase(this.numbering.getNumFont())) {
 				drawBullet(g, r.x, r.y, r.width, r.height, getAlignment(Y_AXIS));
-			} else {
+			}
+			else {
 				drawNumberingString(g, r.x, r.y, r.width, r.height, getAlignment(Y_AXIS));
 			}
 		}
@@ -158,7 +159,8 @@ public class NumberingView extends View {
 
 		if (getContainer() == null) {
 			;// return
-		} else if (axis == View.X_AXIS && this.numbering != null) {
+		}
+		else if (axis == View.X_AXIS && this.numbering != null) {
 			FontMetrics fm = getContainer().getFontMetrics(getFont());
 			// theSpan = fm.stringWidth(this.numbering.getNumString());
 			theSpan = SwingUtilities2.stringWidth((JComponent) getContainer(), fm, this.numbering.getNumString()) + DEFAULT_NUMBERING_GAP;
@@ -166,7 +168,8 @@ public class NumberingView extends View {
 			if (Math.abs(this.firstLineIndent) > theSpan) {
 				theSpan = Math.abs(this.firstLineIndent);
 			}
-		} else {
+		}
+		else {
 			FontMetrics fm = getContainer().getFontMetrics(getFont());
 			theSpan = fm.getHeight();
 		}
@@ -307,13 +310,13 @@ public class NumberingView extends View {
 			throws BadLocationException {
 
 		switch (direction) {
-		case View.NORTH:
-		case View.SOUTH:
-		case View.EAST:
-		case View.WEST:
-			return -1;
-		default:
-			throw new IllegalArgumentException("Bad direction: " + direction);
+			case View.NORTH:
+			case View.SOUTH:
+			case View.EAST:
+			case View.WEST:
+				return -1;
+			default:
+				throw new IllegalArgumentException("Bad direction: " + direction);
 		}
 	}
 
@@ -332,6 +335,12 @@ public class NumberingView extends View {
 		}
 		this.numbering = Emulator.getNumber(elemML.getWordprocessingMLPackage(), pStyle, numId, ilvl);
 
+		System.out.println("pStyle=" + pStyle);
+		System.out.println("numId=" + numId);
+		System.out.println("ilvl=" + ilvl);
+
+		System.out.println("Pour " + elemML.getDocxObject() + " j'ai " + this.numbering.getNumString());
+
 		this.firstLineIndent = (int) StyleConstants.getFirstLineIndent(attr);
 
 		if (this.numbering != null && this.numbering.getNumFont() != null) {
@@ -341,11 +350,11 @@ public class NumberingView extends View {
 			StyleConstants.setFontSize(temp, StyleConstants.getFontSize(attr));
 			StyleConstants.setFontFamily(temp, this.numbering.getNumFont());
 			this.font = ((StyledDocument) getDocument()).getFont(temp);
-		} else {
+		}
+		else {
 			this.font = ((StyledDocument) getDocument()).getFont(attr);
 		}
 
 	}
 
 }// NumberingView class
-

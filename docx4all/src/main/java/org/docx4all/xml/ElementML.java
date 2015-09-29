@@ -107,7 +107,8 @@ public abstract class ElementML implements Cloneable {
 	public void setDocxParent(Object docxParent) {
 		if (this.docxObject == null) {
 			;// do nothing
-		} else {
+		}
+		else {
 			try {
 				this.docxObject.getClass().getMethod("setParent", Object.class).invoke(this.docxObject, docxParent);
 			} catch (NoSuchMethodException exc) {
@@ -125,7 +126,8 @@ public abstract class ElementML implements Cloneable {
 
 		if (child.getParent() != null) {
 			canAdd = false;
-		} else if (this.children == null) {
+		}
+		else if (this.children == null) {
 			canAdd = (idx == 0);
 		}
 
@@ -137,13 +139,16 @@ public abstract class ElementML implements Cloneable {
 
 		if (elem.getParent() != null) {
 			canAdd = false;
-		} else if (getParent() == null) {
+		}
+		else if (getParent() == null) {
 			canAdd = false;
-		} else {
+		}
+		else {
 			int idx = getParent().getChildIndex(this);
 			if (idx < 0) {
 				canAdd = false;
-			} else {
+			}
+			else {
 				if (after) {
 					idx++;
 				}
@@ -210,11 +215,13 @@ public abstract class ElementML implements Cloneable {
 						child.setDocxParent(getDocxChildParent());
 					}
 				}
-			} else {
+			}
+			else {
 				throw new IndexOutOfBoundsException("Index: " + idx + ", Size: 0");
 			}
 
-		} else {
+		}
+		else {
 			// Add to this ElementML's children
 			this.children.add(idx, child);
 
@@ -243,7 +250,8 @@ public abstract class ElementML implements Cloneable {
 						list.add(siblingIndex + 1, child.getDocxObject());
 						child.setDocxParent(getDocxChildParent());
 
-					} else if (idx < this.children.size() - 1) {
+					}
+					else if (idx < this.children.size() - 1) {
 						// Browse younger siblings for index position
 						for (int i = idx + 1; i < this.children.size() && siblingIndex == -1; i++) {
 							Object obj = this.children.get(i).getDocxObject();
@@ -283,7 +291,8 @@ public abstract class ElementML implements Cloneable {
 				}
 				child.setDocxParent(null);
 			}
-		} else {
+		}
+		else {
 			// Delete from this ElementML's children
 			this.children.remove(child);
 			child.setParent(null);
@@ -379,7 +388,8 @@ public abstract class ElementML implements Cloneable {
 		String dummy = "";
 		if (isImplied()) {
 			dummy = "IMPLIED_";
-		} else if (isDummy()) {
+		}
+		else if (isDummy()) {
 			dummy = "DUMMY_";
 		}
 
@@ -392,4 +402,3 @@ public abstract class ElementML implements Cloneable {
 	}
 
 } // ElementML class
-

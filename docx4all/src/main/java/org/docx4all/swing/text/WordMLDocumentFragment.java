@@ -19,17 +19,11 @@
 
 package org.docx4all.swing.text;
 
-import java.util.ArrayList;
-
-import javax.xml.bind.JAXBElement;
-
 import org.docx4all.util.XmlUtil;
 import org.docx4all.xml.BodyML;
 import org.docx4all.xml.ElementML;
 import org.docx4all.xml.ElementMLFactory;
-import org.docx4j.XmlUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
-import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,16 +56,82 @@ public class WordMLDocumentFragment extends WordMLDocument {
 			ElementML bodyML = paraML.getParent();
 			paraML.delete();
 
-			WordprocessingMLPackage wmlPackage = XmlUtils.deepCopy(docML.getWordprocessingMLPackage());
-
-			wmlPackage = XmlUtil.applyFilter(wmlPackage);
+			/*WordprocessingMLPackage filteredWMLPackage;
+			try {
+				filteredWMLPackage = WordprocessingMLPackage.createPackage();
+			} catch (InvalidFormatException e) {
+				e.printStackTrace();
+				return;
+			}
+			MainDocumentPart filteredMdp = filteredWMLPackage.getMainDocumentPart();*/
 
 			System.out.println("Now we try to filter from " + startIndex + " to " + endIndex);
+
+			WordprocessingMLPackage wmlPackage = XmlUtil.applyFilter(docML.getWordprocessingMLPackage());
+
+			/*MainDocumentPart mdp = wmlPackage.getMainDocumentPart();
+			
+			int index = 0;
+			for (Object o : new ArrayList<Object>(mdp.getContent())) {
+				Object initO = o;
+				if (o instanceof JAXBElement) {
+					o = ((JAXBElement) o).getValue();
+				}
+				if (index < startIndex || index > endIndex) {
+					System.out.println("On ne prend pas " + index + " " + o);
+					// mdp.getContent().remove(initO);
+				}
+				else {
+					System.out.println("On prend " + index + " " + o);
+			
+					Object clonedO = XmlUtils.deepCopy(o);
+					filteredMdp.getContent().add(clonedO);
+				}
+				index++;
+			}*/
+
+			// org.docx4j.wml.Document wmlDoc = filteredMdp.getJaxbElement();
+
+			// MainDocumentPart mdp = XmlUtils.deepCopy(wmlPackage.getMainDocumentPart());
+			// filteredWMLPackage.getM
+
+			// org.docx4j.wml.Document wmlDoc = XmlUtils.deepCopy(filteredWMLPackage.getMainDocumentPart().getJaxbElement());
+			// XmlUtils.deepCopy(filteredWMLPackage.getMainDocumentPart().getJaxbElement());
+
+			// MainDocumentPart mdp
+
+			// MainDocumentPart mdp = null; // XmlUtils.deepCopy(filteredWMLPackage.getMainDocumentPart());
+			// org.docx4j.wml.Document wmlDoc = mdp.getJaxbElement();
+			/*int index = 0;
+			for (Object o : new ArrayList<Object>(mdp.getContent())) {
+				Object initO = o;
+				if (o instanceof JAXBElement) {
+					o = ((JAXBElement) o).getValue();
+				}
+				if (index < startIndex || index > endIndex) {
+					System.out.println("On ne prend pas " + index + " " + o);
+					mdp.getContent().remove(initO);
+				}
+				else {
+					System.out.println("On prend " + index + " " + o);
+				}
+				index++;
+			}*/
+
+			// WordprocessingMLPackage wmlPackage = XmlUtils.deepCopy(docML.getWordprocessingMLPackage());
+
+			// filteredWMLPackage = XmlUtil.applyFilter(filteredWMLPackage);
 
 			// Restore document's last paragraph 'paraML'.
 			bodyML.addChild(paraML);
 
-			MainDocumentPart mdp = wmlPackage.getMainDocumentPart();
+			org.docx4j.wml.Document wmlDoc = wmlPackage.getMainDocumentPart().getJaxbElement();
+			// replaceBodyML(new FilteredBodyML(wmlDoc.getBody(), startIndex, endIndex, getElementMLFactory()));
+			replaceBodyML(new BodyML(wmlDoc.getBody(), getElementMLFactory()));
+
+			// System.out.println("Now we suceeded in filtering from " + startIndex + " to " + endIndex);
+
+			/*MainDocumentPart mdp = wmlPackage.getMainDocumentPart();
 			org.docx4j.wml.Document wmlDoc = mdp.getJaxbElement();
 			int index = 0;
 			for (Object o : new ArrayList<Object>(mdp.getContent())) {
@@ -82,13 +142,14 @@ public class WordMLDocumentFragment extends WordMLDocument {
 				if (index < startIndex || index > endIndex) {
 					System.out.println("On ne prend pas " + index + " " + o);
 					mdp.getContent().remove(initO);
-				} else {
+				}
+				else {
 					System.out.println("On prend " + index + " " + o);
 				}
 				index++;
 			}
-
-			replaceBodyML(new BodyML(wmlDoc.getBody(), getElementMLFactory()));
+			
+			replaceBodyML(new BodyML(wmlDoc.getBody(), getElementMLFactory()));*/
 
 		} finally {
 			writeUnlock();
