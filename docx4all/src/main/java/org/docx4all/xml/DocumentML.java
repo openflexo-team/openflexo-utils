@@ -45,6 +45,12 @@ public class DocumentML extends ElementML {
 		this.docPackage = docPackage;
 	}
 
+	public DocumentML(WordprocessingMLPackage docPackage, int startIndex, int endIndex, ElementMLFactory elementMLFactory) {
+		super((docPackage != null) ? docPackage.getMainDocumentPart().getJaxbElement() : null, startIndex, endIndex, elementMLFactory,
+				false);
+		this.docPackage = docPackage;
+	}
+
 	@Override
 	public WordprocessingMLPackage getWordprocessingMLPackage() {
 		return this.docPackage;
@@ -78,9 +84,11 @@ public class DocumentML extends ElementML {
 
 		if (!(child instanceof BodyML)) {
 			canAdd = false;
-		} else if (getChildrenCount() != 0) {
+		}
+		else if (getChildrenCount() != 0) {
 			canAdd = false;
-		} else {
+		}
+		else {
 			canAdd = super.canAddChild(idx, child);
 		}
 
@@ -166,16 +174,18 @@ public class DocumentML extends ElementML {
 
 		if (docxObject == null) {
 			;// implied DocumentML
-		} else if (docxObject instanceof org.docx4j.wml.Document) {
+		}
+		else if (docxObject instanceof org.docx4j.wml.Document) {
 			doc = (org.docx4j.wml.Document) docxObject;
-		} else {
+		}
+		else {
 			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
 
 		initChildren(doc);
 	}
 
-	private void initChildren(org.docx4j.wml.Document doc) {
+	protected void initChildren(org.docx4j.wml.Document doc) {
 		if (doc == null) {
 			return;
 		}
@@ -189,4 +199,3 @@ public class DocumentML extends ElementML {
 	}// initChildren()
 
 }// DocumentML class
-

@@ -19,11 +19,12 @@
 
 package org.docx4all.swing.text;
 
-import org.docx4all.util.XmlUtil;
-import org.docx4all.xml.BodyML;
-import org.docx4all.xml.ElementML;
+import java.util.List;
+
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.StyleConstants;
+
 import org.docx4all.xml.ElementMLFactory;
-import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,121 +41,43 @@ public class WordMLDocumentFragment extends WordMLDocument {
 
 	}
 
-	public void filterFragment() {
+	public int getStartIndex() {
+		return startIndex;
+	}
 
-		System.out.println("on y est, entre " + startIndex + " " + endIndex);
+	public int getEndIndex() {
+		return endIndex;
+	}
 
+	// IMPORTANT
+	// We override here parent method by commenting last paragraph management
+	// which has no meaning here, and causes many troubles
+	@Override
+	protected void createElementStructure(List<ElementSpec> list) {
+		ElementSpec[] specs = new ElementSpec[list.size()];
+		list.toArray(specs);
 		try {
 			writeLock();
+			super.create(specs);
 
-			DocumentElement elem = (DocumentElement) getDefaultRootElement();
-			ElementML docML = elem.getElementML();
+			DocumentElement root = (DocumentElement) getDefaultRootElement();
+			StyleConstants.setFontFamily((MutableAttributeSet) root.getAttributes(),
+					FontManager.getInstance().getDocx4AllDefaultFontFamilyName());
 
-			// Do not include document's last paragraph.
-			elem = (DocumentElement) elem.getElement(elem.getElementCount() - 1);
-			ElementML paraML = elem.getElementML();
-			ElementML bodyML = paraML.getParent();
-			paraML.delete();
+			StyleConstants.setFontSize((MutableAttributeSet) root.getAttributes(), FontManager.getInstance().getDocx4AllDefaultFontSize());
 
-			/*WordprocessingMLPackage filteredWMLPackage;
-			try {
-				filteredWMLPackage = WordprocessingMLPackage.createPackage();
-			} catch (InvalidFormatException e) {
-				e.printStackTrace();
-				return;
-			}
-			MainDocumentPart filteredMdp = filteredWMLPackage.getMainDocumentPart();*/
-
-			System.out.println("Now we try to filter from " + startIndex + " to " + endIndex);
-
-			WordprocessingMLPackage wmlPackage = XmlUtil.applyFilter(docML.getWordprocessingMLPackage());
-
-			/*MainDocumentPart mdp = wmlPackage.getMainDocumentPart();
-			
-			int index = 0;
-			for (Object o : new ArrayList<Object>(mdp.getContent())) {
-				Object initO = o;
-				if (o instanceof JAXBElement) {
-					o = ((JAXBElement) o).getValue();
-				}
-				if (index < startIndex || index > endIndex) {
-					System.out.println("On ne prend pas " + index + " " + o);
-					// mdp.getContent().remove(initO);
-				}
-				else {
-					System.out.println("On prend " + index + " " + o);
-			
-					Object clonedO = XmlUtils.deepCopy(o);
-					filteredMdp.getContent().add(clonedO);
-				}
-				index++;
-			}*/
-
-			// org.docx4j.wml.Document wmlDoc = filteredMdp.getJaxbElement();
-
-			// MainDocumentPart mdp = XmlUtils.deepCopy(wmlPackage.getMainDocumentPart());
-			// filteredWMLPackage.getM
-
-			// org.docx4j.wml.Document wmlDoc = XmlUtils.deepCopy(filteredWMLPackage.getMainDocumentPart().getJaxbElement());
-			// XmlUtils.deepCopy(filteredWMLPackage.getMainDocumentPart().getJaxbElement());
-
-			// MainDocumentPart mdp
-
-			// MainDocumentPart mdp = null; // XmlUtils.deepCopy(filteredWMLPackage.getMainDocumentPart());
-			// org.docx4j.wml.Document wmlDoc = mdp.getJaxbElement();
-			/*int index = 0;
-			for (Object o : new ArrayList<Object>(mdp.getContent())) {
-				Object initO = o;
-				if (o instanceof JAXBElement) {
-					o = ((JAXBElement) o).getValue();
-				}
-				if (index < startIndex || index > endIndex) {
-					System.out.println("On ne prend pas " + index + " " + o);
-					mdp.getContent().remove(initO);
-				}
-				else {
-					System.out.println("On prend " + index + " " + o);
-				}
-				index++;
-			}*/
-
-			// WordprocessingMLPackage wmlPackage = XmlUtils.deepCopy(docML.getWordprocessingMLPackage());
-
-			// filteredWMLPackage = XmlUtil.applyFilter(filteredWMLPackage);
-
-			// Restore document's last paragraph 'paraML'.
-			bodyML.addChild(paraML);
-
-			org.docx4j.wml.Document wmlDoc = wmlPackage.getMainDocumentPart().getJaxbElement();
-			// replaceBodyML(new FilteredBodyML(wmlDoc.getBody(), startIndex, endIndex, getElementMLFactory()));
-			replaceBodyML(new BodyML(wmlDoc.getBody(), getElementMLFactory()));
-
-			// System.out.println("Now we suceeded in filtering from " + startIndex + " to " + endIndex);
-
-			/*MainDocumentPart mdp = wmlPackage.getMainDocumentPart();
-			org.docx4j.wml.Document wmlDoc = mdp.getJaxbElement();
-			int index = 0;
-			for (Object o : new ArrayList<Object>(mdp.getContent())) {
-				Object initO = o;
-				if (o instanceof JAXBElement) {
-					o = ((JAXBElement) o).getValue();
-				}
-				if (index < startIndex || index > endIndex) {
-					System.out.println("On ne prend pas " + index + " " + o);
-					mdp.getContent().remove(initO);
-				}
-				else {
-					System.out.println("On prend " + index + " " + o);
-				}
-				index++;
-			}
-			
-			replaceBodyML(new BodyML(wmlDoc.getBody(), getElementMLFactory()));*/
+			/*
+			// Needs to validate the last ParagraphML's parent.
+			DocumentElement lastPara = (DocumentElement) root.getElement(root.getElementCount() - 1);
+			ElementML lastParaML = lastPara.getElementML();
+			// detach from its previous parent
+			lastParaML.delete();
+			// make the new document root as new parent
+			root.getElementML().getChild(0).addChild(lastParaML);*/
 
 		} finally {
 			writeUnlock();
 		}
-
 	}
 
 }// WordMLDocumentFragment class

@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.docx4all.xml;
@@ -26,13 +26,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Jojada Tirtowidjojo - 08/01/2008
+ * A subclass of BodyML, used to represent a document fragment
+ * 
+ * @author sylvain
+ *
  */
 public class FilteredBodyML extends BodyML {
 	private static Logger log = LoggerFactory.getLogger(FilteredBodyML.class);
 
-	private final int startIndex;
-	private final int endIndex;
+	private int startIndex = -1;
+	private int endIndex = -1;
 
 	public FilteredBodyML(Object docxObject, int startIndex, int endIndex, ElementMLFactory elementMLFactory) {
 		this(docxObject, startIndex, endIndex, elementMLFactory, false);
@@ -73,27 +76,45 @@ public class FilteredBodyML extends BodyML {
 		return super.getDocxChildren();
 	}
 
+	private List<ElementML> filteredList = null;
+
 	// TODO: perf issue, please implement a cache !!!
 	protected List<ElementML> getFilteredChildren() {
-		return super.getChildren().subList(startIndex, endIndex);
+		if (filteredList == null) {
+			if (startIndex > -1 && endIndex > -1) {
+				filteredList = super.getChildren().subList(startIndex, endIndex + 1);
+			}
+		}
+		if (filteredList == null) {
+			return super.getChildren();
+		}
+		return filteredList;
 	}
 
-	/*@Override
+	@Override
 	public List<ElementML> getChildren() {
 		return getFilteredChildren();
 	}
-	
+
 	@Override
 	public int getChildrenCount() {
 		return (getFilteredChildren() == null) ? 0 : getFilteredChildren().size();
 	}
-	
+
 	@Override
 	public ElementML getChild(int idx) {
 		if (getFilteredChildren() != null && !getFilteredChildren().isEmpty()) {
 			return getFilteredChildren().get(idx);
 		}
 		return null;
-	}*/
+	}
+
+	public int getStartIndex() {
+		return startIndex;
+	}
+
+	public int getEndIndex() {
+		return endIndex;
+	}
 
 }// BodyML class

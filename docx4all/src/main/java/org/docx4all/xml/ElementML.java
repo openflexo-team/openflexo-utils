@@ -58,6 +58,10 @@ public abstract class ElementML implements Cloneable {
 	}
 
 	public ElementML(Object docxObject, ElementMLFactory elementMLFactory, boolean isDummy) {
+		this(docxObject, -1, -1, elementMLFactory, isDummy);
+	}
+
+	public ElementML(Object docxObject, int startIndex, int endIndex, ElementMLFactory elementMLFactory, boolean isDummy) {
 		this.docxObject = docxObject;
 		this.elementMLFactory = elementMLFactory;
 		this.isDummy = isDummy;
@@ -68,7 +72,7 @@ public abstract class ElementML implements Cloneable {
 				tag = WordML.getTag(name.getLocalPart());
 			}
 		}
-		init(docxObject);
+		init(docxObject, startIndex, endIndex);
 	}
 
 	public ElementMLFactory getElementMLFactory() {
@@ -90,6 +94,10 @@ public abstract class ElementML implements Cloneable {
 
 	@Override
 	public abstract Object clone();
+
+	protected void init(Object docxObject, int startIndex, int endIndex) {
+		init(docxObject);
+	}
 
 	protected abstract void init(Object docxObject);
 

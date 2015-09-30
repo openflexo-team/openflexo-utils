@@ -33,7 +33,6 @@ import javax.swing.text.MutableAttributeSet;
 
 import org.docx4all.swing.text.DocumentElement;
 import org.docx4all.swing.text.WordMLDocument;
-import org.docx4all.swing.text.WordMLDocumentFragment;
 import org.docx4all.swing.text.WordMLEditorKit;
 import org.docx4all.swing.text.WordMLFragment;
 import org.docx4all.ui.main.WordMLEditor;
@@ -93,12 +92,9 @@ public class WordMLTextPane extends JEditorPane {
 	public void setDocument(Document doc) {
 		if (doc instanceof WordMLDocument) {
 			super.setDocument(doc);
-			// setSelectionColor(((WordMLDocument) doc).SELECTION_COLOR);
 			setSelectionColor(WordMLDocument.SELECTION_COLOR);
-			if (doc instanceof WordMLDocumentFragment) {
-				((WordMLDocumentFragment) doc).filterFragment();
-			}
-		} else {
+		}
+		else {
 			throw new IllegalArgumentException("Model must be WordMLDocument");
 		}
 	}
@@ -115,7 +111,8 @@ public class WordMLTextPane extends JEditorPane {
 	public void setEditorKit(EditorKit kit) {
 		if (kit instanceof WordMLEditorKit) {
 			super.setEditorKit(kit);
-		} else {
+		}
+		else {
 			throw new IllegalArgumentException("Must be WordMLEditorKit");
 		}
 	}
@@ -271,7 +268,8 @@ public class WordMLTextPane extends JEditorPane {
 
 				if (vis.contains(new Point(r.x, r.y))) {
 					// We are already inside
-				} else {
+				}
+				else {
 					scrollRectToVisible(r);
 					if (setCaretPosition) {
 						setCaretPosition(pos);

@@ -140,11 +140,13 @@ public class BodyML extends ElementML {
 		if (docxObject == null) {
 			;// implied BodyML
 
-		} else if (docxObject instanceof org.docx4j.wml.Body) {
+		}
+		else if (docxObject instanceof org.docx4j.wml.Body) {
 			body = (org.docx4j.wml.Body) docxObject;
 			this.isDummy = false;
 
-		} else {
+		}
+		else {
 			throw new IllegalArgumentException("Unsupported Docx Object = " + docxObject);
 		}
 
@@ -181,23 +183,27 @@ public class BodyML extends ElementML {
 					ml.setParent(BodyML.this);
 					this.children.add(ml);
 
-				} else if (value instanceof org.docx4j.wml.Tbl) {
+				}
+				else if (value instanceof org.docx4j.wml.Tbl) {
 					ml = new TableML(obj, getElementMLFactory());
 					ml.setParent(BodyML.this);
 					this.children.add(ml);
 
-				} else if (value instanceof org.docx4j.wml.CTMarkupRange) {
+				}
+				else if (value instanceof org.docx4j.wml.CTMarkupRange) {
 					// suppress <w:bookmarkStart> and <w:bookmarkEnd>
 					JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
 					QName name = inspector.getElementName(obj);
 					if (name != null && (name.getLocalPart() == "bookmarkStart" || name.getLocalPart() == "bookmarkEnd")) {
 						// suppress
-					} else {
+					}
+					else {
 						ml = new ParagraphML(obj, getElementMLFactory());
 						ml.setParent(BodyML.this);
 						this.children.add(ml);
 					}
-				} else {
+				}
+				else {
 					ml = new ParagraphML(obj, getElementMLFactory());
 					ml.setParent(BodyML.this);
 					this.children.add(ml);
@@ -207,4 +213,3 @@ public class BodyML extends ElementML {
 	}// initChildren()
 
 }// BodyML class
-

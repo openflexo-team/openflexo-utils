@@ -335,12 +335,6 @@ public class NumberingView extends View {
 		}
 		this.numbering = Emulator.getNumber(elemML.getWordprocessingMLPackage(), pStyle, numId, ilvl);
 
-		System.out.println("pStyle=" + pStyle);
-		System.out.println("numId=" + numId);
-		System.out.println("ilvl=" + ilvl);
-
-		System.out.println("Pour " + elemML.getDocxObject() + " j'ai " + this.numbering.getNumString());
-
 		this.firstLineIndent = (int) StyleConstants.getFirstLineIndent(attr);
 
 		if (this.numbering != null && this.numbering.getNumFont() != null) {

@@ -54,8 +54,6 @@ public class RunContentML extends ElementML {
 	public void setTextContent(String textContent) {
 		this.textContent = textContent;
 
-		System.out.println("setTextContent with " + textContent);
-
 		JAXBIntrospector inspector = Context.jc.createJAXBIntrospector();
 		if (this.docxObject != null && inspector.isElement(this.docxObject)) {
 			Object value = JAXBIntrospector.getValue(this.docxObject);

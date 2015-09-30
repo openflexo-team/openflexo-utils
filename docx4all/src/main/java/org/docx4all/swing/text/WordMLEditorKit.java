@@ -83,6 +83,7 @@ import org.docx4all.util.XmlUtil;
 import org.docx4all.xml.DocumentML;
 import org.docx4all.xml.ElementML;
 import org.docx4all.xml.ElementMLFactory;
+import org.docx4all.xml.FragmentDocumentML;
 import org.docx4all.xml.HyperlinkML;
 import org.docx4all.xml.IObjectFactory;
 import org.docx4all.xml.ObjectFactory;
@@ -282,6 +283,9 @@ public class WordMLEditorKit extends DefaultEditorKit {
 	public WordMLDocumentFragment openDocumentFragment(WordprocessingMLPackage document, IObjectFactory objectFactory, int startIndex,
 			int endIndex) {
 
+		// Very important: reset numbering maps (in case of many WordprocessingMLPackage are opened once at a time)
+		document.getMainDocumentPart().getNumberingDefinitionsPart().initialiseMaps();
+
 		elementMLFactory = makeElementMLFactory(objectFactory);
 
 		// Default WordMLDocument has to be created prior to
@@ -289,7 +293,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 		// liveStyles property will be populated correctly.
 		// See: StyleDefinitionsPart.unmarshall(java.io.InputStream)
 		WordMLDocumentFragment doc = createDefaultDocumentFragment(elementMLFactory, startIndex, endIndex);
-		List<ElementSpec> specs = DocUtil.getElementSpecs(new DocumentML(document, elementMLFactory));
+		List<ElementSpec> specs = DocUtil.getElementSpecs(new FragmentDocumentML(document, startIndex, endIndex, elementMLFactory));
 		doc.createElementStructure(specs);
 
 		if (log.isDebugEnabled()) {
