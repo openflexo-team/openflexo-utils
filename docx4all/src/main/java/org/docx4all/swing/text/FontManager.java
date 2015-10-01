@@ -358,12 +358,12 @@ public class FontManager {
 				}
 			}
 			else {
-				log.warn("Cannot create font '" + fontname + "'");
+				log.debug("Cannot create font '" + fontname + "'");
 				if (pf == null) {
-					log.warn(".. no mapping for that key.");
+					log.debug(".. no mapping for that key.");
 				}
 				else {
-					log.warn(".. found a mapping, but getEmbeddedFile returned null!");
+					log.debug(".. found a mapping, but getEmbeddedFile returned null!");
 				}
 
 				if (defaultTried) {
