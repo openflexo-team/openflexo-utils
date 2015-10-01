@@ -1340,7 +1340,7 @@ public class TableView extends BoxView {
 						; // advance to a free column
 					int colSpan = getColumnGridSpan(cv);
 					spans[cell] = (col < columnSpans.length ? columnSpans[col] : 100);
-					offsets[cell] = (col < columnOffsets.length ? columnOffsets[col] : 100);
+					offsets[cell] = (col < columnOffsets.length ? columnOffsets[col] : 50);
 					if (colSpan > 1) {
 						int n = columnSpans.length;
 						for (int j = 1; j < colSpan; j++) {
