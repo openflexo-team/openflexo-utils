@@ -194,7 +194,8 @@ public class TableView extends BoxView {
 		TblBorders borders = WordMLStyleConstants.getTblBorders(attr);
 		if (borders != null) {
 			borderWidth = borders.getCTBorder(LineBorderSegment.Side.LEFT).getSizeInPixels();
-		} else {
+		}
+		else {
 			borderWidth = 0;
 		}
 
@@ -259,7 +260,8 @@ public class TableView extends BoxView {
 							for (int i = 1; i < colSpan; i++) {
 								rv.fillColumn(col + i);
 							}
-						} else {
+						}
+						else {
 							// TableCellView cv is a continuation of
 							// vertical merge.
 							// Try to find the cell that starts the vertical merge
@@ -283,7 +285,8 @@ public class TableView extends BoxView {
 									rv.fillColumn(col + i);
 								}
 								multiRowCells = true;
-							} else {
+							}
+							else {
 								// Ignore bad vmerge setting.
 							}
 						}
@@ -368,7 +371,8 @@ public class TableView extends BoxView {
 					int colSpan = getColumnGridSpan(cv);
 					if (colSpan == 1) {
 						checkSingleColumnCell(axis, col, cv);
-					} else {
+					}
+					else {
 						hasMultiColumn = true;
 						col += colSpan - 1;
 					}
@@ -519,7 +523,8 @@ public class TableView extends BoxView {
 			int width = tblWidth.getWidthInPixel(ignoreThisParam);
 			if (width < (int) min) {
 				r.maximum = r.minimum = r.preferred = (int) min;
-			} else {
+			}
+			else {
 				r.maximum = r.minimum = r.preferred = width;
 			}
 		}
@@ -528,11 +533,14 @@ public class TableView extends BoxView {
 		int alignment = StyleConstants.getAlignment(attr);
 		if (alignment == StyleConstants.ALIGN_LEFT) {
 			r.alignment = 0;
-		} else if (alignment == StyleConstants.ALIGN_CENTER) {
+		}
+		else if (alignment == StyleConstants.ALIGN_CENTER) {
 			r.alignment = 0.5f;
-		} else if (alignment == StyleConstants.ALIGN_RIGHT) {
+		}
+		else if (alignment == StyleConstants.ALIGN_RIGHT) {
 			r.alignment = 1;
-		} else {
+		}
+		else {
 			r.alignment = 0;
 		}
 
@@ -718,9 +726,9 @@ public class TableView extends BoxView {
 	 * Establishes the parent view for this view. This is guaranteed to be called before any other methods if the parent view is functioning
 	 * properly.
 	 * <p>
-	 * This is implemented to forward to the superclass as well as call the <a
-	 * href="#setPropertiesFromAttributes">setPropertiesFromAttributes</a> method to set the paragraph properties from the css attributes.
-	 * The call is made at this time to ensure the ability to resolve upward through the parents view attributes.
+	 * This is implemented to forward to the superclass as well as call the
+	 * <a href="#setPropertiesFromAttributes">setPropertiesFromAttributes</a> method to set the paragraph properties from the css
+	 * attributes. The call is made at this time to ensure the ability to resolve upward through the parents view attributes.
 	 *
 	 * @param parent
 	 *            the new parent, or null if the view is being removed from a parent it was previously added to
@@ -792,7 +800,8 @@ public class TableView extends BoxView {
 
 			if (cellWidthInPercentage) {
 				percentages = new int[columnRequirements.length];
-			} else {
+			}
+			else {
 				percentages = null;
 			}
 
@@ -805,7 +814,8 @@ public class TableView extends BoxView {
 					TableCellView cv = (TableCellView) row.getView(cell);
 					if (cv.isHidden()) {
 						col--;
-					} else {
+					}
+					else {
 						for (; row.isFilled(col); col++)
 							; // advance to a free column
 						int colSpan = getColumnGridSpan(cv);
@@ -818,7 +828,8 @@ public class TableView extends BoxView {
 								if (tcwidth.getType() == TblWidth.Type.PCT) {
 									percentages[col + i] = Math.max(percentages[col + i], len);
 									adjustmentWeights[col + i] = Math.max(adjustmentWeights[col + i], WorstAdjustmentWeight);
-								} else {
+								}
+								else {
 									adjustmentWeights[col + i] = Math.max(adjustmentWeights[col + i], WorstAdjustmentWeight - 1);
 								}
 							}
@@ -946,7 +957,8 @@ public class TableView extends BoxView {
 						}
 					}
 				}
-			} else {
+			}
+			else {
 				adjustments = null;
 			}
 		}
@@ -1146,7 +1158,8 @@ public class TableView extends BoxView {
 					int cellColumnEnd = cellColumnStart + colSpan - 1;
 					if (cellColumnStart <= col && col <= cellColumnEnd) {
 						;// return theCell
-					} else {
+					}
+					else {
 						theCell = null;
 						cellColumnStart = cellColumnEnd + 1;
 					}
@@ -1213,7 +1226,8 @@ public class TableView extends BoxView {
 
 			if (axis == View.X_AXIS) {
 				value = totalColumnRequirements.minimum + getLeftInset() + getRightInset();
-			} else {
+			}
+			else {
 				value = super.getMinimumSpan(axis);
 			}
 			return value;
@@ -1226,7 +1240,8 @@ public class TableView extends BoxView {
 			if (axis == View.X_AXIS) {
 				// We're flexible.
 				value = Integer.MAX_VALUE;
-			} else {
+			}
+			else {
 				value = super.getMaximumSpan(axis);
 			}
 			return value;
@@ -1238,7 +1253,8 @@ public class TableView extends BoxView {
 
 			if (axis == View.X_AXIS) {
 				value = totalColumnRequirements.preferred + getLeftInset() + getRightInset();
-			} else {
+			}
+			else {
 				value = super.getPreferredSpan(axis);
 			}
 			return value;
@@ -1273,7 +1289,8 @@ public class TableView extends BoxView {
 				if (nrows > 1) {
 					multiRowCells = true;
 					max = Math.max((int) v.getMaximumSpan(axis), max);
-				} else {
+				}
+				else {
 					min = Math.max((int) v.getMinimumSpan(axis), min);
 					pref = Math.max((int) v.getPreferredSpan(axis), pref);
 					max = Math.max((int) v.getMaximumSpan(axis), max);
@@ -1310,33 +1327,38 @@ public class TableView extends BoxView {
 		 */
 		@Override
 		protected void layoutMajorAxis(int targetSpan, int axis, int[] offsets, int[] spans) {
-			int col = 0;
-			int ncells = getViewCount();
-			for (int cell = 0; cell < ncells; cell++) {
-				TableCellView cv = (TableCellView) getView(cell);
-				if (cv.isHidden()) {
-					continue;
-				}
-
-				for (; isFilled(col); col++)
-					; // advance to a free column
-				int colSpan = getColumnGridSpan(cv);
-				spans[cell] = columnSpans[col];
-				offsets[cell] = columnOffsets[col];
-				if (colSpan > 1) {
-					int n = columnSpans.length;
-					for (int j = 1; j < colSpan; j++) {
-						// Because the table may be only partially formed, some
-						// of the columns may not yet exist. Therefore we check
-						// the bounds.
-						if ((col + j) < n) {
-							spans[cell] += columnSpans[col + j];
-							spans[cell] += cellSpacing;
-						}
+			try {
+				int col = 0;
+				int ncells = getViewCount();
+				for (int cell = 0; cell < ncells; cell++) {
+					TableCellView cv = (TableCellView) getView(cell);
+					if (cv.isHidden()) {
+						continue;
 					}
-					col += colSpan - 1;
+
+					for (; isFilled(col); col++)
+						; // advance to a free column
+					int colSpan = getColumnGridSpan(cv);
+					spans[cell] = (col < columnSpans.length ? columnSpans[col] : 100);
+					offsets[cell] = (col < columnOffsets.length ? columnOffsets[col] : 100);
+					if (colSpan > 1) {
+						int n = columnSpans.length;
+						for (int j = 1; j < colSpan; j++) {
+							// Because the table may be only partially formed, some
+							// of the columns may not yet exist. Therefore we check
+							// the bounds.
+							if ((col + j) < n) {
+								spans[cell] += columnSpans[col + j];
+								spans[cell] += cellSpacing;
+							}
+						}
+						col += colSpan - 1;
+					}
+					col++;
 				}
-				col++;
+			} catch (ArrayIndexOutOfBoundsException e) {
+				// We have decided to ignore that
+				e.printStackTrace();
 			}
 		}
 
@@ -1367,7 +1389,8 @@ public class TableView extends BoxView {
 				TableCellView cv = (TableCellView) getView(cell);
 				if (cv.isHidden()) {
 					col--;
-				} else {
+				}
+				else {
 					for (; isFilled(col); col++)
 						; // advance to a free column
 					int colSpan = getColumnGridSpan(cv);
