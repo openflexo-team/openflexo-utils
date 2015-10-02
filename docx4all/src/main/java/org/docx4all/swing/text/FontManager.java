@@ -368,13 +368,13 @@ public class FontManager {
 
 				if (defaultTried) {
 					if (_fontTable.values().size() > 0) {
-						log.info("Failed to get default font; using first available");
+						log.debug("Failed to get default font; using first available");
 						return _fontTable.values().iterator().next();
 					}
 					return Font.getFont(fontname);
 				}
 				else {
-					log.info("Using Docx4all default font.");
+					log.debug("Using Docx4all default font.");
 					defaultTried = true;
 					theFont = getFontInAction(getDocx4AllDefaultFontFamilyName(), Font.PLAIN, getDocx4AllDefaultFontSize());
 				}
