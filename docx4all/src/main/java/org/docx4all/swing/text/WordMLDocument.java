@@ -1827,6 +1827,7 @@ public class WordMLDocument extends DefaultStyledDocument {
 
 		@Override
 		public void setSelected(boolean selected) {
+
 			if (selected != this.selected) {
 				this.selected = selected;
 				if (selected) {

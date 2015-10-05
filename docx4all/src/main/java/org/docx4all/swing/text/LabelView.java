@@ -59,10 +59,12 @@ public class LabelView extends javax.swing.text.LabelView implements PropertyCha
 			if (parent.getParent() instanceof RunInsML) {
 				foreground = Color.RED;
 				impliedUnderline = true;
-			} else if (parent.getParent() instanceof RunDelML) {
+			}
+			else if (parent.getParent() instanceof RunDelML) {
 				foreground = Color.RED;
 				impliedStrikethrough = true;
-			} else if (parent.getParent() instanceof HyperlinkML) {
+			}
+			else if (parent.getParent() instanceof HyperlinkML) {
 				foreground = Color.BLUE;
 				impliedUnderline = true;
 			}
@@ -128,24 +130,30 @@ public class LabelView extends javax.swing.text.LabelView implements PropertyCha
 				spaceMap.set(i - txtOffset);
 				if (state == TRAILING) {
 					trailingSpaces++;
-				} else if (state == CONTENT) {
+				}
+				else if (state == CONTENT) {
 					state = SPACES;
 					leadingSpaces = 1;
-				} else if (state == SPACES) {
+				}
+				else if (state == SPACES) {
 					leadingSpaces++;
 				}
-			} else if ('\t' == segment.array[i]) {
+			}
+			else if ('\t' == segment.array[i]) {
 				hasTab = true;
 				break;
-			} else {
+			}
+			else {
 				if (state == TRAILING) {
 					if ('\n' != segment.array[i] && '\r' != segment.array[i]) {
 						state = CONTENT;
 						endContentPosition = i;
 					}
-				} else if (state == CONTENT) {
+				}
+				else if (state == CONTENT) {
 					// do nothing
-				} else if (state == SPACES) {
+				}
+				else if (state == SPACES) {
 					contentSpaces += leadingSpaces;
 					leadingSpaces = 0;
 				}
