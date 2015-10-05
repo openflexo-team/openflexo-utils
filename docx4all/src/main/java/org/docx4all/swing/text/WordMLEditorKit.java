@@ -286,7 +286,10 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			int endIndex) {
 
 		// Very important: reset numbering maps (in case of many WordprocessingMLPackage are opened once at a time)
-		document.getMainDocumentPart().getNumberingDefinitionsPart().initialiseMaps();
+		if (document != null && document.getMainDocumentPart() != null
+				&& document.getMainDocumentPart().getNumberingDefinitionsPart() != null) {
+			document.getMainDocumentPart().getNumberingDefinitionsPart().initialiseMaps();
+		}
 
 		elementMLFactory = makeElementMLFactory(objectFactory);
 
