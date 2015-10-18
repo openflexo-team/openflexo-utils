@@ -74,7 +74,7 @@ public class RunView extends CompositeView {
 					pref = 0;
 				}
 			} catch (NullPointerException e) {
-				log.warn("Unexpected exception " + e.getMessage());
+				// log.warn("Unexpected exception " + e.getMessage());
 			}
 		}
 		maxpref = Math.max(maxpref, pref);

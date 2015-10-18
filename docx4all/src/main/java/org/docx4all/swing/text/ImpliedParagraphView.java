@@ -1588,7 +1588,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					x += chunkSpan;
 
 				} catch (NullPointerException e) {
-					log.warn("Unexpected exception: " + e);
+					// log.warn("Unexpected exception: " + e);
 				}
 
 				viewBuffer.add(v);
