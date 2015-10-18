@@ -1544,47 +1544,53 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					break;
 				}
 
-				int bw = v.getBreakWeight(flowAxis, x, spanLeft);
-				if (bw >= ForcedBreakWeight) {
-					View w = v.breakView(flowAxis, pos, x, spanLeft);
-					if (w != null) {
-						viewBuffer.add(w);
+				try {
+					int bw = v.getBreakWeight(flowAxis, x, spanLeft);
+					if (bw >= ForcedBreakWeight) {
+						View w = v.breakView(flowAxis, pos, x, spanLeft);
+						if (w != null) {
+							viewBuffer.add(w);
+						}
+						else if (n == 0) {
+							// if the view does not break, and it is the only view
+							// in a row, use the whole view
+							viewBuffer.add(v);
+						}
+						break;
 					}
-					else if (n == 0) {
-						// if the view does not break, and it is the only view
-						// in a row, use the whole view
-						viewBuffer.add(v);
+					else if (bw >= breakWeight && bw > BadBreakWeight) {
+						breakWeight = bw;
+						breakX = x;
+						breakSpan = spanLeft;
+						breakIndex = n;
 					}
-					break;
-				}
-				else if (bw >= breakWeight && bw > BadBreakWeight) {
-					breakWeight = bw;
-					breakX = x;
-					breakSpan = spanLeft;
-					breakIndex = n;
+
+					float chunkSpan;
+					if (flowAxis == X_AXIS && v instanceof TabableView) {
+						chunkSpan = ((TabableView) v).getTabbedSpan(x, te);
+					}
+					else {
+						chunkSpan = v.getPreferredSpan(flowAxis);
+					}
+
+					if (chunkSpan > spanLeft && breakIndex >= 0) {
+						// row is too long, and we may break
+						if (breakIndex < n) {
+							v = viewBuffer.get(breakIndex);
+						}
+						for (int i = n - 1; i >= breakIndex; i--) {
+							viewBuffer.remove(i);
+						}
+						v = v.breakView(flowAxis, v.getStartOffset(), breakX, breakSpan);
+					}
+
+					spanLeft -= chunkSpan;
+					x += chunkSpan;
+
+				} catch (NullPointerException e) {
+					log.warn("Unexpected exception: " + e);
 				}
 
-				float chunkSpan;
-				if (flowAxis == X_AXIS && v instanceof TabableView) {
-					chunkSpan = ((TabableView) v).getTabbedSpan(x, te);
-				}
-				else {
-					chunkSpan = v.getPreferredSpan(flowAxis);
-				}
-
-				if (chunkSpan > spanLeft && breakIndex >= 0) {
-					// row is too long, and we may break
-					if (breakIndex < n) {
-						v = viewBuffer.get(breakIndex);
-					}
-					for (int i = n - 1; i >= breakIndex; i--) {
-						viewBuffer.remove(i);
-					}
-					v = v.breakView(flowAxis, v.getStartOffset(), breakX, breakSpan);
-				}
-
-				spanLeft -= chunkSpan;
-				x += chunkSpan;
 				viewBuffer.add(v);
 				pos = v.getEndOffset();
 				n++;
