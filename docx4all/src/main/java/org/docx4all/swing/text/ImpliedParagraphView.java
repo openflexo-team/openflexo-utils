@@ -1161,93 +1161,96 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 
 		@Override
 		protected void layoutMajorAxis(int targetSpan, int axis, int[] offsets, int[] spans) {
-			int oldJustficationData[] = justificationData;
-			justificationData = null;
-			super.layoutMajorAxis(targetSpan, axis, offsets, spans);
-			if (!isJustifyEnabled()) {
-				return;
-			}
+			try {
+				int oldJustficationData[] = justificationData;
+				justificationData = null;
+				super.layoutMajorAxis(targetSpan, axis, offsets, spans);
+				if (!isJustifyEnabled()) {
+					return;
+				}
 
-			int currentSpan = 0;
-			for (int span : spans) {
-				currentSpan += span;
-			}
-			if (currentSpan == targetSpan) {
-				// no need to justify
-				return;
-			}
+				int currentSpan = 0;
+				for (int span : spans) {
+					currentSpan += span;
+				}
+				if (currentSpan == targetSpan) {
+					// no need to justify
+					return;
+				}
 
-			// we justify text by enlarging spaces by the {@code spaceAddon}.
-			// justification is started to the right of the rightmost TAB.
-			// leading and trailing spaces are not extendable.
-			//
-			// GlyphPainter1 uses
-			// justificationData
-			// for all painting and measurement.
+				// we justify text by enlarging spaces by the {@code spaceAddon}.
+				// justification is started to the right of the rightmost TAB.
+				// leading and trailing spaces are not extendable.
+				//
+				// GlyphPainter1 uses
+				// justificationData
+				// for all painting and measurement.
 
-			int extendableSpaces = 0;
-			int startJustifiableContent = -1;
-			int endJustifiableContent = -1;
-			int lastLeadingSpaces = 0;
+				int extendableSpaces = 0;
+				int startJustifiableContent = -1;
+				int endJustifiableContent = -1;
+				int lastLeadingSpaces = 0;
 
-			int rowStartOffset = getStartOffset();
-			int rowEndOffset = getEndOffset();
-			int spaceMap[] = new int[rowEndOffset - rowStartOffset];
-			Arrays.fill(spaceMap, 0);
-			for (int i = getViewCount() - 1; i >= 0; i--) {
-				View view = getView(i);
-				if (view instanceof org.docx4all.swing.text.LabelView) {
-					org.docx4all.swing.text.LabelView.JustificationInfo justificationInfo = ((org.docx4all.swing.text.LabelView) view)
-							.getJustificationInfo(rowStartOffset);
-					final int viewStartOffset = view.getStartOffset();
-					final int offset = viewStartOffset - rowStartOffset;
-					for (int j = 0; j < justificationInfo.spaceMap.length(); j++) {
-						if (justificationInfo.spaceMap.get(j)) {
-							// Fixed java.lang.ArrayIndexOutOfBoundsException
-							if (j + offset < spaceMap.length) {
-								spaceMap[j + offset] = 1;
+				int rowStartOffset = getStartOffset();
+				int rowEndOffset = getEndOffset();
+				int spaceMap[] = new int[rowEndOffset - rowStartOffset];
+				Arrays.fill(spaceMap, 0);
+				for (int i = getViewCount() - 1; i >= 0; i--) {
+					View view = getView(i);
+					if (view instanceof org.docx4all.swing.text.LabelView) {
+						org.docx4all.swing.text.LabelView.JustificationInfo justificationInfo = ((org.docx4all.swing.text.LabelView) view)
+								.getJustificationInfo(rowStartOffset);
+						final int viewStartOffset = view.getStartOffset();
+						final int offset = viewStartOffset - rowStartOffset;
+						for (int j = 0; j < justificationInfo.spaceMap.length(); j++) {
+							if (justificationInfo.spaceMap.get(j)) {
+								// Fixed java.lang.ArrayIndexOutOfBoundsException
+								if (j + offset < spaceMap.length) {
+									spaceMap[j + offset] = 1;
+								}
 							}
 						}
-					}
-					if (startJustifiableContent > 0) {
-						if (justificationInfo.end >= 0) {
-							extendableSpaces += justificationInfo.trailingSpaces;
-						} else {
-							lastLeadingSpaces += justificationInfo.trailingSpaces;
+						if (startJustifiableContent > 0) {
+							if (justificationInfo.end >= 0) {
+								extendableSpaces += justificationInfo.trailingSpaces;
+							} else {
+								lastLeadingSpaces += justificationInfo.trailingSpaces;
+							}
+						}
+						if (justificationInfo.start >= 0) {
+							startJustifiableContent = justificationInfo.start + viewStartOffset;
+							extendableSpaces += lastLeadingSpaces;
+						}
+						if (justificationInfo.end >= 0 && endJustifiableContent < 0) {
+							endJustifiableContent = justificationInfo.end + viewStartOffset;
+						}
+						extendableSpaces += justificationInfo.contentSpaces;
+						lastLeadingSpaces = justificationInfo.leadingSpaces;
+						if (justificationInfo.hasTab) {
+							break;
 						}
 					}
-					if (justificationInfo.start >= 0) {
-						startJustifiableContent = justificationInfo.start + viewStartOffset;
-						extendableSpaces += lastLeadingSpaces;
-					}
-					if (justificationInfo.end >= 0 && endJustifiableContent < 0) {
-						endJustifiableContent = justificationInfo.end + viewStartOffset;
-					}
-					extendableSpaces += justificationInfo.contentSpaces;
-					lastLeadingSpaces = justificationInfo.leadingSpaces;
-					if (justificationInfo.hasTab) {
-						break;
-					}
 				}
-			}
-			if (extendableSpaces <= 0) {
-				// there is nothing we can do to justify
-				return;
-			}
-			int adjustment = (targetSpan - currentSpan);
-			int spaceAddon = (extendableSpaces > 0) ? adjustment / extendableSpaces : 0;
-			int spaceAddonLeftoverEnd = -1;
-			for (int i = startJustifiableContent - rowStartOffset, leftover = adjustment - spaceAddon * extendableSpaces; leftover > 0; leftover -= (i >= 0
-					&& i < spaceMap.length ? spaceMap[i] : 0), i++) {
-				spaceAddonLeftoverEnd = i;
-			}
-			if (spaceAddon > 0 || spaceAddonLeftoverEnd >= 0) {
-				justificationData = (oldJustficationData != null) ? oldJustficationData : new int[END_JUSTIFIABLE + 1];
-				justificationData[SPACE_ADDON] = spaceAddon;
-				justificationData[SPACE_ADDON_LEFTOVER_END] = spaceAddonLeftoverEnd;
-				justificationData[START_JUSTIFIABLE] = startJustifiableContent - rowStartOffset;
-				justificationData[END_JUSTIFIABLE] = endJustifiableContent - rowStartOffset;
-				super.layoutMajorAxis(targetSpan, axis, offsets, spans);
+				if (extendableSpaces <= 0) {
+					// there is nothing we can do to justify
+					return;
+				}
+				int adjustment = (targetSpan - currentSpan);
+				int spaceAddon = (extendableSpaces > 0) ? adjustment / extendableSpaces : 0;
+				int spaceAddonLeftoverEnd = -1;
+				for (int i = startJustifiableContent - rowStartOffset, leftover = adjustment - spaceAddon * extendableSpaces; leftover > 0; leftover -= (i >= 0
+						&& i < spaceMap.length ? spaceMap[i] : 0), i++) {
+					spaceAddonLeftoverEnd = i;
+				}
+				if (spaceAddon > 0 || spaceAddonLeftoverEnd >= 0) {
+					justificationData = (oldJustficationData != null) ? oldJustficationData : new int[END_JUSTIFIABLE + 1];
+					justificationData[SPACE_ADDON] = spaceAddon;
+					justificationData[SPACE_ADDON_LEFTOVER_END] = spaceAddonLeftoverEnd;
+					justificationData[START_JUSTIFIABLE] = startJustifiableContent - rowStartOffset;
+					justificationData[END_JUSTIFIABLE] = endJustifiableContent - rowStartOffset;
+					super.layoutMajorAxis(targetSpan, axis, offsets, spans);
+				}
+			} catch (NullPointerException e) {
 			}
 		}
 
