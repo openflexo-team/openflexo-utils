@@ -1145,14 +1145,18 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 		// Justification should not affect MajorAxisRequirements
 		@Override
 		protected SizeRequirements calculateMajorAxisRequirements(int axis, SizeRequirements r) {
-			int oldJustficationData[] = justificationData;
-			justificationData = null;
-			SizeRequirements ret = super.calculateMajorAxisRequirements(axis, r);
-			if (isJustifyEnabled()) {
-				justificationData = oldJustficationData;
+			try {
+				int oldJustficationData[] = justificationData;
+				justificationData = null;
+				SizeRequirements ret = super.calculateMajorAxisRequirements(axis, r);
+				if (isJustifyEnabled()) {
+					justificationData = oldJustficationData;
+				}
+				majorRequest = ret;
+				return ret;
+			} catch (NullPointerException e) {
+				return new SizeRequirements();
 			}
-			majorRequest = ret;
-			return ret;
 		}
 
 		@Override
