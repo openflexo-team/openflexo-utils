@@ -945,7 +945,10 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 		 */
 		@Override
 		protected void layoutMinorAxis(int targetSpan, int axis, int[] offsets, int[] spans) {
-			baselineLayout(targetSpan, axis, offsets, spans);
+			try {
+				baselineLayout(targetSpan, axis, offsets, spans);
+			} catch (NullPointerException e) {
+			}
 		}
 
 		@Override
