@@ -74,11 +74,14 @@ public class NumberingView extends View {
 	@Override
 	public float getAlignment(int axis) {
 		float align = super.getAlignment(axis);
-		if (axis == View.Y_AXIS) {
-			FontMetrics fm = getContainer().getFontMetrics(getFont());
-			float h = fm.getHeight();
-			float d = fm.getDescent();
-			align = (h > 0) ? (h - d) / h : 0;
+		try {
+			if (axis == View.Y_AXIS) {
+				FontMetrics fm = getContainer().getFontMetrics(getFont());
+				float h = fm.getHeight();
+				float d = fm.getDescent();
+				align = (h > 0) ? (h - d) / h : 0;
+			}
+		} catch (NullPointerException e) {
 		}
 		return align;
 	}
