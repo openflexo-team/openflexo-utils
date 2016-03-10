@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License   
     along with Docx4all.  If not, see <http://www.gnu.org/licenses/>.
-    
+
  */
 
 package org.docx4all.swing.text;
@@ -74,11 +74,14 @@ public class NumberingView extends View {
 	@Override
 	public float getAlignment(int axis) {
 		float align = super.getAlignment(axis);
-		if (axis == View.Y_AXIS) {
-			FontMetrics fm = getContainer().getFontMetrics(getFont());
-			float h = fm.getHeight();
-			float d = fm.getDescent();
-			align = (h > 0) ? (h - d) / h : 0;
+		try {
+			if (axis == View.Y_AXIS) {
+				FontMetrics fm = getContainer().getFontMetrics(getFont());
+				float h = fm.getHeight();
+				float d = fm.getDescent();
+				align = (h > 0) ? (h - d) / h : 0;
+			}
+		} catch (NullPointerException e) {
 		}
 		return align;
 	}
@@ -115,8 +118,7 @@ public class NumberingView extends View {
 		if (intersect) {
 			if (this.numbering != null && this.numbering.getBullet() != null && "Symbol".equalsIgnoreCase(this.numbering.getNumFont())) {
 				drawBullet(g, r.x, r.y, r.width, r.height, getAlignment(Y_AXIS));
-			}
-			else {
+			} else {
 				drawNumberingString(g, r.x, r.y, r.width, r.height, getAlignment(Y_AXIS));
 			}
 		}
@@ -157,21 +159,23 @@ public class NumberingView extends View {
 	public float getPreferredSpan(int axis) {
 		int theSpan = 0;
 
-		if (getContainer() == null) {
-			;// return
-		}
-		else if (axis == View.X_AXIS && this.numbering != null) {
-			FontMetrics fm = getContainer().getFontMetrics(getFont());
-			// theSpan = fm.stringWidth(this.numbering.getNumString());
-			theSpan = SwingUtilities2.stringWidth((JComponent) getContainer(), fm, this.numbering.getNumString()) + DEFAULT_NUMBERING_GAP;
+		try {
+			if (getContainer() == null) {
+				;// return
+			} else if (axis == View.X_AXIS && this.numbering != null) {
+				FontMetrics fm = getContainer().getFontMetrics(getFont());
+				// theSpan = fm.stringWidth(this.numbering.getNumString());
+				theSpan = SwingUtilities2.stringWidth((JComponent) getContainer(), fm, this.numbering.getNumString())
+						+ DEFAULT_NUMBERING_GAP;
 
-			if (Math.abs(this.firstLineIndent) > theSpan) {
-				theSpan = Math.abs(this.firstLineIndent);
+				if (Math.abs(this.firstLineIndent) > theSpan) {
+					theSpan = Math.abs(this.firstLineIndent);
+				}
+			} else {
+				FontMetrics fm = getContainer().getFontMetrics(getFont());
+				theSpan = fm.getHeight();
 			}
-		}
-		else {
-			FontMetrics fm = getContainer().getFontMetrics(getFont());
-			theSpan = fm.getHeight();
+		} catch (NullPointerException e) {
 		}
 
 		return theSpan;
@@ -310,13 +314,13 @@ public class NumberingView extends View {
 			throws BadLocationException {
 
 		switch (direction) {
-			case View.NORTH:
-			case View.SOUTH:
-			case View.EAST:
-			case View.WEST:
-				return -1;
-			default:
-				throw new IllegalArgumentException("Bad direction: " + direction);
+		case View.NORTH:
+		case View.SOUTH:
+		case View.EAST:
+		case View.WEST:
+			return -1;
+		default:
+			throw new IllegalArgumentException("Bad direction: " + direction);
 		}
 	}
 
@@ -344,8 +348,7 @@ public class NumberingView extends View {
 			StyleConstants.setFontSize(temp, StyleConstants.getFontSize(attr));
 			StyleConstants.setFontFamily(temp, this.numbering.getNumFont());
 			this.font = ((StyledDocument) getDocument()).getFont(temp);
-		}
-		else {
+		} else {
 			this.font = ((StyledDocument) getDocument()).getFont(attr);
 		}
 

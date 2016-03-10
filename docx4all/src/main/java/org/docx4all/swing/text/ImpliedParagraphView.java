@@ -148,12 +148,10 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 				Object o = doc.getProperty(TextAttribute.RUN_DIRECTION);
 				if ((o != null) && o.equals(TextAttribute.RUN_DIRECTION_RTL)) {
 					alignment = StyleConstants.ALIGN_RIGHT;
-				}
-				else {
+				} else {
 					alignment = StyleConstants.ALIGN_LEFT;
 				}
-			}
-			else {
+			} else {
 				alignment = a.intValue();
 			}
 			setJustification(alignment);
@@ -198,15 +196,12 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 				if (indByNumPr.getHanging() != null) {
 					int hanging = StyleSheet.toPixels(indByNumPr.getHanging().intValue());
 					firstLineIndent = (short) (-1 * hanging);
-				}
-				else if (indByNumPr.getFirstLine() != null) {
+				} else if (indByNumPr.getFirstLine() != null) {
 					firstLineIndent = (short) StyleSheet.toPixels(indByNumPr.getFirstLine().intValue());
-				}
-				else {
+				} else {
 					firstLineIndent = (short) StyleConstants.getFirstLineIndent(attr);
 				}
-			}
-			else {
+			} else {
 				firstLineIndent = (short) StyleConstants.getFirstLineIndent(attr);
 			}
 
@@ -275,12 +270,10 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 		int vIndex;
 		if (pos == -1) {
 			vIndex = (direction == NORTH) ? getViewCount() - 1 : 0;
-		}
-		else {
+		} else {
 			if (b == Position.Bias.Backward && pos > 0) {
 				vIndex = getViewIndexAtPosition(pos - 1);
-			}
-			else {
+			} else {
 				vIndex = getViewIndexAtPosition(pos);
 			}
 			if (direction == NORTH) {
@@ -288,8 +281,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					return -1;
 				}
 				vIndex--;
-			}
-			else if (++vIndex >= getViewCount()) {
+			} else if (++vIndex >= getViewCount()) {
 				return -1;
 			}
 		}
@@ -308,12 +300,10 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 			}
 			if (posBounds == null) {
 				x = 0;
-			}
-			else {
+			} else {
 				x = posBounds.getBounds().x;
 			}
-		}
-		else {
+		} else {
 			x = magicPoint.x;
 		}
 		return getClosestPositionTo(pos, b, a, direction, biasRet, vIndex, x);
@@ -371,8 +361,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					}
 				}
 				lastPos--;
-			}
-			else {
+			} else {
 				for (lastPos = v.getEndOffset() - 1; lastPos >= start; lastPos--) {
 					float xx = text.modelToView(lastPos).getBounds().x;
 					if (xx >= x) {
@@ -502,35 +491,35 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 		int alignment = tab.getAlignment();
 		int offset;
 		switch (alignment) {
-			default:
-			case TabStop.ALIGN_LEFT:
-				// Simple case, left tab.
-				return tabBase + tab.getPosition();
-			case TabStop.ALIGN_BAR:
-				// PENDING: what does this mean?
-				return tabBase + tab.getPosition();
-			case TabStop.ALIGN_RIGHT:
-			case TabStop.ALIGN_CENTER:
-				offset = findOffsetToCharactersInString(tabChars, tabOffset + 1);
-				break;
-			case TabStop.ALIGN_DECIMAL:
-				offset = findOffsetToCharactersInString(tabDecimalChars, tabOffset + 1);
-				break;
+		default:
+		case TabStop.ALIGN_LEFT:
+			// Simple case, left tab.
+			return tabBase + tab.getPosition();
+		case TabStop.ALIGN_BAR:
+			// PENDING: what does this mean?
+			return tabBase + tab.getPosition();
+		case TabStop.ALIGN_RIGHT:
+		case TabStop.ALIGN_CENTER:
+			offset = findOffsetToCharactersInString(tabChars, tabOffset + 1);
+			break;
+		case TabStop.ALIGN_DECIMAL:
+			offset = findOffsetToCharactersInString(tabDecimalChars, tabOffset + 1);
+			break;
 		}
 		if (offset == -1) {
 			offset = getEndOffset();
 		}
 		float charsSize = getPartialSize(tabOffset + 1, offset);
 		switch (alignment) {
-			case TabStop.ALIGN_RIGHT:
-			case TabStop.ALIGN_DECIMAL:
-				// right and decimal are treated the same way, the new
-				// position will be the location of the tab less the
-				// partialSize.
-				return tabBase + Math.max(x, tab.getPosition() - charsSize);
-			case TabStop.ALIGN_CENTER:
-				// Similar to right, but half the partialSize.
-				return tabBase + Math.max(x, tab.getPosition() - charsSize / 2.0f);
+		case TabStop.ALIGN_RIGHT:
+		case TabStop.ALIGN_DECIMAL:
+			// right and decimal are treated the same way, the new
+			// position will be the location of the tab less the
+			// partialSize.
+			return tabBase + Math.max(x, tab.getPosition() - charsSize);
+		case TabStop.ALIGN_CENTER:
+			// Similar to right, but half the partialSize.
+			return tabBase + Math.max(x, tab.getPosition() - charsSize / 2.0f);
 		}
 		// will never get here!
 		return x;
@@ -666,8 +655,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					paintChild(g, tempRect, 0);
 				}
 			}
-		}
-		else if (numberingView != null) {
+		} else if (numberingView != null) {
 			Shape sh = getChildAllocation(0, a);
 			if ((sh != null) && sh.intersects(alloc)) {
 				int x = alloc.x + getLeftInset();
@@ -697,19 +685,19 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 	@Override
 	public float getAlignment(int axis) {
 		switch (axis) {
-			case Y_AXIS:
-				float a = 0.5f;
-				if (getViewCount() != 0) {
-					int paragraphSpan = (int) getPreferredSpan(View.Y_AXIS);
-					View v = getView(0);
-					int rowSpan = (int) v.getPreferredSpan(View.Y_AXIS);
-					a = (paragraphSpan != 0) ? ((float) (rowSpan / 2)) / paragraphSpan : 0;
-				}
-				return a;
-			case X_AXIS:
-				return 0.5f;
-			default:
-				throw new IllegalArgumentException("Invalid axis: " + axis);
+		case Y_AXIS:
+			float a = 0.5f;
+			if (getViewCount() != 0) {
+				int paragraphSpan = (int) getPreferredSpan(View.Y_AXIS);
+				View v = getView(0);
+				int rowSpan = (int) v.getPreferredSpan(View.Y_AXIS);
+				a = (paragraphSpan != 0) ? ((float) (rowSpan / 2)) / paragraphSpan : 0;
+			}
+			return a;
+		case X_AXIS:
+			return 0.5f;
+		default:
+			throw new IllegalArgumentException("Invalid axis: " + axis);
 		}
 	}
 
@@ -856,20 +844,20 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 		public float getAlignment(int axis) {
 			if (axis == View.X_AXIS) {
 				switch (justification) {
-					case StyleConstants.ALIGN_LEFT:
-						return 0;
-					case StyleConstants.ALIGN_RIGHT:
-						return 1;
-					case StyleConstants.ALIGN_CENTER:
-						return 0.5f;
-					case StyleConstants.ALIGN_JUSTIFIED:
-						float rv = 0.5f;
-						// if we can justifiy the content always align to
-						// the left.
-						if (isJustifiableDocument()) {
-							rv = 0f;
-						}
-						return rv;
+				case StyleConstants.ALIGN_LEFT:
+					return 0;
+				case StyleConstants.ALIGN_RIGHT:
+					return 1;
+				case StyleConstants.ALIGN_CENTER:
+					return 0.5f;
+				case StyleConstants.ALIGN_JUSTIFIED:
+					float rv = 0.5f;
+					// if we can justifiy the content always align to
+					// the left.
+					if (isJustifiableDocument()) {
+						rv = 0f;
+					}
+					return rv;
 				}
 			}
 			return super.getAlignment(axis);
@@ -957,7 +945,10 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 		 */
 		@Override
 		protected void layoutMinorAxis(int targetSpan, int axis, int[] offsets, int[] spans) {
-			baselineLayout(targetSpan, axis, offsets, spans);
+			try {
+				baselineLayout(targetSpan, axis, offsets, spans);
+			} catch (NullPointerException e) {
+			}
 		}
 
 		@Override
@@ -989,19 +980,16 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					if (align == 0.0f) {
 						// if the alignment is 0 then we need to fit into the descent
 						viewSpan = Math.max(Math.min(maxSpan, totalDescent), minSpan);
-					}
-					else if (align == 1.0f) {
+					} else if (align == 1.0f) {
 						// if the alignment is 1 then we need to fit into the ascent
 						viewSpan = Math.max(Math.min(maxSpan, totalAscent), minSpan);
-					}
-					else {
+					} else {
 						// figure out the span that we must fit into
 						float fitSpan = Math.min(totalAscent / align, totalDescent / (1.0f - align));
 						// fit into the calculated span
 						viewSpan = Math.max(Math.min(maxSpan, fitSpan), minSpan);
 					}
-				}
-				else {
+				} else {
 					// otherwise use the preferred spans
 					viewSpan = v.getPreferredSpan(axis);
 				}
@@ -1036,39 +1024,41 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 			// descents at minimum, preferred, and maximum sizes
 			for (int i = 0; i < n; i++) {
 				View v = getView(i);
-				float align = v.getAlignment(axis);
-				float span;
-				int ascent;
-				int descent;
+				try {
+					float align = v.getAlignment(axis);
+					float span;
+					int ascent;
+					int descent;
 
-				// find the maximum of the preferred ascents and descents
-				span = v.getPreferredSpan(axis);
-				ascent = (int) (align * span);
-				descent = (int) (span - ascent);
-				totalAscent.preferred = Math.max(ascent, totalAscent.preferred);
-				totalDescent.preferred = Math.max(descent, totalDescent.preferred);
-
-				if (v.getResizeWeight(axis) > 0) {
-					// if the view is resizable then do the same for the minimum and
-					// maximum ascents and descents
-					span = v.getMinimumSpan(axis);
+					// find the maximum of the preferred ascents and descents
+					span = v.getPreferredSpan(axis);
 					ascent = (int) (align * span);
 					descent = (int) (span - ascent);
-					totalAscent.minimum = Math.max(ascent, totalAscent.minimum);
-					totalDescent.minimum = Math.max(descent, totalDescent.minimum);
+					totalAscent.preferred = Math.max(ascent, totalAscent.preferred);
+					totalDescent.preferred = Math.max(descent, totalDescent.preferred);
 
-					span = v.getMaximumSpan(axis);
-					ascent = (int) (align * span);
-					descent = (int) (span - ascent);
-					totalAscent.maximum = Math.max(ascent, totalAscent.maximum);
-					totalDescent.maximum = Math.max(descent, totalDescent.maximum);
-				}
-				else {
-					// otherwise use the preferred
-					totalAscent.minimum = Math.max(ascent, totalAscent.minimum);
-					totalDescent.minimum = Math.max(descent, totalDescent.minimum);
-					totalAscent.maximum = Math.max(ascent, totalAscent.maximum);
-					totalDescent.maximum = Math.max(descent, totalDescent.maximum);
+					if (v.getResizeWeight(axis) > 0) {
+						// if the view is resizable then do the same for the minimum and
+						// maximum ascents and descents
+						span = v.getMinimumSpan(axis);
+						ascent = (int) (align * span);
+						descent = (int) (span - ascent);
+						totalAscent.minimum = Math.max(ascent, totalAscent.minimum);
+						totalDescent.minimum = Math.max(descent, totalDescent.minimum);
+
+						span = v.getMaximumSpan(axis);
+						ascent = (int) (align * span);
+						descent = (int) (span - ascent);
+						totalAscent.maximum = Math.max(ascent, totalAscent.maximum);
+						totalDescent.maximum = Math.max(descent, totalDescent.maximum);
+					} else {
+						// otherwise use the preferred
+						totalAscent.minimum = Math.max(ascent, totalAscent.minimum);
+						totalDescent.minimum = Math.max(descent, totalDescent.minimum);
+						totalAscent.maximum = Math.max(ascent, totalAscent.maximum);
+						totalDescent.maximum = Math.max(descent, totalDescent.maximum);
+					}
+				} catch (NullPointerException e) {
 				}
 			}
 
@@ -1087,14 +1077,12 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 				// the minimum and maximum descents since there's nothing above the baseline
 				r.minimum = totalDescent.minimum;
 				r.maximum = totalDescent.maximum;
-			}
-			else if (r.alignment == 1.0f) {
+			} else if (r.alignment == 1.0f) {
 				// if the preferred alignment is 1 then the minimum and maximum spans are simply
 				// the minimum and maximum ascents since there's nothing below the baseline
 				r.minimum = totalAscent.minimum;
 				r.maximum = totalAscent.maximum;
-			}
-			else {
+			} else {
 				// we want to honor the preferred alignment so we calculate two possible minimum
 				// span values using 1) the minimum ascent and the alignment, and 2) the minimum
 				// descent and the alignment. We'll choose the larger of these two numbers.
@@ -1160,106 +1148,112 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 		// Justification should not affect MajorAxisRequirements
 		@Override
 		protected SizeRequirements calculateMajorAxisRequirements(int axis, SizeRequirements r) {
-			int oldJustficationData[] = justificationData;
-			justificationData = null;
-			SizeRequirements ret = super.calculateMajorAxisRequirements(axis, r);
-			if (isJustifyEnabled()) {
-				justificationData = oldJustficationData;
+			try {
+				int oldJustficationData[] = justificationData;
+				justificationData = null;
+				SizeRequirements ret = super.calculateMajorAxisRequirements(axis, r);
+				if (isJustifyEnabled()) {
+					justificationData = oldJustficationData;
+				}
+				majorRequest = ret;
+				return ret;
+			} catch (NullPointerException e) {
+				return new SizeRequirements();
 			}
-			majorRequest = ret;
-			return ret;
 		}
 
 		@Override
 		protected void layoutMajorAxis(int targetSpan, int axis, int[] offsets, int[] spans) {
-			int oldJustficationData[] = justificationData;
-			justificationData = null;
-			super.layoutMajorAxis(targetSpan, axis, offsets, spans);
-			if (!isJustifyEnabled()) {
-				return;
-			}
+			try {
+				int oldJustficationData[] = justificationData;
+				justificationData = null;
+				super.layoutMajorAxis(targetSpan, axis, offsets, spans);
+				if (!isJustifyEnabled()) {
+					return;
+				}
 
-			int currentSpan = 0;
-			for (int span : spans) {
-				currentSpan += span;
-			}
-			if (currentSpan == targetSpan) {
-				// no need to justify
-				return;
-			}
+				int currentSpan = 0;
+				for (int span : spans) {
+					currentSpan += span;
+				}
+				if (currentSpan == targetSpan) {
+					// no need to justify
+					return;
+				}
 
-			// we justify text by enlarging spaces by the {@code spaceAddon}.
-			// justification is started to the right of the rightmost TAB.
-			// leading and trailing spaces are not extendable.
-			//
-			// GlyphPainter1 uses
-			// justificationData
-			// for all painting and measurement.
+				// we justify text by enlarging spaces by the {@code spaceAddon}.
+				// justification is started to the right of the rightmost TAB.
+				// leading and trailing spaces are not extendable.
+				//
+				// GlyphPainter1 uses
+				// justificationData
+				// for all painting and measurement.
 
-			int extendableSpaces = 0;
-			int startJustifiableContent = -1;
-			int endJustifiableContent = -1;
-			int lastLeadingSpaces = 0;
+				int extendableSpaces = 0;
+				int startJustifiableContent = -1;
+				int endJustifiableContent = -1;
+				int lastLeadingSpaces = 0;
 
-			int rowStartOffset = getStartOffset();
-			int rowEndOffset = getEndOffset();
-			int spaceMap[] = new int[rowEndOffset - rowStartOffset];
-			Arrays.fill(spaceMap, 0);
-			for (int i = getViewCount() - 1; i >= 0; i--) {
-				View view = getView(i);
-				if (view instanceof org.docx4all.swing.text.LabelView) {
-					org.docx4all.swing.text.LabelView.JustificationInfo justificationInfo = ((org.docx4all.swing.text.LabelView) view)
-							.getJustificationInfo(rowStartOffset);
-					final int viewStartOffset = view.getStartOffset();
-					final int offset = viewStartOffset - rowStartOffset;
-					for (int j = 0; j < justificationInfo.spaceMap.length(); j++) {
-						if (justificationInfo.spaceMap.get(j)) {
-							// Fixed java.lang.ArrayIndexOutOfBoundsException
-							if (j + offset < spaceMap.length) {
-								spaceMap[j + offset] = 1;
+				int rowStartOffset = getStartOffset();
+				int rowEndOffset = getEndOffset();
+				int spaceMap[] = new int[rowEndOffset - rowStartOffset];
+				Arrays.fill(spaceMap, 0);
+				for (int i = getViewCount() - 1; i >= 0; i--) {
+					View view = getView(i);
+					if (view instanceof org.docx4all.swing.text.LabelView) {
+						org.docx4all.swing.text.LabelView.JustificationInfo justificationInfo = ((org.docx4all.swing.text.LabelView) view)
+								.getJustificationInfo(rowStartOffset);
+						final int viewStartOffset = view.getStartOffset();
+						final int offset = viewStartOffset - rowStartOffset;
+						for (int j = 0; j < justificationInfo.spaceMap.length(); j++) {
+							if (justificationInfo.spaceMap.get(j)) {
+								// Fixed java.lang.ArrayIndexOutOfBoundsException
+								if (j + offset < spaceMap.length) {
+									spaceMap[j + offset] = 1;
+								}
 							}
 						}
-					}
-					if (startJustifiableContent > 0) {
-						if (justificationInfo.end >= 0) {
-							extendableSpaces += justificationInfo.trailingSpaces;
+						if (startJustifiableContent > 0) {
+							if (justificationInfo.end >= 0) {
+								extendableSpaces += justificationInfo.trailingSpaces;
+							} else {
+								lastLeadingSpaces += justificationInfo.trailingSpaces;
+							}
 						}
-						else {
-							lastLeadingSpaces += justificationInfo.trailingSpaces;
+						if (justificationInfo.start >= 0) {
+							startJustifiableContent = justificationInfo.start + viewStartOffset;
+							extendableSpaces += lastLeadingSpaces;
 						}
-					}
-					if (justificationInfo.start >= 0) {
-						startJustifiableContent = justificationInfo.start + viewStartOffset;
-						extendableSpaces += lastLeadingSpaces;
-					}
-					if (justificationInfo.end >= 0 && endJustifiableContent < 0) {
-						endJustifiableContent = justificationInfo.end + viewStartOffset;
-					}
-					extendableSpaces += justificationInfo.contentSpaces;
-					lastLeadingSpaces = justificationInfo.leadingSpaces;
-					if (justificationInfo.hasTab) {
-						break;
+						if (justificationInfo.end >= 0 && endJustifiableContent < 0) {
+							endJustifiableContent = justificationInfo.end + viewStartOffset;
+						}
+						extendableSpaces += justificationInfo.contentSpaces;
+						lastLeadingSpaces = justificationInfo.leadingSpaces;
+						if (justificationInfo.hasTab) {
+							break;
+						}
 					}
 				}
-			}
-			if (extendableSpaces <= 0) {
-				// there is nothing we can do to justify
-				return;
-			}
-			int adjustment = (targetSpan - currentSpan);
-			int spaceAddon = (extendableSpaces > 0) ? adjustment / extendableSpaces : 0;
-			int spaceAddonLeftoverEnd = -1;
-			for (int i = startJustifiableContent - rowStartOffset, leftover = adjustment
-					- spaceAddon * extendableSpaces; leftover > 0; leftover -= (i >= 0 && i < spaceMap.length ? spaceMap[i] : 0), i++) {
-				spaceAddonLeftoverEnd = i;
-			}
-			if (spaceAddon > 0 || spaceAddonLeftoverEnd >= 0) {
-				justificationData = (oldJustficationData != null) ? oldJustficationData : new int[END_JUSTIFIABLE + 1];
-				justificationData[SPACE_ADDON] = spaceAddon;
-				justificationData[SPACE_ADDON_LEFTOVER_END] = spaceAddonLeftoverEnd;
-				justificationData[START_JUSTIFIABLE] = startJustifiableContent - rowStartOffset;
-				justificationData[END_JUSTIFIABLE] = endJustifiableContent - rowStartOffset;
-				super.layoutMajorAxis(targetSpan, axis, offsets, spans);
+				if (extendableSpaces <= 0) {
+					// there is nothing we can do to justify
+					return;
+				}
+				int adjustment = (targetSpan - currentSpan);
+				int spaceAddon = (extendableSpaces > 0) ? adjustment / extendableSpaces : 0;
+				int spaceAddonLeftoverEnd = -1;
+				for (int i = startJustifiableContent - rowStartOffset, leftover = adjustment - spaceAddon * extendableSpaces; leftover > 0; leftover -= (i >= 0
+						&& i < spaceMap.length ? spaceMap[i] : 0), i++) {
+					spaceAddonLeftoverEnd = i;
+				}
+				if (spaceAddon > 0 || spaceAddonLeftoverEnd >= 0) {
+					justificationData = (oldJustficationData != null) ? oldJustficationData : new int[END_JUSTIFIABLE + 1];
+					justificationData[SPACE_ADDON] = spaceAddon;
+					justificationData[SPACE_ADDON_LEFTOVER_END] = spaceAddonLeftoverEnd;
+					justificationData[START_JUSTIFIABLE] = startJustifiableContent - rowStartOffset;
+					justificationData[END_JUSTIFIABLE] = endJustifiableContent - rowStartOffset;
+					super.layoutMajorAxis(targetSpan, axis, offsets, spans);
+				}
+			} catch (NullPointerException e) {
 			}
 		}
 
@@ -1270,8 +1264,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 			float ret;
 			if (View.X_AXIS == axis && isJustifyEnabled()) {
 				ret = Float.MAX_VALUE;
-			}
-			else {
+			} else {
 				ret = super.getMaximumSpan(axis);
 			}
 			return ret;
@@ -1384,8 +1377,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 				if (host != null) {
 					host.repaint(alloc.x, alloc.y, alloc.width, alloc.height);
 				}
-			}
-			else {
+			} else {
 				fv.preferenceChanged(null, true, true);
 			}
 		}
@@ -1407,8 +1399,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 				if (host != null) {
 					host.repaint(alloc.x, alloc.y, alloc.width, alloc.height);
 				}
-			}
-			else {
+			} else {
 				fv.preferenceChanged(null, true, true);
 			}
 		}
@@ -1432,8 +1423,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 				if (host != null) {
 					host.repaint(alloc.x, alloc.y, alloc.width, alloc.height);
 				}
-			}
-			else {
+			} else {
 				fv.preferenceChanged(null, true, true);
 			}
 		}
@@ -1472,8 +1462,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					rowIndex--;
 				}
 				p0 = fv.getView(rowIndex).getStartOffset();
-			}
-			else {
+			} else {
 				rowIndex = 0;
 				p0 = fv.getStartOffset();
 			}
@@ -1486,8 +1475,7 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 				if (rowIndex >= rowCount) {
 					row = ((ImpliedParagraphView) fv).createRow();
 					fv.append(row);
-				}
-				else {
+				} else {
 					row = fv.getView(rowIndex);
 				}
 				p0 = layoutRow(fv, rowIndex, p0);
@@ -1544,47 +1532,50 @@ public class ImpliedParagraphView extends FlowView implements TabExpander {
 					break;
 				}
 
-				int bw = v.getBreakWeight(flowAxis, x, spanLeft);
-				if (bw >= ForcedBreakWeight) {
-					View w = v.breakView(flowAxis, pos, x, spanLeft);
-					if (w != null) {
-						viewBuffer.add(w);
+				try {
+					int bw = v.getBreakWeight(flowAxis, x, spanLeft);
+					if (bw >= ForcedBreakWeight) {
+						View w = v.breakView(flowAxis, pos, x, spanLeft);
+						if (w != null) {
+							viewBuffer.add(w);
+						} else if (n == 0) {
+							// if the view does not break, and it is the only view
+							// in a row, use the whole view
+							viewBuffer.add(v);
+						}
+						break;
+					} else if (bw >= breakWeight && bw > BadBreakWeight) {
+						breakWeight = bw;
+						breakX = x;
+						breakSpan = spanLeft;
+						breakIndex = n;
 					}
-					else if (n == 0) {
-						// if the view does not break, and it is the only view
-						// in a row, use the whole view
-						viewBuffer.add(v);
+
+					float chunkSpan;
+					if (flowAxis == X_AXIS && v instanceof TabableView) {
+						chunkSpan = ((TabableView) v).getTabbedSpan(x, te);
+					} else {
+						chunkSpan = v.getPreferredSpan(flowAxis);
 					}
-					break;
-				}
-				else if (bw >= breakWeight && bw > BadBreakWeight) {
-					breakWeight = bw;
-					breakX = x;
-					breakSpan = spanLeft;
-					breakIndex = n;
+
+					if (chunkSpan > spanLeft && breakIndex >= 0) {
+						// row is too long, and we may break
+						if (breakIndex < n) {
+							v = viewBuffer.get(breakIndex);
+						}
+						for (int i = n - 1; i >= breakIndex; i--) {
+							viewBuffer.remove(i);
+						}
+						v = v.breakView(flowAxis, v.getStartOffset(), breakX, breakSpan);
+					}
+
+					spanLeft -= chunkSpan;
+					x += chunkSpan;
+
+				} catch (NullPointerException e) {
+					// log.warn("Unexpected exception: " + e);
 				}
 
-				float chunkSpan;
-				if (flowAxis == X_AXIS && v instanceof TabableView) {
-					chunkSpan = ((TabableView) v).getTabbedSpan(x, te);
-				}
-				else {
-					chunkSpan = v.getPreferredSpan(flowAxis);
-				}
-
-				if (chunkSpan > spanLeft && breakIndex >= 0) {
-					// row is too long, and we may break
-					if (breakIndex < n) {
-						v = viewBuffer.get(breakIndex);
-					}
-					for (int i = n - 1; i >= breakIndex; i--) {
-						viewBuffer.remove(i);
-					}
-					v = v.breakView(flowAxis, v.getStartOffset(), breakX, breakSpan);
-				}
-
-				spanLeft -= chunkSpan;
-				x += chunkSpan;
 				viewBuffer.add(v);
 				pos = v.getEndOffset();
 				n++;

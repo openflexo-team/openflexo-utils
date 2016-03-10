@@ -67,10 +67,14 @@ public class RunView extends CompositeView {
 		int n = getViewCount();
 		for (int i = 0; i < n; i++) {
 			View v = getView(i);
-			pref += v.getPreferredSpan(axis);
-			if (v.getBreakWeight(axis, 0, Integer.MAX_VALUE) >= ForcedBreakWeight) {
-				maxpref = Math.max(maxpref, pref);
-				pref = 0;
+			try {
+				pref += v.getPreferredSpan(axis);
+				if (v.getBreakWeight(axis, 0, Integer.MAX_VALUE) >= ForcedBreakWeight) {
+					maxpref = Math.max(maxpref, pref);
+					pref = 0;
+				}
+			} catch (NullPointerException e) {
+				// log.warn("Unexpected exception " + e.getMessage());
 			}
 		}
 		maxpref = Math.max(maxpref, pref);
