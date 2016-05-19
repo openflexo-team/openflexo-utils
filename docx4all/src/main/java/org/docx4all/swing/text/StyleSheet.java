@@ -227,7 +227,8 @@ public class StyleSheet extends StyleContext {
 		TblWidth tw = tblPr.getTblInd();
 		if (tw != null) {
 			org.docx4all.xml.type.TblWidth indent = new org.docx4all.xml.type.TblWidth(tw);
-			if (indent.getType() == org.docx4all.xml.type.TblWidth.Type.DXA || indent.getType() == org.docx4all.xml.type.TblWidth.Type.NIL) {
+			if (indent.getType() == org.docx4all.xml.type.TblWidth.Type.DXA
+					|| indent.getType() == org.docx4all.xml.type.TblWidth.Type.NIL) {
 				int ignoreThisParam = 0;
 				int pixels = indent.getWidthInPixel(ignoreThisParam);
 				attrs.addAttribute(WordMLStyleConstants.TblIndentAttribute, Integer.valueOf(pixels));
@@ -248,7 +249,8 @@ public class StyleSheet extends StyleContext {
 			tw = tmar.getLeft();
 			if (tw != null) {
 				org.docx4all.xml.type.TblWidth left = new org.docx4all.xml.type.TblWidth(tw);
-				if (left.getType() == org.docx4all.xml.type.TblWidth.Type.DXA || left.getType() == org.docx4all.xml.type.TblWidth.Type.NIL) {
+				if (left.getType() == org.docx4all.xml.type.TblWidth.Type.DXA
+						|| left.getType() == org.docx4all.xml.type.TblWidth.Type.NIL) {
 					attrs.addAttribute(WordMLStyleConstants.TcLeftMarginAttribute, left);
 				} else {
 					// WordprocessingML Spec says to ignore.
@@ -654,9 +656,13 @@ public class StyleSheet extends StyleContext {
 		FontManager.getInstance().addFontsInUse(docPackage);
 
 		org.docx4j.wml.Styles docxStyles = docPackage.getMainDocumentPart().getStyleDefinitionsPart().getJaxbElement();
-		initDefaultStyle(docxStyles);
-		initLatentStyles(docxStyles);
-		initStyles(docxStyles);
+		try {
+			initDefaultStyle(docxStyles);
+			initLatentStyles(docxStyles);
+			initStyles(docxStyles);
+		} catch (Exception e) {
+			System.err.println("Unexpected exception occured during styles initialization");
+		}
 	}
 
 	public WordprocessingMLPackage getWordprocessingMLPackage() {
@@ -747,8 +753,8 @@ public class StyleSheet extends StyleContext {
 
 		// Currently still supporting uipriority and qformat attributes.
 		latentStyles.addAttribute(WordMLStyleConstants.DocxObjectAttribute, latent);
-		latentStyles.addAttribute(WordMLStyleConstants.UiPriorityAttribute, (latent.getDefUIPriority() == null) ? new Integer(99)
-				: new Integer(latent.getDefUIPriority().intValue()));
+		latentStyles.addAttribute(WordMLStyleConstants.UiPriorityAttribute,
+				(latent.getDefUIPriority() == null) ? new Integer(99) : new Integer(latent.getDefUIPriority().intValue()));
 		latentStyles.addAttribute(WordMLStyleConstants.QFormatAttribute, Boolean.valueOf(latent.isDefQFormat()));
 
 		List<LsdException> list = latent.getLsdException();
@@ -918,7 +924,10 @@ public class StyleSheet extends StyleContext {
 	}
 
 	private Style getChildStyle(Style parent, String childName) {
-		return (Style) parent.getAttribute(childName);
+		if (parent != null) {
+			return (Style) parent.getAttribute(childName);
+		}
+		return null;
 	}
 
 	private class UIStyleComparator implements Comparator<Style> {
@@ -937,4 +946,3 @@ public class StyleSheet extends StyleContext {
 	} // StyleUIComparator inner class
 
 }// StyleSheet class
-
