@@ -27,13 +27,11 @@ import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.stream.StreamSource;
 
+import org.docx4j.XmlUtils;
+import org.docx4j.wml.SdtBlock;
+import org.plutext.client.SdtWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.docx4j.XmlUtils;
-import org.docx4j.wml.Id;
-import org.docx4j.wml.SdtBlock;
-import org.docx4j.wml.Tag;
-import org.plutext.client.SdtWrapper;
 
 /* Represent the state of a chunk.
  * 
@@ -43,60 +41,62 @@ import org.plutext.client.SdtWrapper;
  * 
  * We never directly look at the content
  * control itself 
- */ 
-public class StateChunk 
-{
-	
+ */
+public class StateChunk {
+
 	private static Logger log = LoggerFactory.getLogger(StateChunk.class);
 
-    public StateChunk(SdtBlock cc) {
+	public StateChunk(SdtBlock cc) {
 		this.cc = cc;
-		sdtWrapper = new SdtWrapper(cc); 
-		xml = getContentControlXML(cc);    	
-    }
-    
-    private SdtWrapper sdtWrapper;
-    
+		sdtWrapper = new SdtWrapper(cc);
+		xml = getContentControlXML(cc);
+	}
+
+	private SdtWrapper sdtWrapper;
+
 	private SdtBlock cc;
-    public SdtBlock getSdt() {
-    	return cc; 
-    }
-    
+
+	public SdtBlock getSdt() {
+		return cc;
+	}
+
 	public String getIdAsString() {
-//		return getId().getVal().toString();
+		// return getId().getVal().toString();
 		return sdtWrapper.getPlutextId();
 	}
-	
+
 	public long getIdAsLong() {
-		//return cc.getSdtPr().getId();
+		// return cc.getSdtPr().getId();
 		return Long.parseLong(sdtWrapper.getPlutextId());
 	}
 
 	public long getVersionAsLong() {
 		return Long.parseLong(sdtWrapper.getVersionNumber());
 	}
-	
+
 	public String getVersionAsString() {
 		return sdtWrapper.getVersionNumber();
 	}
-	
-    private String xml = null;
-    public String getXml() {
-    	return xml; 
-    }
-            
-//            set { xml = value; }
-//        }
-    
-    private String markedUpSdt = null;
-    public String getMarkedUpSdt() {
-    	return markedUpSdt;
-    }
-    
-    public void setMarkedUpSdt(String s) {
-    	markedUpSdt = s;
-    }
-    
+
+	private String xml = null;
+
+	public String getXml() {
+		return xml;
+	}
+
+	// set { xml = value; }
+	// }
+
+	private String markedUpSdt = null;
+
+	public String getMarkedUpSdt() {
+		return markedUpSdt;
+	}
+
+	public void setMarkedUpSdt(String s) {
+		markedUpSdt = s;
+	}
+
 	/*
 	 * cc.Range.WordOpenXML returns an XML document which contains all
 	 * associates Parts eg style.xml etc. But all we want is the XML for the
@@ -111,96 +111,84 @@ public class StateChunk
 		// xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">"
 		// + node.InnerXml + "</w:sdt>";
 	}
-    
 
-    private Boolean transformUpdatesExist = false;
-        // TODO - reset this to false each time thread starts
+	private Boolean transformUpdatesExist = false;
+	// TODO - reset this to false each time thread starts
 
-    public Boolean containsTrackedChanges()
-    {
-        if (xml.contains("w:del")
-            || xml.contains("w:delText")
-            || xml.contains("w:ins"))
-            return true;
-        else
-            return false;
+	public Boolean containsTrackedChanges() {
+		if (xml.contains("w:del") || xml.contains("w:delText") || xml.contains("w:ins"))
+			return true;
+		else
+			return false;
 
-    }
+	}
 
-	static Templates xsltChangesAccept;	    
-    public void acceptTrackedChanges()
-    {
-    	if (xsltChangesAccept==null) {
-    		try {
-    			Source xsltSource  = new StreamSource(
-    					org.docx4j.utils.ResourceUtils.getResource(
-    							"org/plutext/client/state/ChangesAccept.xslt"));
-    			xsltChangesAccept = XmlUtils.getTransformerTemplate(xsltSource);
-    		} catch (IOException e) {
-    			e.printStackTrace();
-    		} catch (TransformerConfigurationException e) {
-    			e.printStackTrace();
-    		}
-    	}
-        transform(xsltChangesAccept);
-    }
-    
-	static Templates xsltChangesReject;	        
-    public void rejectTrackedChanges()
-    {
-    	if (xsltChangesReject==null) {
-    		try {
-    			Source xsltSource  = new StreamSource(
-    					org.docx4j.utils.ResourceUtils.getResource(
-    							"org/plutext/client/state/ChangesReject.xslt"));
-    			xsltChangesReject = XmlUtils.getTransformerTemplate(xsltSource);
-    		} catch (IOException e) {
-    			e.printStackTrace();
-    		} catch (TransformerConfigurationException e) {
-    			e.printStackTrace();
-    		}
-    	}
-        transform(xsltChangesReject);
-    }
+	static Templates xsltChangesAccept;
 
-    private void transform(Templates xslt)
-    {
-        log.debug("In: " + xml);
-        
-        
-        java.io.StringWriter sw = new java.io.StringWriter();
-        javax.xml.transform.Result result = new javax.xml.transform.stream.StreamResult(sw); 
-        
+	public void acceptTrackedChanges() {
+		if (xsltChangesAccept == null) {
+			try {
+				Source xsltSource = new StreamSource(
+						org.docx4j.utils.ResourceUtils.getResource("org/plutext/client/state/ChangesAccept.xslt"));
+				xsltChangesAccept = XmlUtils.getTransformerTemplate(xsltSource);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (TransformerConfigurationException e) {
+				e.printStackTrace();
+			}
+		}
+		transform(xsltChangesAccept);
+	}
+
+	static Templates xsltChangesReject;
+
+	public void rejectTrackedChanges() {
+		if (xsltChangesReject == null) {
+			try {
+				Source xsltSource = new StreamSource(
+						org.docx4j.utils.ResourceUtils.getResource("org/plutext/client/state/ChangesReject.xslt"));
+				xsltChangesReject = XmlUtils.getTransformerTemplate(xsltSource);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (TransformerConfigurationException e) {
+				e.printStackTrace();
+			}
+		}
+		transform(xsltChangesReject);
+	}
+
+	private void transform(Templates xslt) {
+		log.debug("In: " + xml);
+
+		java.io.StringWriter sw = new java.io.StringWriter();
+		javax.xml.transform.Result result = new javax.xml.transform.stream.StreamResult(sw);
+
 		try {
 			StreamSource src = new StreamSource(new StringReader(xml));
 			Map<String, Object> transformParameters = new java.util.HashMap<String, Object>();
 			XmlUtils.transform(src, xslt, transformParameters, result);
-			
+
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}
-        
 
+		// Ouptut
+		xml = sw.toString();
 
-        // Ouptut
-        xml = sw.toString();
+		log.debug("Transformed: " + xml);
+	}
 
-        log.debug("Transformed: " + xml);
-    }
-
-
-
-//    public Word.ContentControl getContentControl()
-//    {
-//        foreach (Word.ContentControl ctrl in Globals.ThisAddIn.Application.ActiveDocument.ContentControls)
-//        {
-//            if (ctrl.ID.Equals(id) )
-//            {
-//                //diagnostics("DEBUG - Got control");
-//                return ctrl;
-//            }
-//        }
-//        return null;
-//    }
+	// public Word.ContentControl getContentControl()
+	// {
+	// foreach (Word.ContentControl ctrl in Globals.ThisAddIn.Application.ActiveDocument.ContentControls)
+	// {
+	// if (ctrl.ID.Equals(id) )
+	// {
+	// //diagnostics("DEBUG - Got control");
+	// return ctrl;
+	// }
+	// }
+	// return null;
+	// }
 
 }

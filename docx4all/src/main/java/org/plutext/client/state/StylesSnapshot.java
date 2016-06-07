@@ -26,14 +26,11 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBElement;
 
+import org.docx4j.XmlUtils;
+import org.docx4j.wml.SdtBlock;
 import org.docx4j.wml.Style;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.docx4j.wml.SdtBlock;
-
-import org.docx4j.XmlUtils;
-import org.plutext.client.wrappedTransforms.TransformAbstract;
 
 /* This class keeps track of the styles we know to
      * be in use, and their definitions.  StateDocx 
@@ -69,283 +66,268 @@ import org.plutext.client.wrappedTransforms.TransformAbstract;
      * to the server, and deserialise it on the other 
      * clients.
      */
-    public class StylesSnapshot
-    {
-    	
-// TODO - consider how this relates to org.docx4all.swing.text.StyleSheet  
-// and to org.docx4j.openpackaging.parts.WordprocessingML.StyleDefinitionsPart
-    	
-    	private static Logger log = LoggerFactory.getLogger(StylesSnapshot.class);
-    	
-        /*
-         * 
-            <w:styles xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-              <w:docDefaults>
-            :
-              <w:latentStyles w:defLockedState="0" w:defUIPriority="99" w:defSemiHidden="1" w:defUnhideWhenUsed="1" w:defQFormat="0" w:count="267">
-            :
-              <w:lsdException w:name="TOC Heading" w:uiPriority="39" w:qFormat="1" />
-              </w:latentStyles>
-              <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
-                <w:name w:val="Normal" />
-            :
-              </w:style>
+public class StylesSnapshot {
 
-         */
+	// TODO - consider how this relates to org.docx4all.swing.text.StyleSheet
+	// and to org.docx4j.openpackaging.parts.WordprocessingML.StyleDefinitionsPart
 
+	private static Logger log = LoggerFactory.getLogger(StylesSnapshot.class);
 
-    	// Copy of the styles at a point in time
-        HashMap<String, String> stylesSnapshot = new HashMap<String, String>();
-        
-        // Live styles - regenerated as necessary
-        HashMap<String, Style> stylesLive = new HashMap<String, Style>();
+	/*
+	 * 
+	    <w:styles xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+	      <w:docDefaults>
+	    :
+	      <w:latentStyles w:defLockedState="0" w:defUIPriority="99" w:defSemiHidden="1" w:defUnhideWhenUsed="1" w:defQFormat="0" w:count="267">
+	    :
+	      <w:lsdException w:name="TOC Heading" w:uiPriority="39" w:qFormat="1" />
+	      </w:latentStyles>
+	      <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+	        <w:name w:val="Normal" />
+	    :
+	      </w:style>
+	
+	 */
 
-        // When marshalling, suppress XML declaration
-    	boolean suppressDeclaration = true;
-        
-    	org.docx4j.wml.Styles docxStyles;
-    	
-        public StylesSnapshot(org.docx4j.wml.Styles docxStyles)
-        {
-        	this.docxStyles = docxStyles;
+	// Copy of the styles at a point in time
+	HashMap<String, String> stylesSnapshot = new HashMap<String, String>();
 
-            //System.Diagnostics.Debug.WriteLine("Hello!!");
-            for (Style s : docxStyles.getStyle() )
-            {
-                //log.warn(s.OuterXml);
-                //log.warn(getStyleName(s));
+	// Live styles - regenerated as necessary
+	HashMap<String, Style> stylesLive = new HashMap<String, Style>();
 
-            	stylesLive.put(getStyleId(s), s);
-            	
-            	stylesSnapshot.put(getStyleId(s), XmlUtils.marshaltoString(s, suppressDeclaration));
+	// When marshalling, suppress XML declaration
+	boolean suppressDeclaration = true;
 
-            }
-        }
+	org.docx4j.wml.Styles docxStyles;
 
-        /*public String getStyleName(XmlNode s)
-        {
-              //<w:style w:type="paragraph" w:default="1" w:styleId="Normal">
-              //  <w:name w:val="Normal" />
-            return s.FirstChild.Attributes.GetNamedItem("val", WORDML_NAMESPACE).InnerText;
-        }*/
+	public StylesSnapshot(org.docx4j.wml.Styles docxStyles) {
+		this.docxStyles = docxStyles;
 
-        public String getStyleId(Style s)
-        {
-            //<w:style w:type="paragraph" w:default="1" w:styleId="Normal">
-            return s.getStyleId();
-        }
+		// System.Diagnostics.Debug.WriteLine("Hello!!");
+		for (Style s : docxStyles.getStyle()) {
+			// log.warn(s.OuterXml);
+			// log.warn(getStyleName(s));
 
-//        public XmlNodeList getStyleNodes()
-//        {
-//            String oXML = Globals.ThisAddIn.Application.ActiveDocument.WordOpenXML;
-//            XmlDocument doc = new XmlDocument();
-//            doc.LoadXml(oXML);
-//            XmlNamespaceManager nsmgr = new XmlNamespaceManager(doc.NameTable);
-//            nsmgr.AddNamespace("w", Namespaces.WORDML_NAMESPACE);
-//
-//            return doc.SelectNodes("//w:style", nsmgr);
-//        }
+			stylesLive.put(getStyleId(s), s);
 
+			stylesSnapshot.put(getStyleId(s), XmlUtils.marshaltoString(s, suppressDeclaration));
 
-//        public Style getStyleNode(String stylename)
-//        {
-//        	return (Style)stylesLive.get(stylename);
-//
-//        }
-        
-        
+		}
+	}
 
+	/*public String getStyleName(XmlNode s)
+	{
+	      //<w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+	      //  <w:name w:val="Normal" />
+	    return s.FirstChild.Attributes.GetNamedItem("val", WORDML_NAMESPACE).InnerText;
+	}*/
 
-        /* Iterate through the content control looking for any
-         * styles which have been added to the document, or updated.
-         * Return a string containing these. */
-        public String identifyAlteredStyles(SdtBlock cc)
-        {
-        	
-        	// Get the styles in the style definitions part
-        	stylesLive = new HashMap<String, Style>();
-            for (Style s : docxStyles.getStyle() ) {
-            	stylesLive.put(getStyleId(s), s);
-            }
-        	
-        	// Collect the styles in this SdtBlock
-        	HashMap stylesInUse = new HashMap();        	
-        	traverseRecursive(cc.getSdtContent().getContent(), stylesInUse);
-        	
-            StringBuilder result = new StringBuilder();
+	public String getStyleId(Style s) {
+		// <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+		return s.getStyleId();
+	}
 
-            // See if any of them have changed
-    		Iterator stylesInUseIterator = stylesInUse.entrySet().iterator();
-    	    while (stylesInUseIterator.hasNext()) {
-    	        Map.Entry pairs = (Map.Entry)stylesInUseIterator.next();
-    	        
-                String styleName = (String)pairs.getValue();
-                
-                result.append( identifyAlteredStylesWorker(styleName)  );
-    	    }
-            return result.toString();
-        }
+	// public XmlNodeList getStyleNodes()
+	// {
+	// String oXML = Globals.ThisAddIn.Application.ActiveDocument.WordOpenXML;
+	// XmlDocument doc = new XmlDocument();
+	// doc.LoadXml(oXML);
+	// XmlNamespaceManager nsmgr = new XmlNamespaceManager(doc.NameTable);
+	// nsmgr.AddNamespace("w", Namespaces.WORDML_NAMESPACE);
+	//
+	// return doc.SelectNodes("//w:style", nsmgr);
+	// }
 
+	// public Style getStyleNode(String stylename)
+	// {
+	// return (Style)stylesLive.get(stylename);
+	//
+	// }
 
-        private String identifyAlteredStylesWorker(String styleName)
-        {
-            StringBuilder result = new StringBuilder();
+	/* Iterate through the content control looking for any
+	 * styles which have been added to the document, or updated.
+	 * Return a string containing these. */
+	public String identifyAlteredStyles(SdtBlock cc) {
 
-            try {
-            	
-            	Style style = (Style)stylesLive.get(styleName);
-            	String currentStyleXml = XmlUtils.marshaltoString(style, suppressDeclaration); 
-            	
-                String cachedStyleXml = (String)stylesSnapshot.get(styleName);
-                
-                if (cachedStyleXml==null) {
-                    // This is a new style added to the document!
-                    result.append("<!-- New -->");
-                    result.append(currentStyleXml);
-                    stylesSnapshot.put(styleName, currentStyleXml);
+		// Get the styles in the style definitions part
+		stylesLive = new HashMap<String, Style>();
+		for (Style s : docxStyles.getStyle()) {
+			stylesLive.put(getStyleId(s), s);
+		}
 
-                    //log.warn("New style: " + styleName);
-                	
-                } else if ( !currentStyleXml.equals(cachedStyleXml)) {
-                    // The style definition has changed, so add it to result
-                    result.append("<!-- Updated -->");
-                    result.append(currentStyleXml);
+		// Collect the styles in this SdtBlock
+		HashMap stylesInUse = new HashMap();
+		traverseRecursive(cc.getSdtContent().getContent(), stylesInUse);
 
-                    // .. and update the hashmap
-                    stylesSnapshot.put(styleName, currentStyleXml);
-                    // or styleMap.Add(getStyleName(currentStyleNode), currentStyleNode);
+		StringBuilder result = new StringBuilder();
 
-                    // log.warn("Old " + cachedStyleNode.OuterXml + " New " + currentStyleNode.OuterXml);
-                }
-                // else no change
-            }
-            catch (Exception e) {
-            	e.printStackTrace();
-            }
-            return result.toString();
+		// See if any of them have changed
+		Iterator stylesInUseIterator = stylesInUse.entrySet().iterator();
+		while (stylesInUseIterator.hasNext()) {
+			Map.Entry pairs = (Map.Entry) stylesInUseIterator.next();
 
+			String styleName = (String) pairs.getValue();
 
-        }
+			result.append(identifyAlteredStylesWorker(styleName));
+		}
+		return result.toString();
+	}
 
+	private String identifyAlteredStylesWorker(String styleName) {
+		StringBuilder result = new StringBuilder();
 
-        
-    	void traverseRecursive(List <Object> children,  Map stylesInUse){
-    		
-    		for (Object o : children ) {
-    						
-    			//log.debug("object: " + o.getClass().getName() );
-    			
-    			if (o instanceof org.docx4j.wml.P) {
-    				
-    				org.docx4j.wml.P p = (org.docx4j.wml.P) o;
-    		
-    				if (p.getPPr() != null && p.getPPr().getPStyle() != null) {
-    					// Note this paragraph style
-    					log.debug("put style "
-    							+ p.getPPr().getPStyle().getVal());
-    					stylesInUse.put(p.getPPr().getPStyle().getVal(), 
-    									p.getPPr().getPStyle().getVal());
-    				}
-    		
-    				if (p.getPPr() != null && p.getPPr().getRPr() != null) {
-    					// Inspect RPr
-    					inspectRPr(p.getPPr().getRPr(), stylesInUse);
-    				}
-    		
-    				traverseRecursive(p.getParagraphContent(), stylesInUse);
-    		
-    			} else if (o instanceof org.docx4j.wml.SdtContentBlock) {
+		try {
 
-    				org.docx4j.wml.SdtBlock sdt = (org.docx4j.wml.SdtBlock) o;
-    				
-    				// Don't bother looking in SdtPr
-    				
-    				traverseRecursive(sdt.getSdtContent().getContent(),
-    						stylesInUse);
-    				
-    				
-    			} else if (o instanceof org.docx4j.wml.R) {
+			Style style = stylesLive.get(styleName);
+			String currentStyleXml = XmlUtils.marshaltoString(style, suppressDeclaration);
 
-    				org.docx4j.wml.R run = (org.docx4j.wml.R) o;
-    				if (run.getRPr() != null) {
-    					inspectRPr(run.getRPr(), stylesInUse);
-    				}
+			String cachedStyleXml = stylesSnapshot.get(styleName);
 
-    				// don't need to traverse run.getRunContent()
-    				
-    			} else if (o instanceof org.w3c.dom.Node) {
-    				
-    				// If Xerces is on the path, this will be a org.apache.xerces.dom.NodeImpl;
-    				// otherwise, it will be com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
-    				
-    				// Ignore these, eg w:bookmarkStart
-    				
-    				log.debug("not traversing into unhandled Node: " + ((org.w3c.dom.Node)o).getNodeName() );
-    				
-    			} else if ( o instanceof javax.xml.bind.JAXBElement) {
+			if (cachedStyleXml == null) {
+				// This is a new style added to the document!
+				result.append("<!-- New -->");
+				result.append(currentStyleXml);
+				stylesSnapshot.put(styleName, currentStyleXml);
 
-    				log.debug( "Encountered " + ((JAXBElement) o).getDeclaredType().getName() );
-    					
-//    				if (((JAXBElement) o).getDeclaredType().getName().equals(
-//    						"org.docx4j.wml.P")) {
-//    					org.docx4j.wml.P p = (org.docx4j.wml.P) ((JAXBElement) o)
-//    							.getValue();
-    //
-//    					if (p.getPPr() != null && p.getPPr().getPStyle() != null) {
-//    						// Note this paragraph style
-//    						log.debug("put style "
-//    								+ p.getPPr().getPStyle().getVal());
-//    						stylesInUse.put(p.getPPr().getPStyle().getVal(), p
-//    								.getPPr().getPStyle().getVal());
-//    					}
-    //
-//    					if (p.getPPr() != null && p.getPPr().getRPr() != null) {
-//    						// Inspect RPr
-//    						inspectRPr(p.getPPr().getRPr(), fontsDiscovered,
-//    								stylesInUse);
-//    					}
-    //
-//    					traverseMainDocumentRecursive(p.getParagraphContent(),
-//    							fontsDiscovered, stylesInUse);
-    //
-//    				}
-    				
-    			} else {
-    				log.error( "UNEXPECTED: " + o.getClass().getName() );
-    			} 
-    		}
-    	}
-    	
-        private void inspectRPr(Object rPrObj, Map stylesInUse) {
-        	
-        	if ( rPrObj instanceof org.docx4j.wml.RPr) {
+				// log.warn("New style: " + styleName);
 
-        		org.docx4j.wml.RPr rPr =  (org.docx4j.wml.RPr)rPrObj;
-        		
-            	if (rPr.getRStyle()!=null) {
-            		// 	Note this run style
-            		//log.debug("put style " + rPr.getRStyle().getVal() );
-            		stylesInUse.put(rPr.getRStyle().getVal(), rPr.getRStyle().getVal());
-            	}
-        		
-        		
-        	} else if ( rPrObj instanceof org.docx4j.wml.ParaRPr) {
+			}
+			else if (!currentStyleXml.equals(cachedStyleXml)) {
+				// The style definition has changed, so add it to result
+				result.append("<!-- Updated -->");
+				result.append(currentStyleXml);
 
-        		org.docx4j.wml.ParaRPr rPr =  (org.docx4j.wml.ParaRPr)rPrObj;
-        		
-            	if (rPr.getRStyle()!=null) {
-            		// 	Note this run style
-            		//log.debug("put style " + rPr.getRStyle().getVal() );
-            		stylesInUse.put(rPr.getRStyle().getVal(), rPr.getRStyle().getVal());
-            	}
-        		
-        		
-        	} else {
-        		
-        		log.error("Expected some kind of rPr, not " + rPrObj.getClass().getName() );    		
-        	}
-        	
-    }
-        
+				// .. and update the hashmap
+				stylesSnapshot.put(styleName, currentStyleXml);
+				// or styleMap.Add(getStyleName(currentStyleNode), currentStyleNode);
 
-    }
+				// log.warn("Old " + cachedStyleNode.OuterXml + " New " + currentStyleNode.OuterXml);
+			}
+			// else no change
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result.toString();
+
+	}
+
+	void traverseRecursive(List<Object> children, Map stylesInUse) {
+
+		for (Object o : children) {
+
+			// log.debug("object: " + o.getClass().getName() );
+
+			if (o instanceof org.docx4j.wml.P) {
+
+				org.docx4j.wml.P p = (org.docx4j.wml.P) o;
+
+				if (p.getPPr() != null && p.getPPr().getPStyle() != null) {
+					// Note this paragraph style
+					log.debug("put style " + p.getPPr().getPStyle().getVal());
+					stylesInUse.put(p.getPPr().getPStyle().getVal(), p.getPPr().getPStyle().getVal());
+				}
+
+				if (p.getPPr() != null && p.getPPr().getRPr() != null) {
+					// Inspect RPr
+					inspectRPr(p.getPPr().getRPr(), stylesInUse);
+				}
+
+				traverseRecursive(p.getParagraphContent(), stylesInUse);
+
+			}
+			else if (o instanceof org.docx4j.wml.SdtContentBlock) {
+
+				org.docx4j.wml.SdtBlock sdt = (org.docx4j.wml.SdtBlock) o;
+
+				// Don't bother looking in SdtPr
+
+				traverseRecursive(sdt.getSdtContent().getContent(), stylesInUse);
+
+			}
+			else if (o instanceof org.docx4j.wml.R) {
+
+				org.docx4j.wml.R run = (org.docx4j.wml.R) o;
+				if (run.getRPr() != null) {
+					inspectRPr(run.getRPr(), stylesInUse);
+				}
+
+				// don't need to traverse run.getRunContent()
+
+			}
+			else if (o instanceof org.w3c.dom.Node) {
+
+				// If Xerces is on the path, this will be a org.apache.xerces.dom.NodeImpl;
+				// otherwise, it will be com.sun.org.apache.xerces.internal.dom.ElementNSImpl;
+
+				// Ignore these, eg w:bookmarkStart
+
+				log.debug("not traversing into unhandled Node: " + ((org.w3c.dom.Node) o).getNodeName());
+
+			}
+			else if (o instanceof javax.xml.bind.JAXBElement) {
+
+				log.debug("Encountered " + ((JAXBElement) o).getDeclaredType().getName());
+
+				// if (((JAXBElement) o).getDeclaredType().getName().equals(
+				// "org.docx4j.wml.P")) {
+				// org.docx4j.wml.P p = (org.docx4j.wml.P) ((JAXBElement) o)
+				// .getValue();
+				//
+				// if (p.getPPr() != null && p.getPPr().getPStyle() != null) {
+				// // Note this paragraph style
+				// log.debug("put style "
+				// + p.getPPr().getPStyle().getVal());
+				// stylesInUse.put(p.getPPr().getPStyle().getVal(), p
+				// .getPPr().getPStyle().getVal());
+				// }
+				//
+				// if (p.getPPr() != null && p.getPPr().getRPr() != null) {
+				// // Inspect RPr
+				// inspectRPr(p.getPPr().getRPr(), fontsDiscovered,
+				// stylesInUse);
+				// }
+				//
+				// traverseMainDocumentRecursive(p.getParagraphContent(),
+				// fontsDiscovered, stylesInUse);
+				//
+				// }
+
+			}
+			else {
+				log.error("UNEXPECTED: " + o.getClass().getName());
+			}
+		}
+	}
+
+	private void inspectRPr(Object rPrObj, Map stylesInUse) {
+
+		if (rPrObj instanceof org.docx4j.wml.RPr) {
+
+			org.docx4j.wml.RPr rPr = (org.docx4j.wml.RPr) rPrObj;
+
+			if (rPr.getRStyle() != null) {
+				// Note this run style
+				// log.debug("put style " + rPr.getRStyle().getVal() );
+				stylesInUse.put(rPr.getRStyle().getVal(), rPr.getRStyle().getVal());
+			}
+
+		}
+		else if (rPrObj instanceof org.docx4j.wml.ParaRPr) {
+
+			org.docx4j.wml.ParaRPr rPr = (org.docx4j.wml.ParaRPr) rPrObj;
+
+			if (rPr.getRStyle() != null) {
+				// Note this run style
+				// log.debug("put style " + rPr.getRStyle().getVal() );
+				stylesInUse.put(rPr.getRStyle().getVal(), rPr.getRStyle().getVal());
+			}
+
+		}
+		else {
+
+			log.error("Expected some kind of rPr, not " + rPrObj.getClass().getName());
+		}
+
+	}
+
+}

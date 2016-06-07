@@ -40,9 +40,7 @@
 package org.openflexo.help;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Observable;
@@ -55,8 +53,6 @@ import javax.help.HelpSet;
 
 import org.openflexo.rm.Resource;
 import org.openflexo.rm.ResourceLocator;
-import org.openflexo.toolbox.FileUtils;
-
 
 /**
  * Please comment this class
@@ -67,8 +63,7 @@ import org.openflexo.toolbox.FileUtils;
 public class FlexoHelp extends Observable {
 
 	private static final Logger logger = Logger.getLogger(FlexoHelp.class.getPackage().getName());
-	
-	
+
 	private static HelpSet _hs = null;
 	private static HelpBroker _hb = null;
 	private static File _helpSetFile;
@@ -170,10 +165,10 @@ public class FlexoHelp extends Observable {
 		String endPattern = "_" + distributionName + "_" + languageIdentifier + ".helpset";
 
 		List<Resource> allFiles = null;
-		
+
 		// TODO en fait on veut juste les répertoires qui contiennent des .hs....
 		allFiles = (List<Resource>) getHelpSetDirectory().getContents(Pattern.compile(".*[.]hs"));
-				
+
 		/*
 		ResourceLocation[] allFiles = getHelpSetDirectory().listFiles(new FileFilter() {
 			@Override
@@ -194,7 +189,7 @@ public class FlexoHelp extends Observable {
 			}
 		});
 		*/
-		
+
 		if (allFiles == null) {
 			if (logger.isLoggable(Level.WARNING)) {
 				logger.warning("Missing help directory: " + getHelpSetDirectory().getURI());

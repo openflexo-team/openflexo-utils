@@ -19,59 +19,51 @@
 
 package org.plutext.client;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.plutext.client.state.StateDocx;
-import org.docx4j.wml.SdtBlock;
 import java.util.ArrayList;
 
+import org.docx4j.wml.SdtBlock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
-public class Chunker
-{
+public class Chunker {
 
 	private static Logger log = LoggerFactory.getLogger(Chunker.class);
 
 	public static boolean containsMultipleBlocks(org.docx4j.wml.SdtContentBlock sdtContent) {
-		log.info(""+sdtContent.getEGContentBlockContent().size());
-		
+		log.info("" + sdtContent.getEGContentBlockContent().size());
+
 		// TODO - In addition to P, getEGContentBlockContent() can contain things
-		// like Tbl, RunTrackChange etc.  Consider what to do with those.
-		
-		if (sdtContent.getEGContentBlockContent().size() == 0 ) {
+		// like Tbl, RunTrackChange etc. Consider what to do with those.
+
+		if (sdtContent.getEGContentBlockContent().size() == 0) {
 			log.error("Didn't expect 0 blocks!");
 			return false;
-		} else if (sdtContent.getEGContentBlockContent().size() == 1 ) {
+		}
+		else if (sdtContent.getEGContentBlockContent().size() == 1) {
 			return false;
-		} else {
+		}
+		else {
 			log.info("SDT has " + sdtContent.getEGContentBlockContent().size() + " block children.");
 			return true;
 		}
 
-	}    
-    
-	
-	
-	
+	}
 
-    /* Split a control containing n paragraphs
-     * into n controls.  
-     * 
-     * The ID of the first control remains the same.
-     * 
-     * Returns a list of the IDs of the new controls. */
-    public static ArrayList<String> chunk(SdtBlock cc)
-    {
-    	
-    	// Jo to implement
-    	
-    	return null;
+	/* Split a control containing n paragraphs
+	 * into n controls.  
+	 * 
+	 * The ID of the first control remains the same.
+	 * 
+	 * Returns a list of the IDs of the new controls. */
+	public static ArrayList<String> chunk(SdtBlock cc) {
 
-    }
+		// Jo to implement
 
-    
-//	if ( o instanceof org.docx4j.wml.P  
-//	|| o instanceof org.docx4j.wml.Tbl ) {
-    
+		return null;
+
+	}
+
+	// if ( o instanceof org.docx4j.wml.P
+	// || o instanceof org.docx4j.wml.Tbl ) {
 
 }
