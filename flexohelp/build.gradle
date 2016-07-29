@@ -1,0 +1,4 @@
+dependencies {
+  compile group: "org.openflexo", name: "flexoutils", version: "1.+"
+  compile 'javax.help:javahelp:2.0.05'
+}
