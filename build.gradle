@@ -17,6 +17,10 @@ subprojects {
   
   repositories {
     jcenter()
+
+    maven {
+      url "https://maven.openflexo.org/artifactory/openflexo-deps"
+    }
   }
  
   dependencies {
