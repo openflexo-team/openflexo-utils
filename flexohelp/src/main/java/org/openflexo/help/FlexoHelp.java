@@ -166,8 +166,17 @@ public class FlexoHelp extends Observable {
 
 		List<Resource> allFiles = null;
 
+		Resource helpsetDirectory = getHelpSetDirectory();
+
+		if (helpsetDirectory == null) {
+			if (logger.isLoggable(Level.WARNING)) {
+				logger.warning("Missing help directory");
+			}
+			return null;
+		}
+
 		// TODO en fait on veut juste les répertoires qui contiennent des .hs....
-		allFiles = (List<Resource>) getHelpSetDirectory().getContents(Pattern.compile(".*[.]hs"));
+		allFiles = (List<Resource>) helpsetDirectory.getContents(Pattern.compile(".*[.]hs"));
 
 		/*
 		ResourceLocation[] allFiles = getHelpSetDirectory().listFiles(new FileFilter() {
