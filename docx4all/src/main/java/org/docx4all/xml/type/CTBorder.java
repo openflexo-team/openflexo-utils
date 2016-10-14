@@ -26,103 +26,89 @@ import org.docx4all.swing.LineBorderSegment;
 import org.docx4all.swing.text.StyleSheet;
 
 /**
- *	@author Jojada Tirtowidjojo - 30/09/2008
+ * @author Jojada Tirtowidjojo - 30/09/2008
  */
 public class CTBorder {
 	private org.docx4j.wml.CTBorder ctBorder;
 	private Color autoColor;
-	
+
 	public CTBorder(org.docx4j.wml.CTBorder ctBorder) {
 		this.ctBorder = ctBorder;
 	}
-	
+
 	public Object getDocxObject() {
 		return this.ctBorder;
 	}
-	
+
 	public void setAutoColor(Color c) {
 		this.autoColor = c;
 	}
-	
+
 	public Color getAutoColor() {
 		return this.autoColor;
 	}
-	
+
 	public Color getColor() {
 		Color color = null;
-		
+
 		String s = ctBorder.getColor();
-		if (s.equalsIgnoreCase("auto")) {
-			color = getAutoColor();
-		} else {
-			int r = Integer.valueOf(s.substring(0, 2), 16).intValue();
-			int g = Integer.valueOf(s.substring(2, 4), 16).intValue();
-			int b = Integer.valueOf(s.substring(4), 16).intValue();
-			color = new Color(r, g, b);
+		if (s != null) {
+			if (s.equalsIgnoreCase("auto")) {
+				color = getAutoColor();
+			}
+			else {
+				int r = Integer.valueOf(s.substring(0, 2), 16).intValue();
+				int g = Integer.valueOf(s.substring(2, 4), 16).intValue();
+				int b = Integer.valueOf(s.substring(4), 16).intValue();
+				color = new Color(r, g, b);
+			}
 		}
+		else
+			color = new Color(0, 0, 0); // XTOF: sets default color to black when it's null
 		return color;
 	}
-	
+
 	public LineBorderSegment.Style getStyle() {
-		//TODO: Currently only supporting two styles: SOLID and DASHED.
+		// TODO: Currently only supporting two styles: SOLID and DASHED.
 		LineBorderSegment.Style style = LineBorderSegment.Style.SOLID;
 		if (ctBorder.getVal().value().toLowerCase().indexOf("dash") >= 0) {
 			style = LineBorderSegment.Style.DASHED;
 		}
-		//Other styles are being considered as SOLID. 
+		// Other styles are being considered as SOLID.
 		return style;
 	}
 
 	public int getSize() {
 		int theSize = 0;
-		
+
 		BigInteger sz = ctBorder.getSz();
 		if (sz != null && sz.intValue() > 0) {
-			//ctBorder.getSz() is in eights of a point.
+			// ctBorder.getSz() is in eights of a point.
 			theSize = sz.intValue();
 		}
-		
-		//Because we are still supporting Line Border style,
-		//current minimum size is 2 and maximum size is 96 
-		//eights of a point
+
+		// Because we are still supporting Line Border style,
+		// current minimum size is 2 and maximum size is 96
+		// eights of a point
 		theSize = Math.max(theSize, 2);
 		theSize = Math.min(theSize, 96);
-		
-		//TODO: For Art Border style, size is in point.
-		//Its miniumum size is 1 and maximum size is 31
-		
+
+		// TODO: For Art Border style, size is in point.
+		// Its miniumum size is 1 and maximum size is 31
+
 		return theSize;
 	}
-	
+
 	public int getSizeInTwips() {
-		//TODO: For Art Border style, size is in point.
-		//Because we are still supporting Line Border style,
-		//getSize() is in eights of a point.
-		int sz = getSize(); //eights of a point
-		return sz * 8 / 20; //twips
+		// TODO: For Art Border style, size is in point.
+		// Because we are still supporting Line Border style,
+		// getSize() is in eights of a point.
+		int sz = getSize(); // eights of a point
+		return sz * 8 / 20; // twips
 	}
-	
+
 	public int getSizeInPixels() {
 		return StyleSheet.toPixels(getSizeInTwips());
 	}
-	
+
 }// CTBorder class
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
