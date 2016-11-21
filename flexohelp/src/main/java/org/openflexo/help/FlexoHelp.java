@@ -176,7 +176,7 @@ public class FlexoHelp extends Observable {
 		}
 
 		// TODO en fait on veut juste les répertoires qui contiennent des .hs....
-		allFiles = (List<Resource>) helpsetDirectory.getContents(Pattern.compile(".*[.]hs"));
+		allFiles = (List<Resource>) helpsetDirectory.getContents(Pattern.compile(".*[.]hs"), true);
 
 		/*
 		ResourceLocation[] allFiles = getHelpSetDirectory().listFiles(new FileFilter() {
