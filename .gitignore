@@ -1,6 +1,8 @@
-/target
+target/
+build/
 .classpath
 .settings
 .project
 *.iml
 /pom.xml~
+
