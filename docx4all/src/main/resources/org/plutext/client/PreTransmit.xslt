@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:java="http://xml.apache.org/xalan/java" 
-    xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage"
-    xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-  xmlns:xml="http://www.w3.org/XML/1998/namespace"                
-  version="1.0" 
-  exclude-result-prefixes="java"> 
+                xmlns:java="http://xml.apache.org/xalan/java"
+                xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                version="1.0"
+                exclude-result-prefixes="java">
   
 
   <!-- 

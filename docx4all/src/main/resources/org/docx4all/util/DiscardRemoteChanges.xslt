@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-  xmlns:o="urn:schemas-microsoft-com:office:office"
-  xmlns:v="urn:schemas-microsoft-com:vml"
-  xmlns:WX="http://schemas.microsoft.com/office/word/2003/auxHint"
-  xmlns:aml="http://schemas.microsoft.com/aml/2001/core"
-  xmlns:w10="urn:schemas-microsoft-com:office:word"
-  xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage"
-        xmlns:msxsl="urn:schemas-microsoft-com:xslt"
-    xmlns:ext="http://www.xmllab.net/wordml2html/ext"
-  xmlns:java="http://xml.apache.org/xalan/java"
-  xmlns:xml="http://www.w3.org/XML/1998/namespace"
-  version="1.0"
-        exclude-result-prefixes="java msxsl ext o v WX aml w10">
+                xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:v="urn:schemas-microsoft-com:vml"
+                xmlns:WX="http://schemas.microsoft.com/office/word/2003/auxHint"
+                xmlns:aml="http://schemas.microsoft.com/aml/2001/core"
+                xmlns:w10="urn:schemas-microsoft-com:office:word"
+                xmlns:msxsl="urn:schemas-microsoft-com:xslt"
+                xmlns:ext="http://www.xmllab.net/wordml2html/ext"
+                xmlns:java="http://xml.apache.org/xalan/java"
+                version="1.0"
+                exclude-result-prefixes="java msxsl ext o v WX aml w10">
 
   <!-- 
   *  Copyright 2007, Plutext Pty Ltd.
@@ -37,13 +35,13 @@
   <xsl:output method="xml" encoding="utf-8" omit-xml-declaration="no" indent="yes" />
 
 
-  <xsl:template match="/ | @*|node()">
+  <xsl:template match="@*|node()">
     <xsl:copy>
       <xsl:apply-templates select="@*|node()"/>
     </xsl:copy>
   </xsl:template>
 
-<!--
+  <!--
 
        <w:body>
                <w:p w:rsidR="00265854" w:rsidRDefault="00320AE9">
@@ -83,14 +81,21 @@ w:header="708" w:footer="708" w:gutter="0" />
        </w:body>
 
 
-<w:sdt xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:sdtPr><w:id w:val="1028116818"></w:id><w:tag w:val="4"></w:tag></w:sdtPr><w:sdtContent><w:customXmlDelRangeEnd w:id="0"></w:customXmlDelRangeEnd><w:p><w:del w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="1"><w:r><w:delText>Heading</w:delText></w:r></w:del><w:ins w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="2"><w:r><w:t>y</w:t></w:r></w:ins><w:customXmlInsRangeStart w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="3"></w:customXmlInsRangeStart><w:sdt><w:sdtPr><w:id w:val="135511535"></w:id><w:tag w:val="4"></w:tag></w:sdtPr><w:sdtContent><w:customXmlInsRangeEnd w:id="3"></w:customXmlInsRangeEnd><w:ins w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="4"><w:r><w:t>Heading</w:t></w:r></w:ins><w:r><w:t xml:space="preserve"> is back, with a </w:t></w:r><w:ins w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="5"><w:r><w:t>vengenace.</w:t></w:r></w:ins><w:customXmlInsRangeStart w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="6"></w:customXmlInsRangeStart></w:sdtContent></w:sdt><w:customXmlInsRangeEnd w:id="6"></w:customXmlInsRangeEnd><w:del w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="7"><w:r><w:delText>vengenace.</w:delText></w:r></w:del></w:p></w:sdtContent><w:customXmlDelRangeStart w:author="Jason Harrop" w:date="2008-06-06T09:16:00Z" w:id="8"></w:customXmlDelRangeStart></w:sdt>
-
 -->
 
-  <xsl:template match="w:del" />
+  <xsl:template match="w:ins" />
 
-  <xsl:template match="w:ins" >
+  <xsl:template match="w:del" >
     <xsl:apply-templates select="*"/>
   </xsl:template>
+
+  <xsl:template match="@w:rsidDel" />
+
+  <xsl:template match="w:delText" >
+    <w:t>
+      <xsl:apply-templates  select="@*|node()"/>
+    </w:t>    
+  </xsl:template>
+
 
 </xsl:stylesheet>
