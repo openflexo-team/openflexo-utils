@@ -247,7 +247,6 @@ public class WordMLTextPane extends JEditorPane {
 
 	@Override
 	public void scrollToReference(String reference) {
-		// TODO Auto-generated method stub
 		super.scrollToReference(reference);
 	}
 

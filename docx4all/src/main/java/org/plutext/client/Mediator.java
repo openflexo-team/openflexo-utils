@@ -331,7 +331,8 @@ public class Mediator {
 		if (updates.length < 2) {
 			log.error(stateDocx.getDocID() + " ERROR!!!");
 
-		} else {
+		}
+		else {
 			log.debug(stateDocx.getDocID() + " transforms = " + updates[1]);
 
 			Boolean needToFetchSkel = false;
@@ -353,7 +354,8 @@ public class Mediator {
 
 				}
 				worker.setProgress(FetchProgress.FETCHING_DONE, "About to apply remote edits to local document");
-			} else {
+			}
+			else {
 				worker.setProgress(FetchProgress.FETCHING_DONE, "No remote updates");
 			}
 		}
@@ -672,7 +674,8 @@ public class Mediator {
 				// Part doesn't exist on server
 				// This should not happen.
 				log.error(i + " : doesn't exist on server!  INVESTIGATE");
-			} else {
+			}
+			else {
 				// 1. Attach this to our pkg
 				// We need an XmlNode; this is an easy way to get it
 				Part part = Part.factory(itemField[1]);
@@ -772,7 +775,8 @@ public class Mediator {
 			if (!PartVersionList.getSequenceableParts().contains(relevantParts.get(i))) {
 				log.debug(".. ignoring; not sequencable.");
 				continue;
-			} else {
+			}
+			else {
 				j++;
 			}
 
@@ -784,9 +788,11 @@ public class Mediator {
 				// Part doesn't exist on server
 				// This should not happen.
 
-				log.error(i + " : " + PartVersionList.getSequenceableParts().get(mapping.get(i)) + " doesn't exist on server!  INVESTIGATE");
+				log.error(
+						i + " : " + PartVersionList.getSequenceableParts().get(mapping.get(i)) + " doesn't exist on server!  INVESTIGATE");
 
-			} else {
+			}
+			else {
 
 				SequencedPart sp = (SequencedPart) org.plutext.client.partWrapper.Part.factory(itemField[1]);
 				serverSequencedParts[i] = sp;
@@ -820,7 +826,8 @@ public class Mediator {
 				localSequencedParts[i] = (SequencedPartRels) localParts.get(partName);
 				log.debug("Set localSequencedParts[" + i + " as rels");
 
-			} else {
+			}
+			else {
 				// localSequencedParts[i] = (SequencedPart)stateDocx.Parts[partName];
 				localSequencedParts[i] = (SequencedPart) localParts.get(partName);
 				if (localSequencedParts[i] == null) {
@@ -837,7 +844,8 @@ public class Mediator {
 					// much of the following code would be unnecessary in that case;
 					// however, it does take care of adding the part for us...)
 					log.debug("Set localSequencedParts[" + i + " using server part. ");
-				} else {
+				}
+				else {
 					log.debug("Set localSequencedParts[" + i + " ");
 				}
 			}
@@ -877,7 +885,6 @@ public class Mediator {
 			domResult = new javax.xml.transform.dom.DOMResult();
 			XmlUtils.transform(mdpW3C, xsltReferenceMap, null, domResult);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -933,7 +940,7 @@ public class Mediator {
 			String partName = serverSequencedParts[i].getName(); // as good a way as any to get the part name
 			log.debug("Constructing content for Part: " + i + " .. " + partName);
 
-			constructedContent[i] = new ArrayList();
+			constructedContent[i] = new ArrayList<>();
 
 			if (partName.equals("/word/footnotes.xml") || partName.equals("/word/endnotes.xml")) {
 				// footnotes & endnotes 0 & 1 are artificial;
@@ -975,9 +982,10 @@ public class Mediator {
 
 						// An Sdt which we didn't update, will reference the existing part
 						if (localSequencedParts[i] instanceof SequencedPartRels) {
-							constructedContent[i].add(((SequencedPartRels) localSequencedParts[i]).getNodeById(
-									idref.getFirstChild().getNodeValue()).cloneNode(true));
-						} else {
+							constructedContent[i].add(((SequencedPartRels) localSequencedParts[i])
+									.getNodeById(idref.getFirstChild().getNodeValue()).cloneNode(true));
+						}
+						else {
 
 							int idx = parseIdref(idref.getFirstChild().getNodeValue());
 
@@ -985,7 +993,8 @@ public class Mediator {
 							log.debug("Added to constructedContent[" + i);
 						}
 					}
-				} else {
+				}
+				else {
 
 					// An Sdt which we inserted/updated will reference the part we just fetched
 					// (assuming it contains rel idrefs).
@@ -998,14 +1007,15 @@ public class Mediator {
 
 						Node idref = idrefs.item(nl2i);
 						if (serverSequencedParts[i] instanceof SequencedPartRels) {
-							constructedContent[i].add(((SequencedPartRels) serverSequencedParts[i]).getNodeById(
-									idref.getFirstChild().getNodeValue()).cloneNode(true));
+							constructedContent[i].add(((SequencedPartRels) serverSequencedParts[i])
+									.getNodeById(idref.getFirstChild().getNodeValue()).cloneNode(true));
 							// Clone, so that if there 2 references to the same image,
 							// we get distinct copies of the rel node, which we can
 							// number as we choose. Without the distinct copies,
 							// when we number the images in the document sequentially,
 							// there is no corresponding rel for the second image.
-						} else {
+						}
+						else {
 							int idx = parseIdref(idref.getFirstChild().getNodeValue());
 							constructedContent[i].add(serverSequencedParts[i].getNodeByIndex(idx));
 							log.debug("Added to constructedContent[" + i);
@@ -1070,7 +1080,6 @@ public class Mediator {
 			try {
 				nodeList = (NodeList) xpath.evaluate(mdpW3C, XPathConstants.NODESET);
 			} catch (XPathExpressionException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1143,12 +1152,14 @@ public class Mediator {
 						if (rel_comment == null) {
 							// Comments part does not exist locally
 							rel_comment = ((SequencedPartRels) (serverSequencedParts[i])).getNodeByType("comments").cloneNode(true);
-						} else {
+						}
+						else {
 							// We know it exists, so let's use a clone of it
 							rel_comment = ((SequencedPartRels) (localSequencedParts[i])).getNodeByType("comments").cloneNode(true);
 						}
 						rel_comment.getAttributes().getNamedItem("Id").setNodeValue(rel_comment_id_new);
-					} else // its not a commentReference
+					}
+					else // its not a commentReference
 					{
 						log.debug("Setting rId" + idNum);
 						// Renumber in the document
@@ -1160,7 +1171,8 @@ public class Mediator {
 							// Up to the point in the nodelist where
 							// we encountered the single comment reference
 							n = (Node) (constructedContent[i].get(k));
-						} else {
+						}
+						else {
 							// After the comment reference
 							n = (Node) (constructedContent[i].get(k - 1));
 						}
@@ -1190,7 +1202,8 @@ public class Mediator {
 					// Number the constructed content the same
 					Node n = (Node) constructedContent[i].get(k + 2);
 					n.getAttributes().getNamedItemNS(Namespaces.WORDML_NAMESPACE, "id").setNodeValue(Integer.toString(k + 2));
-				} else // comments, and hmm, what might else this catch all catch?
+				}
+				else // comments, and hmm, what might else this catch all catch?
 				{
 					// Each comment has 3 nodes:
 					/*
@@ -1270,13 +1283,15 @@ public class Mediator {
 					String idtmp = listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Id").getNodeValue();
 					int relId = Integer.parseInt(idtmp.substring(3));
 
-					log.debug(idtmp + " ( " + listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Target").getNodeValue());
+					log.debug(
+							idtmp + " ( " + listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Target").getNodeValue());
 					if (relId <= prefixedRelsCount) {
 						// Its one of the FIXED_RELS_PREFIX,
 						// so just keep it
 						log.debug(relId + "<=" + prefixedRelsCount + "---> keeping");
 
-					} else if (relId > (relCount - suffixedRelsCount)) {
+					}
+					else if (relId > (relCount - suffixedRelsCount)) {
 						// Its one of the FIXED_RELS_SUFFIX,
 						// so renumber (which is all we need to do with this)
 						log.debug(relId + ">" + relCount + " - " + suffixedRelsCount);
@@ -1291,7 +1306,8 @@ public class Mediator {
 						listParent.getChildNodes().item(i2 - 1).getAttributes().getNamedItem("Id").setNodeValue("rId" + newnum);
 						log.debug("---> renumbered as " + newnum);
 
-					} else {
+					}
+					else {
 						// its one of the others, so delete it
 						Node deletion = listParent.getChildNodes().item(i2 - 1);
 						listParent.removeChild(deletion);
@@ -1307,7 +1323,8 @@ public class Mediator {
 					Node importedNode = parent.getOwnerDocument().importNode(rel_comment, true); // pkgB.PkgXmlDocument.ImportNode(n, true);
 					listParent.appendChild(importedNode);
 				}
-			} else // non rels part
+			}
+			else // non rels part
 			{
 				// Remove all the children
 				for (int i2 = listParent.getChildNodes().getLength(); i2 > 0; i2--) {
@@ -1388,29 +1405,41 @@ public class Mediator {
 				MainDocumentPart mdp = (MainDocumentPart) docx4jParts.get(new PartName("/word/document.xml"));
 				jPart = mdp.getRelationshipsPart(true);
 
-			} else if (partName.equals("/word/comments.xml")) {
+			}
+			else if (partName.equals("/word/comments.xml")) {
 				jPart = new CommentsPart(pn);
-			} else if (partName.equals("/word/footnotes.xml")) {
+			}
+			else if (partName.equals("/word/footnotes.xml")) {
 				jPart = new FootnotesPart(pn);
-			} else if (partName.equals("/word/endnotes.xml")) {
+			}
+			else if (partName.equals("/word/endnotes.xml")) {
 				jPart = new EndnotesPart(pn);
-			} else if (partName.equals("/word/header.xml")) {
+			}
+			else if (partName.equals("/word/header.xml")) {
 				jPart = new HeaderPart(pn);
-			} else if (partName.equals("/word/footer.xml")) {
+			}
+			else if (partName.equals("/word/footer.xml")) {
 				jPart = new FooterPart(pn);
-			} else if (partName.equals("/word/numbering.xml")) {
+			}
+			else if (partName.equals("/word/numbering.xml")) {
 				jPart = new NumberingDefinitionsPart(pn);
-			} else if (partName.equals("/word/styles.xml")) {
+			}
+			else if (partName.equals("/word/styles.xml")) {
 				jPart = new StyleDefinitionsPart(pn);
-			} else if (partName.startsWith("/word/theme/theme")) {
+			}
+			else if (partName.startsWith("/word/theme/theme")) {
 				jPart = new ThemePart(pn);
-			} else if (partName.startsWith("/word/settings.xml")) {
+			}
+			else if (partName.startsWith("/word/settings.xml")) {
 				jPart = new DocumentSettingsPart(pn);
-			} else if (partName.startsWith("/word/webSettings.xml")) {
+			}
+			else if (partName.startsWith("/word/webSettings.xml")) {
 				jPart = new WebSettingsPart(pn);
-			} else if (partName.startsWith("/word/fontTable.xml")) {
+			}
+			else if (partName.startsWith("/word/fontTable.xml")) {
 				jPart = new FontTablePart(pn);
-			} else {
+			}
+			else {
 				log.warn("TODO: handle " + partName);
 				jPart = null;
 			}
@@ -1424,7 +1453,8 @@ public class Mediator {
 
 			// What about [Content_Types].xml?
 
-		} else {
+		}
+		else {
 			// It is safe to assume we are dealing with a JAXB part, since
 			// each of the sequenceableParts are that:
 			//
@@ -1489,13 +1519,15 @@ public class Mediator {
 			if (resultCode == CANT_OVERWRITE) {
 				cantOverwrite = true;
 
-			} else if (resultCode > 0) {
+			}
+			else if (resultCode > 0) {
 				// Applied, so can discard, provided highest fetched is higher
 				// than this snum (otherwise it will just get fetched again!)
 				if (stateDocx.getTransforms().getTSequenceNumberHighestFetched() > t.getSequenceNumber()) {
 					discards.add(t);
 				}
-			} else {
+			}
+			else {
 				log.debug("Failed to apply transformation " + t.getSequenceNumber());
 			}
 		}
@@ -1510,7 +1542,8 @@ public class Mediator {
 		if (cantOverwrite) {
 			worker.setProgress(FetchProgress.APPLYING_DONE,
 					"You need to accept/reject revisions before all remote changes can be applied.  Please do so, then hit the button again.");
-		} else {
+		}
+		else {
 			worker.setProgress(FetchProgress.APPLYING_DONE, "Changesets applied");
 		}
 	}
@@ -1543,7 +1576,6 @@ public class Mediator {
 			// try {
 			// scanSdtForIdref(t);
 			// } catch (XPathExpressionException e) {
-			// // TODO Auto-generated catch block
 			// e.printStackTrace();
 			// }
 			changedChunks.put(t.getPlutextId(), t.getPlutextId());
@@ -1563,7 +1595,8 @@ public class Mediator {
 
 			return resultCode;
 
-		} else if (t instanceof TransformDelete) {
+		}
+		else if (t instanceof TransformDelete) {
 			StateChunk stateDocxSC = stateDocx.getStateChunks().get(plutextId);
 			if (currentChunk == null) {
 				// It is missing from current StateChunks, and the
@@ -1574,7 +1607,8 @@ public class Mediator {
 				// so we can do:
 				t.markupChanges(stateDocxSC.getXml(), changeset);
 
-			} else {
+			}
+			else {
 				boolean conflict = isConflict(currentChunk, stateDocxSC);
 
 				// The update we will insert is one that contains the results
@@ -1599,15 +1633,18 @@ public class Mediator {
 						this.sdtChangeTypes.put(plutextId, TrackedChangeType.Conflict);
 						return CANT_OVERWRITE;
 
-					} else {
+					}
+					else {
 						t.markupChanges(currentChunk.getXml(), changeset);
 					}
 
-				} else if (matchedOnMarkedUpVersion(currentChunk, stateDocxSC)) {
+				}
+				else if (matchedOnMarkedUpVersion(currentChunk, stateDocxSC)) {
 					// Compare it to non-marked up
 					t.markupChanges(stateDocxSC.getXml(), changeset);
 
-				} else {
+				}
+				else {
 					// Easy - they are the same
 					t.markupChanges(currentChunk.getXml(), changeset);
 				}
@@ -1635,7 +1672,8 @@ public class Mediator {
 			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
 			return resultCode;
 
-		} else if (t instanceof TransformMove) {
+		}
+		else if (t instanceof TransformMove) {
 			resultCode = t.apply(this, stateDocx.getStateChunks());
 			t.setApplied(true);
 			if (resultCode >= 0) {
@@ -1645,7 +1683,8 @@ public class Mediator {
 			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
 			return resultCode;
 
-		} else if (t instanceof TransformStyle) {
+		}
+		else if (t instanceof TransformStyle) {
 			// TODO - Implement TransformStyle
 			// that class is currently non functional.
 			resultCode = t.apply(this, stateDocx.getStateChunks());
@@ -1657,7 +1696,8 @@ public class Mediator {
 			log.debug(t.getSequenceNumber() + " applied (" + t.getClass().getName() + ")");
 			return resultCode;
 
-		} else if ((t instanceof TransformUpdate) || (t instanceof TransformInsert)) {
+		}
+		else if ((t instanceof TransformUpdate) || (t instanceof TransformInsert)) {
 
 			// Special handling for document level sectPr
 			if (t.getPlutextId().equals(SECTPR_MAGIC_ID)) {
@@ -1690,7 +1730,8 @@ public class Mediator {
 				// handle this like we handle a TransformInsert.
 				((TransformUpdate) t).markupChanges(null, changeset);
 
-			} else {
+			}
+			else {
 				conflict = isConflict(currentChunk, stateDocxSC);
 
 				// The update we will insert is one that contains the results
@@ -1715,16 +1756,19 @@ public class Mediator {
 						this.sdtChangeTypes.put(plutextId, TrackedChangeType.Conflict);
 						return CANT_OVERWRITE;
 
-					} else {
+					}
+					else {
 						t.markupChanges(currentChunk.getXml(), changeset);
 
 						// We could warn the user here that their stuff has been
 						// redlined as a deletion.
 					}
-				} else if (matchedOnMarkedUpVersion(currentChunk, stateDocxSC)) {
+				}
+				else if (matchedOnMarkedUpVersion(currentChunk, stateDocxSC)) {
 					// Compare it to non-marked up
 					t.markupChanges(stateDocxSC.getXml(), changeset);
-				} else {
+				}
+				else {
 					// Easy
 					t.markupChanges(currentChunk.getXml(), changeset);
 				}
@@ -1735,7 +1779,6 @@ public class Mediator {
 			// try {
 			// scanSdtForIdref(t);
 			// } catch (XPathExpressionException e) {
-			// // TODO Auto-generated catch block
 			// e.printStackTrace();
 			// }
 			changedChunks.put(t.getPlutextId(), t.getPlutextId());
@@ -1746,7 +1789,8 @@ public class Mediator {
 			if (conflict) {
 				this.sdtChangeTypes.put(plutextId, TrackedChangeType.Conflict);
 				log.debug("set state to CONFLICTED");
-			} else {
+			}
+			else {
 				this.sdtChangeTypes.put(plutextId, TrackedChangeType.OtherUserChange);
 			}
 
@@ -1759,7 +1803,8 @@ public class Mediator {
 
 			return resultCode;
 
-		} else {
+		}
+		else {
 			log.debug(" How to handle " + t.getClass().getName());
 			return -1;
 		}
@@ -2095,7 +2140,8 @@ public class Mediator {
 				// All we do here is remove it from sdtIdUndead
 				bornAgain.add(entry.getKey());
 
-			} else if (currentChunk.containsTrackedChanges()) // 2009 07 13: shouldn't happen
+			}
+			else if (currentChunk.containsTrackedChanges()) // 2009 07 13: shouldn't happen
 			{
 				// Remove it from inferredSkeleton and currentStateChunks
 				// but keep in document.
@@ -2104,7 +2150,8 @@ public class Mediator {
 					log.error("Couldn't find '" + entry.getKey() + "' to remove!");
 				}
 
-			} else {
+			}
+			else {
 				// The delete was rejected
 				// (in which case this content control lives again)
 
@@ -2116,7 +2163,7 @@ public class Mediator {
 				// new sdt (though the server will recognise
 				// this one has existed before)
 			}
-		}// while (it.hasNext())
+		} // while (it.hasNext())
 
 		for (String s : bornAgain) {
 			this.sdtIdUndead.remove(s);
@@ -2256,7 +2303,8 @@ public class Mediator {
 						log.debug("Couldn't find " + sdtId + " .. Shouldn't happen!?");
 						continue;
 
-					} else if (chunkCurrent.getXml().equals(chunkOlder.getXml())
+					}
+					else if (chunkCurrent.getXml().equals(chunkOlder.getXml())
 							|| chunkCurrent.getXml().equals(chunkOlder.getMarkedUpSdt())) {
 						continue;
 					}
@@ -2298,7 +2346,8 @@ public class Mediator {
 
 						log.error("Couldn't find key " + sdtId);
 
-					} else if (localVersionNumber.longValue() < serverSkeleton.getVersion(sdtId).longValue()) {
+					}
+					else if (localVersionNumber.longValue() < serverSkeleton.getVersion(sdtId).longValue()) {
 						log.debug("Conflict (old local version) ! Local edit " + sdtId + " not committed.");
 						someConflicted = true;
 						continue;
@@ -2324,7 +2373,7 @@ public class Mediator {
 					t.setSdt(chunkCurrent.getSdt());
 					transformsToSend.add(t);
 				}
-			}// for (idx) loop
+			} // for (idx) loop
 
 			// 2009 09 09: if any are conflicted, don't send, since rel integrity may
 			// break if a conflicted sdt contains rels. (A slight improvement in
@@ -2334,7 +2383,8 @@ public class Mediator {
 				if (someConflicted) {
 					String message = "Done - Conflict warning: Fetch updates then accept/reject changes before trying again.";
 					worker.setProgress(TransmitProgress.DONE, message);
-				} else if (someTrackedConflicts) {
+				}
+				else if (someTrackedConflicts) {
 					String message = "Done - Conflict warning: Accept/Reject changes before trying again.";
 					worker.setProgress(TransmitProgress.DONE, message);
 				}
@@ -2364,7 +2414,8 @@ public class Mediator {
 
 				if (otherUpdates) {
 					worker.setProgress(TransmitProgress.DONE, "Updates sent.");
-				} else {
+				}
+				else {
 					worker.setProgress(TransmitProgress.DONE, "Nothing to send.");
 				}
 				return true;
@@ -2380,7 +2431,8 @@ public class Mediator {
 				d.setVisible(true);
 
 				checkinComment = d.getTextComment();
-			} else {
+			}
+			else {
 				checkinComment = "edited";
 			}
 
@@ -2467,7 +2519,6 @@ public class Mediator {
 						u.setEventHandler(new org.docx4j.jaxb.JaxbValidationEventHandler());
 						transformsObj = (org.plutext.transforms.Transforms) u.unmarshal(new java.io.StringReader(sb.toString()));
 					} catch (JAXBException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 
@@ -2483,7 +2534,8 @@ public class Mediator {
 								updateLocalContentControlTag(ta.getPlutextId(), ta.getTag());
 								this.stateDocx.getStateChunks().put(ta.getPlutextId(), new StateChunk(ta.getSdt()));
 							}
-						} else {
+						}
+						else {
 							// Assumption is that chunking is done locally,
 							// and we won't get eg an Insert back
 							log.error("Not handled: " + ta.getClass().getName());
@@ -2492,12 +2544,14 @@ public class Mediator {
 
 					registerTransforms(transformsObj, appliedTrue, localTrue, updateHighestFetchedFalse);
 
-				} else if (Integer.parseInt(result[i]) > 0) {
-					TransformAbstract ta = org.plutext.client.wrappedTransforms.TransformHelper.construct(t, getWordMLDocument()
-							.getElementMLFactory());
+				}
+				else if (Integer.parseInt(result[i]) > 0) {
+					TransformAbstract ta = org.plutext.client.wrappedTransforms.TransformHelper.construct(t,
+							getWordMLDocument().getElementMLFactory());
 					ta.setSequenceNumber(Integer.parseInt(result[i]));
 					registerTransform(ta, appliedTrue, localTrue, updateHighestFetchedFalse);
-				} else {
+				}
+				else {
 					// If result was 0, the server has decided
 					// this transform is redundant, and thus discarded
 					// (and not allocated a sequence number).
@@ -2522,14 +2576,17 @@ public class Mediator {
 		if (someConflicted) {
 			checkinResult = "Done - Conflict warning: Fetch updates then accept/reject changes before trying again.";
 
-		} else if (someTrackedConflicts) {
+		}
+		else if (someTrackedConflicts) {
 			checkinResult = "Done - Conflict warning: Accept/Reject changes before trying again.";
 
-		} else if (someTransmitted) {
+		}
+		else if (someTransmitted) {
 			checkinResult = "Done - Your changes were transmitted successfully.";
 			success = true;
 
-		} else {
+		}
+		else {
 			checkinResult = "Your changes were NOT transmitted.";
 		}
 
@@ -2563,7 +2620,6 @@ public class Mediator {
 		try {
 			sdt = (org.docx4j.wml.SdtBlock) org.docx4j.XmlUtils.unmarshalString(sdtStr);
 		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -2665,7 +2721,8 @@ public class Mediator {
 				// that part as well,
 				// and sent it ...
 
-			} else {
+			}
+			else {
 
 				// So we do know about it
 				// - has it changed?
@@ -2680,7 +2737,8 @@ public class Mediator {
 					// (TODO - why do we have XML APIs 1.0 beta 2 ??)
 
 					log.debug("No changes detected in: " + knownPart.getName());
-				} else {
+				}
+				else {
 					// Similar to what we do when we send an update to an
 					// SDT,
 					// we send this with our current version number.
@@ -2764,38 +2822,38 @@ public class Mediator {
 		log.debug("\n\r");
 		for (DiffResultSpan drs : diffLines) {
 			switch (drs.getDiffResultSpanStatus()) {
-			case DELETE_SOURCE:
-				for (i = 0; i < drs.getLength(); i++) {
-					insertPos++;
-					// Must be a new local insertion
-					log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine()
-							+ " not at this location in dest");
-					String insertionId = ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine();
-					notHereInDest.put(insertionId, insertPos);
-				}
+				case DELETE_SOURCE:
+					for (i = 0; i < drs.getLength(); i++) {
+						insertPos++;
+						// Must be a new local insertion
+						log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine()
+								+ " not at this location in dest");
+						String insertionId = ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine();
+						notHereInDest.put(insertionId, insertPos);
+					}
 
-				break;
-			case NOCHANGE:
-				for (i = 0; i < drs.getLength(); i++) {
-					insertPos++;
-					log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine() + "\t"
-							+ ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine() + " (no change)");
+					break;
+				case NOCHANGE:
+					for (i = 0; i < drs.getLength(); i++) {
+						insertPos++;
+						log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine() + "\t"
+								+ ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine() + " (no change)");
 
-					// Nothing to do
-				}
+						// Nothing to do
+					}
 
-				break;
-			case ADD_DESTINATION:
-				for (i = 0; i < drs.getLength(); i++) {
-					// insertPos++; // Not for a delete
-					log.debug(insertPos + ": " + ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine()
-							+ " not at this location in source");
-					String deletionId = ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine();
-					notHereInSource.put(deletionId, insertPos);
+					break;
+				case ADD_DESTINATION:
+					for (i = 0; i < drs.getLength(); i++) {
+						// insertPos++; // Not for a delete
+						log.debug(insertPos + ": " + ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine()
+								+ " not at this location in source");
+						String deletionId = ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine();
+						notHereInSource.put(deletionId, insertPos);
 
-				}
+					}
 
-				break;
+					break;
 			}
 		}
 
@@ -2807,175 +2865,178 @@ public class Mediator {
 
 		for (DiffResultSpan drs : diffLines) {
 			switch (drs.getDiffResultSpanStatus()) {
-			case DELETE_SOURCE: // Means we're doing an insertion
-				for (i = 0; i < drs.getLength(); i++) {
-					String insertionId = ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine();
-					log.debug(insertPos + ": " + insertionId + " is at this location in src but not dest, so needs to be inserted");
+				case DELETE_SOURCE: // Means we're doing an insertion
+					for (i = 0; i < drs.getLength(); i++) {
+						String insertionId = ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine();
+						log.debug(insertPos + ": " + insertionId + " is at this location in src but not dest, so needs to be inserted");
 
-					Integer dicVal = notHereInSource.get(insertionId);
+						Integer dicVal = notHereInSource.get(insertionId);
 
-					if (dicVal == null) {
+						if (dicVal == null) {
 
-						// Just a new local insertion
+							// Just a new local insertion
 
-						long adjPos = divergences.getTargetLocation(insertionId);
-						log.debug("Couldn't find " + insertionId + " so inserting at " + adjPos);
+							long adjPos = divergences.getTargetLocation(insertionId);
+							log.debug("Couldn't find " + insertionId + " so inserting at " + adjPos);
 
-						divergences.insert(insertionId); // change +1 to 0
+							divergences.insert(insertionId); // change +1 to 0
 
-						divergences.debugInferred();
+							divergences.debugInferred();
 
-						WordMLDocument doc = getWordMLDocument();
-						StateChunk sc = Util.getStateChunk(doc, insertionId);
-						// Mediator.cs needs to call sc.setNew(true)
-						// because when pasting MS-Word UI preserves
-						// pre-existing tag value and Mediator.cs has
-						// to create a 'new' StateChunk whose tag value is 0 (zero)
-						// sc.setNew(true);
+							WordMLDocument doc = getWordMLDocument();
+							StateChunk sc = Util.getStateChunk(doc, insertionId);
+							// Mediator.cs needs to call sc.setNew(true)
+							// because when pasting MS-Word UI preserves
+							// pre-existing tag value and Mediator.cs has
+							// to create a 'new' StateChunk whose tag value is 0 (zero)
+							// sc.setNew(true);
 
-						// TransformInsert ti = new TransformInsert();
-						// ti.setPos( Integer.toString(adjPos) );
-						// ti.setId( sc.getId() );
-						// ti.attachSdt(sc.getXml());
-						// transformsToSend.add(ti);
+							// TransformInsert ti = new TransformInsert();
+							// ti.setPos( Integer.toString(adjPos) );
+							// ti.setId( sc.getId() );
+							// ti.attachSdt(sc.getXml());
+							// transformsToSend.add(ti);
 
-						T t = transformsFactory.createTransformsT();
-						t.setOp("insert");
-						t.setPosition(adjPos);
-						t.setIdref(sc.getIdAsLong());
-						t.setSdt(sc.getSdt());
-						transformsToSend.add(t);
+							T t = transformsFactory.createTransformsT();
+							t.setOp("insert");
+							t.setPosition(adjPos);
+							t.setIdref(sc.getIdAsLong());
+							t.setSdt(sc.getSdt());
+							transformsToSend.add(t);
 
-						this.stateDocx.getStateChunks().put(sc.getIdAsString(), sc);
+							this.stateDocx.getStateChunks().put(sc.getIdAsString(), sc);
 
-						log.debug("text Inserted:");
-						log.debug("TO   " + sc.getXml());
-						log.debug("");
+							log.debug("text Inserted:");
+							log.debug("TO   " + sc.getXml());
+							log.debug("");
 
-					} else {
+						}
+						else {
 
-						// there is a corresponding delete, so this is really a
-						// move
-						log.debug("   " + insertionId + " is a MOVE");
+							// there is a corresponding delete, so this is really a
+							// move
+							log.debug("   " + insertionId + " is a MOVE");
 
-						// if (toPosition[insertionId] ==
-						// divergences.currentPosition(insertionId))
-						// //rhsPosition[insertionId])
-						// {
-						// // currentPosition is the position in the inferred
-						// point-in-time
-						// // server skeleton (ie as it would be with transforms
-						// // generated so far applied)
+							// if (toPosition[insertionId] ==
+							// divergences.currentPosition(insertionId))
+							// //rhsPosition[insertionId])
+							// {
+							// // currentPosition is the position in the inferred
+							// point-in-time
+							// // server skeleton (ie as it would be with transforms
+							// // generated so far applied)
 
-						// log.debug("Discarding <transform op=move id=" +
-						// insertionId + " pos=" + toPosition[insertionId]);
-						// }
-						// else
-						// {
+							// log.debug("Discarding <transform op=move id=" +
+							// insertionId + " pos=" + toPosition[insertionId]);
+							// }
+							// else
+							// {
 
-						/*
-						 * Semantics of move will be as follows:
-						 * 
-						 * (i) removed the identified item,
-						 * 
-						 * (ii) then insert the new item at the specified
-						 * position.
-						 * 
-						 * This way, the position you specify is the position it
-						 * ends up in (ie irrespective of whether the original
-						 * position was earlier or later).
-						 */
+							/*
+							 * Semantics of move will be as follows:
+							 * 
+							 * (i) removed the identified item,
+							 * 
+							 * (ii) then insert the new item at the specified
+							 * position.
+							 * 
+							 * This way, the position you specify is the position it
+							 * ends up in (ie irrespective of whether the original
+							 * position was earlier or later).
+							 */
 
-						// therefore:
-						// delete first (update divergences object)
-						divergences.delete(insertionId); // remove -1
+							// therefore:
+							// delete first (update divergences object)
+							divergences.delete(insertionId); // remove -1
 
-						long adjPos = divergences.getTargetLocation(insertionId);
+							long adjPos = divergences.getTargetLocation(insertionId);
 
-						log.debug("<transform op=move id=" + insertionId + "  pos=" + adjPos);
+							log.debug("<transform op=move id=" + insertionId + "  pos=" + adjPos);
 
-						divergences.insert(insertionId); // change +1 to 0
+							divergences.insert(insertionId); // change +1 to 0
 
-						divergences.debugInferred();
+							divergences.debugInferred();
 
-						log.debug("<transform op=move id=" + insertionId + "  pos=" + adjPos);
+							log.debug("<transform op=move id=" + insertionId + "  pos=" + adjPos);
 
-						WordMLDocument doc = getWordMLDocument();
-						StateChunk sc = Util.getStateChunk(doc, insertionId);
+							WordMLDocument doc = getWordMLDocument();
+							StateChunk sc = Util.getStateChunk(doc, insertionId);
 
-						// TransformMove tm = new TransformMove();
-						// tm.setPos( Integer.toString(adjPos) );
-						// tm.setId ( sc.getId() );
-						// //tm.attachSdt(sc.Xml);
-						// transformsToSend.add(tm);
+							// TransformMove tm = new TransformMove();
+							// tm.setPos( Integer.toString(adjPos) );
+							// tm.setId ( sc.getId() );
+							// //tm.attachSdt(sc.Xml);
+							// transformsToSend.add(tm);
 
-						T t = transformsFactory.createTransformsT();
-						t.setOp("move");
-						t.setPosition(adjPos);
-						t.setIdref(sc.getIdAsLong());
-						// t.setSdt( sc.getSdt() );
-						transformsToSend.add(t);
+							T t = transformsFactory.createTransformsT();
+							t.setOp("move");
+							t.setPosition(adjPos);
+							t.setIdref(sc.getIdAsLong());
+							// t.setSdt( sc.getSdt() );
+							transformsToSend.add(t);
 
-						log.debug("text moved:");
+							log.debug("text moved:");
 
-						// if (rawPos + adjPos ==
-						// divergences.currentPosition(insertionId))
-						// {`
-						// log.debug(".. that transform could be DISCARDED.");
-						// }
+							// if (rawPos + adjPos ==
+							// divergences.currentPosition(insertionId))
+							// {`
+							// log.debug(".. that transform could be DISCARDED.");
+							// }
 
-						// divergences.move(insertionId, rawPos + adjPos);
-						// }
+							// divergences.move(insertionId, rawPos + adjPos);
+							// }
+						}
 					}
-				}
 
-				break;
-			case NOCHANGE:
-				for (i = 0; i < drs.getLength(); i++) {
+					break;
+				case NOCHANGE:
+					for (i = 0; i < drs.getLength(); i++) {
 
-					log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine() + "\t"
-							+ ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine() + " (no change)");
+						log.debug(insertPos + ": " + ((TextLine) inferredSkeleton.getByIndex(drs.getSourceIndex() + i)).getLine() + "\t"
+								+ ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine() + " (no change)");
 
-				}
-
-				break;
-			case ADD_DESTINATION:
-				for (i = 0; i < drs.getLength(); i++) {
-					String deletionId = ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine();
-					log.debug(insertPos + ": " + deletionId + " present at this location in dest but not source, so needs to be deleted");
-
-					Integer dicVal = notHereInDest.get(deletionId);
-
-					if (dicVal == null) {
-						// Just a new local deletion
-
-						log.debug("Couldn't find " + deletionId + " so deleting");
-						divergences.delete(deletionId);
-
-						divergences.debugInferred();
-
-						// TransformDelete td = new TransformDelete(deletionId);
-						// transformsToSend.add(td);
-
-						T t = transformsFactory.createTransformsT();
-						t.setOp("delete");
-						t.setIdref(Long.parseLong(deletionId));
-						// t.setSdt( sc.getSdt() );
-						transformsToSend.add(t);
-
-						this.stateDocx.getStateChunks().remove(deletionId);
-
-						log.debug("text deleted:");
-
-					} else {
-						// there is a corresponding insert, so this is really a
-						// move
-						log.debug("   " + deletionId + " is a MOVE to elsewhere (" + dicVal + ")");
-						// DO NOTHING
 					}
-				}
 
-				break;
+					break;
+				case ADD_DESTINATION:
+					for (i = 0; i < drs.getLength(); i++) {
+						String deletionId = ((TextLine) serverSkeleton.getByIndex(drs.getDestIndex() + i)).getLine();
+						log.debug(
+								insertPos + ": " + deletionId + " present at this location in dest but not source, so needs to be deleted");
+
+						Integer dicVal = notHereInDest.get(deletionId);
+
+						if (dicVal == null) {
+							// Just a new local deletion
+
+							log.debug("Couldn't find " + deletionId + " so deleting");
+							divergences.delete(deletionId);
+
+							divergences.debugInferred();
+
+							// TransformDelete td = new TransformDelete(deletionId);
+							// transformsToSend.add(td);
+
+							T t = transformsFactory.createTransformsT();
+							t.setOp("delete");
+							t.setIdref(Long.parseLong(deletionId));
+							// t.setSdt( sc.getSdt() );
+							transformsToSend.add(t);
+
+							this.stateDocx.getStateChunks().remove(deletionId);
+
+							log.debug("text deleted:");
+
+						}
+						else {
+							// there is a corresponding insert, so this is really a
+							// move
+							log.debug("   " + deletionId + " is a MOVE to elsewhere (" + dicVal + ")");
+							// DO NOTHING
+						}
+					}
+
+					break;
 			}
 		}
 	}
@@ -2988,7 +3049,8 @@ public class Mediator {
 		if (newStyles.equals("")) {
 			log.debug("styles haven't Changed ..");
 
-		} else {
+		}
+		else {
 			log.debug("stylesChanged");
 			log.debug("Committing new/updated styles" + newStyles);
 			// stateDocx.TSequenceNumberHighestSeen =
@@ -3140,4 +3202,3 @@ public class Mediator {
 	}
 
 }// Mediator class
-

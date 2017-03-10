@@ -177,7 +177,6 @@ public class DocUtil {
 		try {
 			in = new InputStreamReader(new ByteArrayInputStream(out.toByteArray()), "UTF-16");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		out = null;
@@ -194,7 +193,7 @@ public class DocUtil {
 	}
 
 	public final static HashMap<BigInteger, SdtBlockInfo> createSdtBlockInfoMap(WordMLDocument doc) {
-		HashMap<BigInteger, SdtBlockInfo> theMap = new HashMap<BigInteger, SdtBlockInfo>();
+		HashMap<BigInteger, SdtBlockInfo> theMap = new HashMap<>();
 
 		try {
 			doc.readLock();
@@ -248,14 +247,16 @@ public class DocUtil {
 		if (bias == null) {
 			if (doc.getParagraphMLElement(offset, true).getStartOffset() == offset) {
 				theElem = (WordMLDocument.TextElement) doc.getCharacterElement(offset);
-			} else {
+			}
+			else {
 				int pos = Math.max(offset - 1, 0);
 				theElem = (WordMLDocument.TextElement) doc.getCharacterElement(pos);
 				if (!canBecomeInputAttributeElement(theElem, offset)) {
 					theElem = (WordMLDocument.TextElement) doc.getCharacterElement(offset);
 				}
 			}
-		} else {
+		}
+		else {
 			int pos = (bias == Position.Bias.Forward) ? offset : Math.max(offset - 1, 0);
 			theElem = (WordMLDocument.TextElement) doc.getCharacterElement(pos);
 		}
@@ -285,7 +286,8 @@ public class DocUtil {
 			ElementML parent = runContent.getElementML().getParent().getParent();
 			if (parent instanceof HyperlinkML || parent instanceof RunDelML || parent instanceof RunInsML) {
 				canBecome = (runContent.getStartOffset() < offset && offset < runContent.getEndOffset());
-			} else {
+			}
+			else {
 				canBecome = true;
 			}
 		}
@@ -336,21 +338,24 @@ public class DocUtil {
 				elem = (DocumentElement) doc.getParagraphMLElement(offs, false);
 				if (offs == doc.getLength()) {
 					;// cannot change the last paragraph in the document
-				} else if (offs == elem.getStartOffset() && elem.getEndOffset() == offs + length) {
+				}
+				else if (offs == elem.getStartOffset() && elem.getEndOffset() == offs + length) {
 					// Do not need to worry about whether 'elem' is the only child element
 					// because at least 'elem' which is a ParagraphML can be changed into Sdt.
 					// However, remember to check whether 'elem' can accept Sdt
 					// as its sibling.
 					canChange = elem.getElementML().canAddSibling(sdt, true);
 
-				} else if (offs + length <= elem.getEndOffset()) {
+				}
+				else if (offs + length <= elem.getEndOffset()) {
 					// [offs, offs + length] is in elem's span.
 					// 'elem' which is a ParagraphML can be changed into Sdt
 					// but still need to check whether 'elem' can accept Sdt
 					// as its sibling.
 					canChange = elem.getElementML().canAddSibling(sdt, true);
 
-				} else {
+				}
+				else {
 					DocumentElement parent = (DocumentElement) elem.getParentElement();
 					if (offs + length <= parent.getEndOffset()) {
 						// [offs, offs + length] has to be within parent's span.
@@ -364,7 +369,8 @@ public class DocUtil {
 							start++;
 						}
 						canChange = changeable;
-					} else {
+					}
+					else {
 						// consider as unchangeable
 					}
 				}
@@ -397,7 +403,8 @@ public class DocUtil {
 						removable = sdt.canAddSibling(ml, true);
 						log.debug("canRemoveSdt(): sibling = " + ml + " canAddSibling = " + removable);
 					}
-				} else {
+				}
+				else {
 					elem = (DocumentElement) doc.getParagraphMLElement(pos, false);
 				}
 
@@ -442,7 +449,8 @@ public class DocUtil {
 				}
 				if (temp == root) {
 					pos = paraE.getEndOffset();
-				} else {
+				}
+				else {
 					// An SdtBlock element is found
 					hasSdt = true;
 				}
@@ -512,10 +520,12 @@ public class DocUtil {
 						if (ml.isImplied()) {
 							// An implied ParagraphML for example.
 							// Go to next parent.
-						} else {
+						}
+						else {
 							canPaste = ml.canAddSibling(sibling, true);
 						}
-					} else {
+					}
+					else {
 						break;
 					}
 				}
@@ -582,8 +592,8 @@ public class DocUtil {
 		}
 
 		if (direction != SwingConstants.NEXT && direction != SwingConstants.PREVIOUS) {
-			throw new IllegalArgumentException("direction=" + direction
-					+ ". Either SwingConstants.NEXT or SwingConstants.PREVIOUS is expected.");
+			throw new IllegalArgumentException(
+					"direction=" + direction + ". Either SwingConstants.NEXT or SwingConstants.PREVIOUS is expected.");
 		}
 
 		int result = -1;
@@ -594,16 +604,19 @@ public class DocUtil {
 			DocumentElement run = getRunMLElement(doc, offs, direction);
 			if (run == null) {
 				;// return -1
-			} else {
+			}
+			else {
 				ElementML ml = run.getElementML().getParent();
 				boolean isRevisionStart = (ml instanceof RunDelML || ml instanceof RunInsML) && ml.getChild(0) == run.getElementML();
 				if (isRevisionStart) {
 					result = run.getStartOffset();
 
-				} else if (direction == SwingConstants.NEXT && run.getEndOffset() < doc.getLength() - 1) {
+				}
+				else if (direction == SwingConstants.NEXT && run.getEndOffset() < doc.getLength() - 1) {
 					result = getRevisionStart(doc, run.getEndOffset(), direction);
 
-				} else if (direction == SwingConstants.PREVIOUS && run.getStartOffset() > 0) {
+				}
+				else if (direction == SwingConstants.PREVIOUS && run.getStartOffset() > 0) {
 					result = getRevisionStart(doc, run.getStartOffset(), direction);
 				}
 			}
@@ -620,8 +633,8 @@ public class DocUtil {
 		}
 
 		if (direction != SwingConstants.NEXT && direction != SwingConstants.PREVIOUS) {
-			throw new IllegalArgumentException("direction=" + direction
-					+ ". Either SwingConstants.NEXT or SwingConstants.PREVIOUS is expected.");
+			throw new IllegalArgumentException(
+					"direction=" + direction + ". Either SwingConstants.NEXT or SwingConstants.PREVIOUS is expected.");
 		}
 
 		int result = -1;
@@ -632,17 +645,20 @@ public class DocUtil {
 			DocumentElement run = getRunMLElement(doc, offs, direction);
 			if (run == null) {
 				;// return -1
-			} else {
+			}
+			else {
 				ElementML ml = run.getElementML().getParent();
 				boolean isRevisionEnd = (ml instanceof RunDelML || ml instanceof RunInsML)
 						&& ml.getChild(ml.getChildrenCount() - 1) == run.getElementML();
 				if (isRevisionEnd) {
 					result = run.getEndOffset();
 
-				} else if (direction == SwingConstants.NEXT && run.getEndOffset() < doc.getLength() - 1) {
+				}
+				else if (direction == SwingConstants.NEXT && run.getEndOffset() < doc.getLength() - 1) {
 					result = getRevisionEnd(doc, run.getEndOffset(), direction);
 
-				} else if (direction == SwingConstants.PREVIOUS && run.getStartOffset() > 0) {
+				}
+				else if (direction == SwingConstants.PREVIOUS && run.getStartOffset() > 0) {
 					result = getRevisionEnd(doc, run.getStartOffset(), direction);
 				}
 			}
@@ -670,7 +686,8 @@ public class DocUtil {
 				RunML runML = (RunML) theElem.getElementML();
 				if (runML.getFldChar() != null && runML.getFldChar().getFldCharType() == org.docx4j.wml.STFldCharType.BEGIN) {
 					// break
-				} else {
+				}
+				else {
 					offs = (direction == SwingConstants.NEXT) ? theElem.getEndOffset() : theElem.getStartOffset();
 					theElem = null;
 				}
@@ -698,7 +715,8 @@ public class DocUtil {
 				RunML runML = (RunML) theElem.getElementML();
 				if (runML.getFldChar() != null && runML.getFldChar().getFldCharType() == org.docx4j.wml.STFldCharType.END) {
 					// break
-				} else {
+				}
+				else {
 					offs = (direction == SwingConstants.NEXT) ? theElem.getEndOffset() : theElem.getStartOffset();
 					theElem = null;
 				}
@@ -716,8 +734,8 @@ public class DocUtil {
 		}
 
 		if (direction != SwingConstants.NEXT && direction != SwingConstants.PREVIOUS) {
-			throw new IllegalArgumentException("direction=" + direction
-					+ ". Either SwingConstants.NEXT or SwingConstants.PREVIOUS is expected.");
+			throw new IllegalArgumentException(
+					"direction=" + direction + ". Either SwingConstants.NEXT or SwingConstants.PREVIOUS is expected.");
 		}
 
 		DocumentElement run = null;
@@ -729,18 +747,23 @@ public class DocUtil {
 				run = (DocumentElement) doc.getRunMLElement(offs);
 				if (run.getStartOffset() == offs) {
 					;// return run
-				} else if (run.getEndOffset() == doc.getLength()) {
+				}
+				else if (run.getEndOffset() == doc.getLength()) {
 					run = null;
-				} else {
+				}
+				else {
 					run = (DocumentElement) doc.getRunMLElement(run.getEndOffset());
 				}
-			} else {
+			}
+			else {
 				run = (DocumentElement) doc.getRunMLElement(offs - 1);
 				if (run.getEndOffset() == offs) {
 					;// return run
-				} else if (run.getStartOffset() == 0) {
+				}
+				else if (run.getStartOffset() == 0) {
 					run = null;
-				} else {
+				}
+				else {
 					run = (DocumentElement) doc.getRunMLElement(run.getStartOffset() - 1);
 				}
 			}
@@ -818,8 +841,8 @@ public class DocUtil {
 		boolean canSplit = false;
 
 		ElementML elemML = elem.getElementML();
-		if (!elemML.isImplied()
-				&& (elemML instanceof SdtBlockML || elemML instanceof ParagraphML || elemML instanceof RunML || elemML instanceof RunContentML)) {
+		if (!elemML.isImplied() && (elemML instanceof SdtBlockML || elemML instanceof ParagraphML || elemML instanceof RunML
+				|| elemML instanceof RunContentML)) {
 
 			WordMLDocument doc = (WordMLDocument) elem.getDocument();
 			try {
@@ -884,7 +907,8 @@ public class DocUtil {
 
 			// Include rightML as a deleted ElementML
 			deletedElementMLs.add(0, rightML);
-		} else {
+		}
+		else {
 			deletedElementMLs = DocUtil.deleteElementML(list);
 		}
 		list = null;
@@ -895,12 +919,13 @@ public class DocUtil {
 		if (elemML instanceof SdtBlockML) {
 			newSibling = doc.getElementMLFactory().createSdtBlockML();
 
-			List<ElementML> paragraphContents = new ArrayList<ElementML>();
+			List<ElementML> paragraphContents = new ArrayList<>();
 			for (ElementML ml : deletedElementMLs) {
 				if (!ml.isImplied()) {
 					if (ml instanceof RunML || ml instanceof RunContentML) {
 						paragraphContents.add(ml);
-					} else {
+					}
+					else {
 						newSibling.addChild(ml);
 					}
 				}
@@ -925,7 +950,8 @@ public class DocUtil {
 				newSibling.addChild(0, newParaML);
 			}
 
-		} else if (elemML instanceof ParagraphML) {
+		}
+		else if (elemML instanceof ParagraphML) {
 			ParagraphML paraML = (ParagraphML) elemML;
 			ParagraphPropertiesML pPr = (ParagraphPropertiesML) paraML.getParagraphProperties();
 			if (pPr != null) {
@@ -941,7 +967,8 @@ public class DocUtil {
 
 			newSibling = doc.getElementMLFactory().createParagraphML(deletedElementMLs, pPr, rPr);
 
-		} else if (elemML instanceof RunML) {
+		}
+		else if (elemML instanceof RunML) {
 			RunML runML = (RunML) elemML;
 			RunPropertiesML rPr = (RunPropertiesML) runML.getRunProperties();
 			if (rPr != null) {
@@ -950,7 +977,8 @@ public class DocUtil {
 
 			newSibling = doc.getElementMLFactory().createRunML(deletedElementMLs, rPr);
 
-		} else {
+		}
+		else {
 			// must be a RunContentML
 			newSibling = deletedElementMLs.get(0);
 		}
@@ -961,7 +989,7 @@ public class DocUtil {
 	}
 
 	public final static List<ElementML> deleteElementML(List<DocumentElement> list) {
-		List<ElementML> deletedElementMLs = new ArrayList<ElementML>(list.size());
+		List<ElementML> deletedElementMLs = new ArrayList<>(list.size());
 
 		List<FldComplexML> fldComplexes = null;
 		for (int i = 0; i < list.size(); i++) {
@@ -977,11 +1005,13 @@ public class DocUtil {
 				if (ml.getGodParent() instanceof FldComplexML) {
 					FldComplexML fc = (FldComplexML) ml.getGodParent();
 					if (fldComplexes == null) {
-						fldComplexes = new ArrayList<FldComplexML>();
+						fldComplexes = new ArrayList<>();
 						fldComplexes.add(fc);
-					} else if (fldComplexes.lastIndexOf(fc) == -1) {
+					}
+					else if (fldComplexes.lastIndexOf(fc) == -1) {
 						fldComplexes.add(fc);
-					} else {
+					}
+					else {
 						// do nothing
 					}
 				}
@@ -1001,7 +1031,7 @@ public class DocUtil {
 				RunML first = (RunML) fc.getChild(0);
 				RunML last = (RunML) fc.getChild(fc.getChildrenCount() - 1);
 				if (first.getFldChar() == null || last.getFldChar() == null) {
-					List<ElementML> remains = new ArrayList<ElementML>(fc.getChildren());
+					List<ElementML> remains = new ArrayList<>(fc.getChildren());
 					for (ElementML ml : remains) {
 						// We do not put these remains
 						// into 'deletedElementMLs'
@@ -1025,7 +1055,7 @@ public class DocUtil {
 	public final static List<String> getElementNamePath(DocumentElement elem, int pos) {
 		List<String> thePath = null;
 		if (elem.getStartOffset() <= pos && pos < elem.getEndOffset()) {
-			thePath = new ArrayList<String>();
+			thePath = new ArrayList<>();
 			String name = elem.getElementML().getClass().getSimpleName();
 			thePath.add(name);
 			while (!elem.isLeaf()) {
@@ -1050,7 +1080,7 @@ public class DocUtil {
 			throw new IllegalArgumentException("Elements belong to two different documents");
 		}
 
-		List<Element> path = new ArrayList<Element>();
+		List<Element> path = new ArrayList<>();
 		Element temp = elem1;
 		while (temp != null) {
 			path.add(temp);
@@ -1072,7 +1102,7 @@ public class DocUtil {
 	 * @return a list of style IDs.
 	 */
 	public final static List<String> getDefinedParagraphStyles(WordMLDocument doc) {
-		Set<String> styles = new HashSet<String>();
+		Set<String> styles = new HashSet<>();
 
 		try {
 			doc.readLock();
@@ -1119,7 +1149,7 @@ public class DocUtil {
 			doc.readUnlock();
 		}
 
-		List<String> list = new ArrayList<String>(styles.size());
+		List<String> list = new ArrayList<>(styles.size());
 		list.addAll(styles);
 		Collections.sort(list);
 
@@ -1127,7 +1157,7 @@ public class DocUtil {
 	}
 
 	public final static List<Integer> getOffsetsOfParagraphSignature(WordMLDocument doc) {
-		List<Integer> positions = new ArrayList<Integer>();
+		List<Integer> positions = new ArrayList<>();
 
 		try {
 			doc.readLock();
@@ -1156,7 +1186,7 @@ public class DocUtil {
 
 	public final static List<Integer> getOffsetsOfStyledParagraphs(WordMLDocument doc, List<String> selectedStyleNames) {
 
-		List<Integer> thePositions = new ArrayList<Integer>();
+		List<Integer> thePositions = new ArrayList<>();
 
 		Style defaultStyle = doc.getStyleSheet().getStyle(StyleSheet.DEFAULT_STYLE);
 		String defaultPStyle = (String) defaultStyle.getAttribute(WordMLStyleConstants.DefaultParagraphStyleNameAttribute);
@@ -1185,7 +1215,8 @@ public class DocUtil {
 						thePositions.add(Integer.valueOf(elem.getStartOffset()));
 					}
 				}
-			} else if (selectedStyleNames.contains(defaultPStyle)) {
+			}
+			else if (selectedStyleNames.contains(defaultPStyle)) {
 				// Put elem.getStartOffset() in the returned list
 				// because default style is listed in selectedStyleNames.
 				thePositions.add(Integer.valueOf(elem.getStartOffset()));
@@ -1206,7 +1237,8 @@ public class DocUtil {
 			DocumentElement root = (DocumentElement) doc.getDefaultRootElement();
 
 			jaxbDoc = (org.docx4j.wml.Document) root.getElementML().getDocxObject();
-		} else {
+		}
+		else {
 			WordprocessingMLPackage wmlPackage = (WordprocessingMLPackage) doc.getProperty(WordMLDocument.WML_PACKAGE_PROPERTY);
 			jaxbDoc = wmlPackage.getMainDocumentPart().getJaxbElement();
 		}
@@ -1274,7 +1306,8 @@ public class DocUtil {
 					sb.append(text.substring(0, lf));
 					sb.append("<<NEWLINE>>");
 					sb.append(text.substring(lf + 1));
-				} else {
+				}
+				else {
 					sb.append(text);
 				}
 				sb.append("]");
@@ -1302,18 +1335,21 @@ public class DocUtil {
 				if (elemML == null) {
 					info.append(getTabSpace(++depth));
 					info.append("OPEN <NULL> - ...");
-				} else {
+				}
+				else {
 					info.append(getTabSpace(++depth));
 					info.append("OPEN <");
 					info.append(elemML.getTag());
 					info.append("> - ");
 					info.append(elemML.toString());
 				}
-			} else if (es.getType() == ElementSpec.ContentType) {
+			}
+			else if (es.getType() == ElementSpec.ContentType) {
 				if (elemML == null) {
 					info.append(getTabSpace(depth + 1));
 					info.append("TEXT - RunContentML=NULL [...]");
-				} else {
+				}
+				else {
 					String text = ((RunContentML) elemML).getTextContent();
 					if (text.length() > 25) {
 						text = text.substring(0, 25);
@@ -1325,7 +1361,8 @@ public class DocUtil {
 						sb.append(text.substring(0, lf));
 						sb.append("<<NEWLINE>>");
 						sb.append(text.substring(lf + 1));
-					} else {
+					}
+					else {
 						sb.append(text);
 					}
 
@@ -1336,11 +1373,13 @@ public class DocUtil {
 					info.append(sb.toString());
 					info.append("]");
 				}
-			} else {
+			}
+			else {
 				if (elemML == null) {
 					info.append(getTabSpace(depth--));
 					info.append("CLOSE <NULL> - ...");
-				} else {
+				}
+				else {
 					info.append(getTabSpace(depth--));
 					info.append("CLOSE <");
 					info.append(elemML.getTag());
@@ -1366,4 +1405,3 @@ public class DocUtil {
 	}
 
 }// DocUtil class
-

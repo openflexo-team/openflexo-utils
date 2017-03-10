@@ -1317,7 +1317,6 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						try {
 							newPara = new ParagraphML(org.docx4j.XmlUtils.unmarshalString(temp), doc.getElementMLFactory());
 						} catch (JAXBException e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 						boolean notEmpty = (XmlUtil.getLastRunContentML(newPara) != null);
@@ -1401,7 +1400,6 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						try {
 							newPara = new ParagraphML(org.docx4j.XmlUtils.unmarshalString(temp), doc.getElementMLFactory());
 						} catch (JAXBException e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 						boolean notEmpty = (XmlUtil.getLastRunContentML(newPara) != null);
@@ -1513,7 +1511,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			super(nm);
 		}
 
-		protected final void setRunMLAttributes(final WordMLTextPane editor, AttributeSet attrs, boolean replace) {
+		protected final static void setRunMLAttributes(final WordMLTextPane editor, AttributeSet attrs, boolean replace) {
 
 			Caret caret = editor.getCaret();
 			int dot = caret.getDot();
@@ -1563,7 +1561,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			}
 		}
 
-		protected final void setParagraphMLAttributes(WordMLTextPane editor, AttributeSet attr, boolean replace) {
+		protected final static void setParagraphMLAttributes(WordMLTextPane editor, AttributeSet attr, boolean replace) {
 
 			Caret caret = editor.getCaret();
 			int dot = caret.getDot();
@@ -1590,7 +1588,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			}
 		}
 
-		protected final void setRunStyle(WordMLTextPane editor, String styleId) {
+		protected final static void setRunStyle(WordMLTextPane editor, String styleId) {
 			Caret caret = editor.getCaret();
 			int dot = caret.getDot();
 			int mark = caret.getMark();
@@ -1636,7 +1634,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			}
 		}
 
-		protected final void setParagraphStyle(WordMLTextPane editor, String styleId) {
+		protected final static void setParagraphStyle(WordMLTextPane editor, String styleId) {
 			Caret caret = editor.getCaret();
 			int dot = caret.getDot();
 			int mark = caret.getMark();
@@ -1923,7 +1921,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			}
 		}
 
-		private void openLinkedDocument(HyperlinkML linkML, final String currentDocFilePath, IObjectFactory objectFactory) {
+		private static void openLinkedDocument(HyperlinkML linkML, final String currentDocFilePath, IObjectFactory objectFactory) {
 
 			FileObject srcFile = null;
 			try {
@@ -2023,7 +2021,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 
 		}// actionPerformed()
 
-		private void selectLater(final JEditorPane editor, final int start, final int end) {
+		private static void selectLater(final JEditorPane editor, final int start, final int end) {
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
@@ -2124,7 +2122,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 			} // if (editor != null)
 		}// actionPerformed()
 
-		private void selectLater(final JEditorPane editor, final int start, final int end) {
+		private static void selectLater(final JEditorPane editor, final int start, final int end) {
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
@@ -2278,7 +2276,7 @@ public class WordMLEditorKit extends DefaultEditorKit {
 						DocumentElement elem = (DocumentElement) doc.getSdtBlockMLElement(offset);
 						if (elem != null) {
 							ElementML sdt = elem.getElementML();
-							List<ElementML> children = new ArrayList<ElementML>(sdt.getChildren());
+							List<ElementML> children = new ArrayList<>(sdt.getChildren());
 							for (ElementML kid : children) {
 								kid.delete();
 								sdt.addSibling(kid, false);

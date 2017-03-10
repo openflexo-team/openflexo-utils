@@ -108,7 +108,6 @@ public class StateDocx {
 					customXmlDoc = ((CustomXmlDataStorageImpl) docx4jPart.getData()).getDocument();
 					// ElementMLFactory could set in LoadFromVFSZipFile
 				} catch (Docx4JException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
