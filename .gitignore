@@ -6,3 +6,4 @@ build/
 *.iml
 /pom.xml~
 .gradle/
+**/out/
