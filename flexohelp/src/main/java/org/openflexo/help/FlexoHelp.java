@@ -154,7 +154,7 @@ public class FlexoHelp extends Observable {
 		if (logger.isLoggable(Level.INFO)) {
 			logger.info("HelpSetFile:" + _helpSetFile.getAbsolutePath());
 		}
-		return _helpSetFile.toURL();
+		return _helpSetFile.toURI().toURL();
 	}
 
 	public static Resource getHelpSetDirectory() {
