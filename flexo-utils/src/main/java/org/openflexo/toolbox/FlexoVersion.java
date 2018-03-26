@@ -95,7 +95,7 @@ public class FlexoVersion implements Comparable<FlexoVersion> {
 
 	public boolean isBeta = false;
 
-	private boolean isSnapshot = false;
+	// Unused private boolean isSnapshot = false;
 
 	public static FlexoVersion versionByIncrementing(FlexoVersion v, int majorInc, int minorInc, int patchInc) {
 		return new FlexoVersion(v.major + majorInc, v.minor + minorInc, v.patch + patchInc, 0, false, false);
@@ -201,7 +201,7 @@ public class FlexoVersion implements Comparable<FlexoVersion> {
 				}
 			}
 			else if (token.indexOf("-SNAPSHOT") > -1) {
-				isSnapshot = true;
+				// Unused isSnapshot = true;
 				try {
 					returned = Integer.parseInt(token.substring(0, token.indexOf("-SNAPSHOT")));
 				} catch (NumberFormatException e) {
@@ -210,7 +210,7 @@ public class FlexoVersion implements Comparable<FlexoVersion> {
 				}
 			}
 			else if (token.indexOf("SNAPSHOT") > -1) {
-				isSnapshot = true;
+				// Unused isSnapshot = true;
 				try {
 					returned = Integer.parseInt(token.substring(0, token.indexOf("SNAPSHOT")));
 				} catch (NumberFormatException e) {
