@@ -1,0 +1,3 @@
+rootProject.name = 'openflexo-utils'
+
+include 'flexohelp','flexo-utils'
