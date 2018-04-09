@@ -62,7 +62,6 @@ public class TestXMLRootElementReader extends TestCase {
 		try {
 			result = reader.readRootElement(rsc);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -82,7 +81,6 @@ public class TestXMLRootElementReader extends TestCase {
 		try {
 			result = reader.readRootElement(rsc.openInputStream());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -102,7 +100,6 @@ public class TestXMLRootElementReader extends TestCase {
 		try {
 			result = reader.readRootElement(rsc);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -121,7 +118,6 @@ public class TestXMLRootElementReader extends TestCase {
 		try {
 			result = reader.readRootElement(rsc.openInputStream());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -143,7 +139,6 @@ public class TestXMLRootElementReader extends TestCase {
 				result = reader.readRootElement(((FileResourceImpl) rsc).getFile());
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -163,7 +158,6 @@ public class TestXMLRootElementReader extends TestCase {
 		try {
 			result = reader.readRootElement(rsc);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
