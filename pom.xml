@@ -25,10 +25,10 @@
        </issueManagement>
        <modules>
               <module>flexohelp</module>
-              <module>flexojavacvs</module>
+              <!--  <module>flexojavacvs</module>
               <module>flexojavaparser</module>
               <module>jiraclient</module>
-              <module>docx4all</module>
+              <module>docx4all</module>-->
        </modules>
        <!-- ************
 	Properties
