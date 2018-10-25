@@ -11,7 +11,7 @@ Openflexo Utilities
   
 Contents of this package
 
-  CONNIE project contains following components (defined here as modules):
+  Openflexo-Utils project contains following components (defined here as modules):
   
   * {{{./flexohelp/index.html}FlexoHelp}}, which contains the Help framework
   
