@@ -8,7 +8,7 @@
        <!-- ************
    	Component identity and specific information
       -->
-       <version>1.4.1-SNAPSHOT</version>
+       <version>1.4.1</version>
        <modelVersion>4.0.0</modelVersion>
        <artifactId>openflexo-utils</artifactId>
        <name>Openflexo-Utils</name>
@@ -17,7 +17,7 @@
        <scm>
               <connection>scm:git:ssh://git@github.com/openflexo-team/openflexo-utils.git</connection>
               <url>https://github.com/openflexo-team/openflexo-utils</url>
-              <tag>1.4</tag>
+              <tag>1.4.1</tag>
        </scm>
        <issueManagement>
               <system>JIRA</system>
@@ -34,10 +34,10 @@
 	Properties
       -->
        <properties>
-              <gina.version>2.1.1-SNAPSHOT</gina.version>
-              <connie.version>1.4.1-SNAPSHOT</connie.version>
-              <pamela.version>1.4.1-SNAPSHOT</pamela.version>
-              <diana.version>1.4.1-SNAPSHOT</diana.version>
+              <gina.version>2.1.1</gina.version>
+              <connie.version>1.4.1</connie.version>
+              <pamela.version>1.4.1</pamela.version>
+              <diana.version>1.4.1</diana.version>
               <ofutils.logo>https://media.openflexo.org/images/ofutils_logo64x64.png</ofutils.logo>
 	    	  <sitedeploy.dir>/home/www/sites/ofutils</sitedeploy.dir>
        </properties>
