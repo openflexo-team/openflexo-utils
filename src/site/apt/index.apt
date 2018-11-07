@@ -1,18 +1,19 @@
  -----
- The Site
+ Openflexo Utils
  -----
- The Maven Team
+ The Openflexo team
  -----
 
-Maven Site for your project
 
- Congratulations! If you are looking at this page then you have successfully generated a
- template site employing the site archetype and you have run:
+Openflexo Utilities
 
-[https://media.openflexo.org/images/openflexo2.png]
+  Contains all utils above Openflexo-Core Infrastructure
+  
+Contents of this package
 
-+-----+
-
-mvn site
-
-+-----+
+  Openflexo-Utils project contains following components (defined here as modules):
+  
+  * {{{./flexohelp/index.html}FlexoHelp}}, which contains the Help framework
+  
+    
+  
