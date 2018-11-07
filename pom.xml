@@ -8,7 +8,7 @@
        <!-- ************
    	Component identity and specific information
       -->
-       <version>1.4.2-SNAPSHOT</version>
+       <version>1.5-SNAPSHOT</version>
        <modelVersion>4.0.0</modelVersion>
        <artifactId>openflexo-utils</artifactId>
        <name>Openflexo-Utils</name>
@@ -24,6 +24,7 @@
               <url>https://bugs.openflexo.org/browse/OFUTILS/</url>
        </issueManagement>
        <modules>
+              <module>flexo-utils</module>
               <module>flexohelp</module>
               <!--  <module>flexojavacvs</module>
               <module>flexojavaparser</module>
