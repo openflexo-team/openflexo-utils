@@ -58,7 +58,12 @@ public class ChainedCollection<T> implements Collection<T> {
 	}
 
 	public void add(Collection<? extends T> itemCollection) {
-		this.collections.add(itemCollection);
+		if (itemCollection == null) {
+			System.err.println("Cannot add null collection");
+		}
+		else {
+			this.collections.add(itemCollection);
+		}
 	}
 
 	@Override
@@ -109,7 +114,9 @@ public class ChainedCollection<T> implements Collection<T> {
 	public int size() {
 		int returned = 0;
 		for (Collection<? extends T> collection : collections) {
-			returned += collection.size();
+			if (collection != null) {
+				returned += collection.size();
+			}
 		}
 		returned += items.size();
 		return returned;
