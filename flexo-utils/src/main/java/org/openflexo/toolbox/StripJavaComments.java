@@ -54,7 +54,6 @@ public final class StripJavaComments extends BaseFilterReader {
 		}
 		else {
 			ch = in.read();
-			System.out.println("ch: " + ch);
 			if (ch == '"' && !quoted) {
 				inString = !inString;
 				quoted = false;
