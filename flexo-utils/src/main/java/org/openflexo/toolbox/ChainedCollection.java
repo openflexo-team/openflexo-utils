@@ -113,7 +113,7 @@ public class ChainedCollection<T> implements Collection<T> {
 	@Override
 	public int size() {
 		int returned = 0;
-		for (Collection<? extends T> collection : collections) {
+		for (Collection<? extends T> collection : new ArrayList<>(collections)) {
 			if (collection != null) {
 				returned += collection.size();
 			}
@@ -129,7 +129,7 @@ public class ChainedCollection<T> implements Collection<T> {
 
 	@Override
 	public boolean contains(Object o) {
-		for (Collection<? extends T> collection : collections) {
+		for (Collection<? extends T> collection : new ArrayList<>(collections)) {
 			if (collection.contains(o)) {
 				return true;
 			}
@@ -156,7 +156,7 @@ public class ChainedCollection<T> implements Collection<T> {
 	@Override
 	public <T2> T2[] toArray(T2[] a) {
 		int i = 0;
-		for (Collection<? extends T> collection : collections) {
+		for (Collection<? extends T> collection : new ArrayList<>(collections)) {
 			for (T item : collection) {
 				a[i++] = (T2) item;
 			}
@@ -169,7 +169,7 @@ public class ChainedCollection<T> implements Collection<T> {
 
 	@Override
 	public boolean remove(Object o) {
-		for (Collection<? extends T> collection : collections) {
+		for (Collection<? extends T> collection : new ArrayList<>(collections)) {
 			if (collection.remove(o)) {
 				return true;
 			}
