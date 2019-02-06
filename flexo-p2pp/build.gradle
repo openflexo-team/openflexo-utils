@@ -1,0 +1,7 @@
+dependencies {
+  compile connieUtils()
+  compile connie()
+  testCompile testUtils()
+  //compile group: 'org.jdom', name: 'jdom2', version: '2.0.6'
+  compile group: 'commons-io', name: 'commons-io', version: '2.6'
+}
