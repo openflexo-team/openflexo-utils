@@ -182,7 +182,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	public final void initializePrettyPrint() {
-		preparePrettyPrint();
+		preparePrettyPrint(getASTNode() != null);
 		System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
 
 		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
@@ -191,11 +191,11 @@ public abstract class P2PPNode<N, T> {
 
 	}
 
-	protected void preparePrettyPrint() {
+	protected void preparePrettyPrint(boolean hasParsedVersion) {
 		defaultInsertionPoint = getStartPosition();
 	}
 
-	protected abstract void prepareNormalizedPrettyPrint();
+	// protected abstract void prepareNormalizedPrettyPrint();
 
 	public final String getNormalizedTextualRepresentation(PrettyPrintContext context) {
 		StringBuffer sb = new StringBuffer();
