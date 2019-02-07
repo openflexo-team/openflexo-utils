@@ -161,9 +161,9 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 					// OK, this is an update
 					derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.getTextualRepresentation(context));
 					insertionPoint = childNode.getLastParsedFragment().getEndPosition();
-					for (int i = 0; i < getPostlude().length(); i++) {
+					/*for (int i = 0; i < getPostlude().length(); i++) {
 						insertionPoint = insertionPoint.increment();
-					}
+					}*/
 				}
 				else {
 					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
@@ -176,13 +176,13 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 		for (P2PPNode<?, T> removedNode : nodesToBeRemoved) {
 			RawSourcePosition startPosition = removedNode.getLastParsedFragment().getStartPosition();
-			for (int i = 0; i < getPrelude().length(); i++) {
+			/*for (int i = 0; i < getPrelude().length(); i++) {
 				startPosition = startPosition.decrement();
-			}
+			}*/
 			RawSourcePosition endPosition = removedNode.getLastParsedFragment().getEndPosition();
-			for (int i = 0; i < getPostlude().length(); i++) {
+			/*for (int i = 0; i < getPostlude().length(); i++) {
 				endPosition = endPosition.increment();
-			}
+			}*/
 			derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
 		}
 
@@ -195,6 +195,59 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		/*System.out.println("> Pour ChildContents " + childNode.getFMLObject() + " c'est plus complique");
 		System.out.println("Et on calcule la nouvelle valeur:");
 		derivedRawSource.replace(getFragment(), childNode.computeFMLRepresentation(context));*/
+	}
+
+	@Override
+	public void handlePreludeAndPosludeExtensions() {
+		for (T childObject : childrenObjectsSupplier.get()) {
+			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			System.out
+					.println("Faudrait gerer l'extension eventuelle du noeud " + childNode + " was: " + childNode.getLastParsedFragment());
+			handlePreludeExtension(childNode);
+			handlePostludeExtension(childNode);
+			System.out.println("On a gere l'extension eventuelle du noeud " + childNode + " now: " + childNode.getLastParsedFragment());
+		}
+	}
+
+	private void handlePreludeExtension(P2PPNode<?, T> node) {
+		if (node.getLastParsedFragment() == null) {
+			return;
+		}
+		if (getPrelude() == null || getPrelude().equals("")) {
+			// Nothing to do
+		}
+		else if (getPrelude().equals(P2PPNode.LINE_SEPARATOR)) {
+			// We go to previous line, when possible
+			if (node.getStartPosition().canDecrement()) {
+				node.setStartPosition(node.getStartPosition().decrement());
+			}
+		}
+
+		// Workaround to handle indentation: please do better here !!!
+		if (getRelativeIndentation() == 1) {
+			if (node.getStartPosition().canDecrement()) {
+				node.setStartPosition(node.getStartPosition().decrement());
+			}
+		}
+	}
+
+	private void handlePostludeExtension(P2PPNode<?, T> node) {
+
+		if (node.getLastParsedFragment() == null) {
+			return;
+		}
+		if (getPostlude() == null || getPostlude().equals("")) {
+			// Nothing to do
+		}
+		else if (getPostlude().equals(P2PPNode.LINE_SEPARATOR)) {
+			// We go to the next line, when possible
+			// TODO: handle the case of this position is in another fragment
+			RawSourcePosition p = node.getLastParsedFragment().getEndPosition();
+			if (p.line <= p.getOuterType().rows.size() - 1) {
+				RawSourcePosition newP = p.getOuterType().makePositionBeforeChar(p.line + 1, 1);
+				node.setEndPosition(newP);
+			}
+		}
 	}
 
 }

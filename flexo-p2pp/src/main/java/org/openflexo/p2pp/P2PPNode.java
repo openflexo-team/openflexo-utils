@@ -117,7 +117,7 @@ public abstract class P2PPNode<N, T> {
 
 	public abstract P2PPNode<N, T> deserialize();
 
-	public void finalizeDeserialization() {
+	public final void finalizeDeserialization() {
 		// Override when required
 	}
 
@@ -141,6 +141,11 @@ public abstract class P2PPNode<N, T> {
 		return startPosition;
 	}
 
+	public void setStartPosition(RawSourcePosition startPosition) {
+		this.startPosition = startPosition;
+		parsedFragment = null;
+	}
+
 	/**
 	 * Return end position of RawSource, where underlying model object is textually serialized, inclusive
 	 * 
@@ -148,6 +153,11 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public RawSourcePosition getEndPosition() {
 		return endPosition;
+	}
+
+	public void setEndPosition(RawSourcePosition endPosition) {
+		this.endPosition = endPosition;
+		parsedFragment = null;
 	}
 
 	/**
@@ -169,6 +179,16 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public PrettyPrintContext makePrettyPrintContext() {
 		return new DefaultPrettyPrintContext(0);
+	}
+
+	public final void initializePrettyPrint() {
+		preparePrettyPrint();
+		System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
+
+		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+			prettyPrintableContents.handlePreludeAndPosludeExtensions();
+		}
+
 	}
 
 	protected void preparePrettyPrint() {
@@ -453,7 +473,7 @@ public abstract class P2PPNode<N, T> {
 	 *            Pretty-printable object
 	 * @return
 	 */
-	protected abstract <C> P2PPNode<?, C> makeObjectNode(C object);
+	public abstract <C> P2PPNode<?, C> makeObjectNode(C object);
 
 	/**
 	 * Return {@link P2PPNode} representing supplied pretty-printable object, when existant
@@ -462,7 +482,7 @@ public abstract class P2PPNode<N, T> {
 	 *            Pretty-printable object
 	 * @return
 	 */
-	protected <C> P2PPNode<?, C> getObjectNode(C object) {
+	public <C> P2PPNode<?, C> getObjectNode(C object) {
 		for (P2PPNode<?, ?> objectNode : getChildren()) {
 			if (objectNode.getFMLObject() == object) {
 				return (P2PPNode<?, C>) objectNode;

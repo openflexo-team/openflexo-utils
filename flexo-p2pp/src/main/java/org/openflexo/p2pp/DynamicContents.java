@@ -90,4 +90,9 @@ public class DynamicContents extends PrettyPrintableContents {
 		derivedRawSource.replace(getFragment(), stringRepresentationSupplier.get());
 	}
 
+	@Override
+	public void handlePreludeAndPosludeExtensions() {
+		// Nothing to do
+	}
+
 }

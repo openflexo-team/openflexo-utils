@@ -88,7 +88,11 @@ public class StaticContents extends PrettyPrintableContents {
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
-		// System.out.println("> Rien a faire pour staticContents=[" + getStaticContents() + "]");
+		// Nothing to do
 	}
 
+	@Override
+	public void handlePreludeAndPosludeExtensions() {
+		// Nothing to do
+	}
 }

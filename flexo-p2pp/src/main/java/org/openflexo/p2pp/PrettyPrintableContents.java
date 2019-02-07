@@ -138,4 +138,6 @@ public abstract class PrettyPrintableContents {
 	public abstract String getNormalizedPrettyPrint(PrettyPrintContext context);
 
 	public abstract void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context);
+
+	public abstract void handlePreludeAndPosludeExtensions();
 }

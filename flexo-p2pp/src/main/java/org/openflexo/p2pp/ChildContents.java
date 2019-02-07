@@ -86,4 +86,9 @@ public class ChildContents<T> extends PrettyPrintableContents {
 		derivedRawSource.replace(getFragment(), childNode.computeTextualRepresentation(context));
 	}
 
+	@Override
+	public void handlePreludeAndPosludeExtensions() {
+		// TODO Auto-generated method stub
+
+	}
 }

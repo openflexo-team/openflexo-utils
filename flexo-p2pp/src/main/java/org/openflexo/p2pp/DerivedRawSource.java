@@ -60,6 +60,8 @@ public class DerivedRawSource {
 	private final RawSourceFragment sourceFragment;
 	private final List<Modification> modifications;
 
+	public static boolean DEBUG = false;
+
 	public DerivedRawSource(RawSourceFragment sourceFragment) {
 		this.sourceFragment = sourceFragment;
 		modifications = new ArrayList<>();
@@ -110,11 +112,12 @@ public class DerivedRawSource {
 			}
 		});
 
-		/*System.out.println("Les modifications:");
-		for (Modification modification : modifications) {
-			System.out.println(" > " + modification);
-		}*/
-
+		if (DEBUG) {
+			System.out.println("DEBUGGING DerivedRowSource");
+			for (Modification modification : modifications) {
+				System.out.println(" > " + modification);
+			}
+		}
 		if (modifications.size() == 0) {
 			return getSourceFragment().getRawText();
 		}
@@ -236,7 +239,7 @@ public class DerivedRawSource {
 
 		@Override
 		public String toString() {
-			return "StringReplacement " + getInitialFragment() + " with " + getReplacement();
+			return "StringReplacement " + getInitialFragment() + " with [" + getReplacement() + "]";
 		}
 	}
 
@@ -251,7 +254,7 @@ public class DerivedRawSource {
 
 		@Override
 		public String toString() {
-			return "DerivedRawSourceReplacement " + getInitialFragment();
+			return "DerivedRawSourceReplacement " + getInitialFragment() + " with DerivedRawSourceReplacement";
 		}
 
 	}
@@ -271,7 +274,7 @@ public class DerivedRawSource {
 
 		@Override
 		public String toString() {
-			return "StringInsertion " + getInitialFragment() + " with " + getInsertion();
+			return "StringInsertion " + getInitialFragment() + " with [" + getInsertion() + "]";
 		}
 	}
 
