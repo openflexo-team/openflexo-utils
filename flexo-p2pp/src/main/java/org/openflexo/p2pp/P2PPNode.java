@@ -75,7 +75,7 @@ public abstract class P2PPNode<N, T> {
 	protected T modelObject;
 
 	private P2PPNode<?, ?> parent;
-	private ArrayList<P2PPNode<?, ?>> children = new ArrayList<>();
+	private List<P2PPNode<?, ?>> children = new ArrayList<>();
 
 	protected RawSourcePosition startPosition;
 	protected RawSourcePosition endPosition;
@@ -122,7 +122,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Return underlying model object: object beeing represented by referenced AST node through this node
+	 * Return underlying model object: object being represented by referenced AST node through this node
 	 * 
 	 * @return
 	 */
@@ -220,7 +220,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Append {@link StaticContents}, whose value is intented to replace text determined with supplied fragment
+	 * Append {@link StaticContents}, whose value is intended to replace text determined with supplied fragment
 	 * 
 	 * @param staticContents
 	 *            value to append
@@ -233,7 +233,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Append {@link StaticContents}, whose value is intented to be inserted at current location (no current contents was parsed in initial
+	 * Append {@link StaticContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
 	 * raw source)
 	 * 
 	 * @param staticContents
@@ -241,13 +241,14 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(null, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
 
 	/**
-	 * Append {@link StaticContents}, whose value is intented to be inserted at current location (no current contents was parsed in initial
+	 * Append {@link StaticContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
 	 * raw source)
 	 * 
 	 * @param prelude
@@ -257,13 +258,14 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
 
 	/**
-	 * Append {@link StaticContents}, whose value is intented to be inserted at current location (no current contents was parsed in initial
+	 * Append {@link StaticContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
 	 * raw source)
 	 * 
 	 * @param prelude
@@ -275,13 +277,14 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
 
 	/**
-	 * Append {@link StaticContents}, whose value is intented to replace text determined with supplied fragment
+	 * Append {@link StaticContents}, whose value is intended to replace text determined with supplied fragment
 	 * 
 	 * @param prelude
 	 *            prelude to add if normalized pretty-print is to be applied
@@ -296,7 +299,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Append {@link StaticContents}, whose value is intented to replace text determined with supplied fragment
+	 * Append {@link StaticContents}, whose value is intended to replace text determined with supplied fragment
 	 * 
 	 * @param prelude
 	 *            prelude to add if normalized pretty-print is to be applied
@@ -313,7 +316,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Append {@link DynamicContents}, whose value is intented to replace text determined with supplied fragment
+	 * Append {@link DynamicContents}, whose value is intended to replace text determined with supplied fragment
 	 * 
 	 * @param stringRepresentationSupplier
 	 *            gives dynamic value of that contents
@@ -326,7 +329,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Append {@link DynamicContents}, whose value is intented to be inserted at current location (no current contents was parsed in initial
+	 * Append {@link DynamicContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
 	 * raw source)
 	 * 
 	 * @param stringRepresentationSupplier
@@ -334,13 +337,14 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
 
 	/**
-	 * Append {@link DynamicContents}, whose value is intented to replace text determined with supplied fragment
+	 * Append {@link DynamicContents}, whose value is intended to replace text determined with supplied fragment
 	 * 
 	 * @param prelude
 	 * @param stringRepresentationSupplier
@@ -354,7 +358,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Append {@link DynamicContents}, whose value is intented to be inserted at current location (no current contents was parsed in initial
+	 * Append {@link DynamicContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
 	 * raw source)
 	 * 
 	 * @param prelude
@@ -363,13 +367,14 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void addDynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(prelude, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
 
 	/**
-	 * Append {@link DynamicContents}, whose value is intented to replace text determined with supplied fragment
+	 * Append {@link DynamicContents}, whose value is intended to replace text determined with supplied fragment
 	 * 
 	 * @param stringRepresentationSupplier
 	 *            gives dynamic value of that contents
@@ -383,7 +388,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Append {@link DynamicContents}, whose value is intented to be inserted at current location (no current contents was parsed in initial
+	 * Append {@link DynamicContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
 	 * raw source)
 	 * 
 	 * @param stringRepresentationSupplier
@@ -392,7 +397,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -481,7 +487,7 @@ public abstract class P2PPNode<N, T> {
 	public abstract <C> P2PPNode<?, C> makeObjectNode(C object);
 
 	/**
-	 * Return {@link P2PPNode} representing supplied pretty-printable object, when existant
+	 * Return {@link P2PPNode} representing supplied pretty-printable object, when it exists
 	 * 
 	 * @param object
 	 *            Pretty-printable object
@@ -497,7 +503,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Return position as a cursor BEFORE the targetted character
+	 * Return position as a cursor BEFORE the targeted character
 	 * 
 	 * @param line
 	 * @param pos
@@ -508,7 +514,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Return position as a cursor AFTER the targetted character
+	 * Return position as a cursor AFTER the targeted character
 	 * 
 	 * @param line
 	 * @param pos
