@@ -50,7 +50,7 @@ import org.openflexo.toolbox.StringUtils;
  */
 public class StaticContents extends PrettyPrintableContents {
 
-	final String staticContents;
+	private final String staticContents;
 
 	public StaticContents(String staticContents, RawSourceFragment fragment) {
 		super(0);
