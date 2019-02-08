@@ -56,7 +56,7 @@ import org.openflexo.toolbox.StringUtils;
 public class ChildrenContents<T> extends PrettyPrintableContents {
 
 	private P2PPNode<?, ?> parentNode;
-	private Class<T> objectType;
+	// Unused private Class<T> objectType;
 	private Supplier<List<? extends T>> childrenObjectsSupplier;
 
 	private List<P2PPNode<?, T>> lastParsedNodes;
@@ -68,7 +68,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			P2PPNode<?, ?> parentNode, Class<T> objectType) {
 		super(prelude, postlude, identationLevel);
 		this.parentNode = parentNode;
-		this.objectType = objectType;
+		// Unused this.objectType = objectType;
 		// setFragment(childNode.getLastParsedFragment());
 
 		childrenObjectsSupplier = childrenObjects;
