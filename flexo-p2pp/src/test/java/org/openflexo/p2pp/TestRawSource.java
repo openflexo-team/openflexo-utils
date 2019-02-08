@@ -48,7 +48,6 @@ import java.io.InputStream;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.openflexo.p2pp.RawSource;
 import org.openflexo.p2pp.RawSource.RawSourcePosition;
 import org.openflexo.test.OrderedRunner;
 import org.openflexo.test.TestOrder;
@@ -71,7 +70,7 @@ public class TestRawSource {
 		String initialString = "ABCD\nEFG\nHI\n\nJKL";
 		InputStream targetStream = new ByteArrayInputStream(initialString.getBytes());
 		rawSource = new RawSource(targetStream);
-		assertEquals(5, rawSource.rows.size());
+		assertEquals(5, rawSource.size());
 		System.out.println(rawSource.debug());
 	}
 

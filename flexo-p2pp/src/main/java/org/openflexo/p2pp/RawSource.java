@@ -82,7 +82,7 @@ public class RawSource {
 
 	private static final Logger logger = Logger.getLogger(RawSource.class.getPackage().getName());
 
-	public List<String> rows;
+	private List<String> rows;
 	private final RawSourcePosition startPosition;
 	private final RawSourcePosition endPosition;
 
@@ -334,7 +334,7 @@ public class RawSource {
 	}
 
 	/**
-	 * Create a position as a cursor BEFORE the targetted character
+	 * Create a position as a cursor BEFORE the targeted character
 	 * 
 	 * @param line
 	 * @param pos
@@ -345,7 +345,7 @@ public class RawSource {
 	}
 
 	/**
-	 * Create a position as a cursor AFTER the targetted character
+	 * Create a position as a cursor AFTER the targeted character
 	 * 
 	 * @param line
 	 * @param pos
@@ -375,6 +375,13 @@ public class RawSource {
 		return new RawSourceFragment(start, end);
 	}
 
+	/**
+	 * @return the size of the source, its number of rows
+	 */
+	public int size() {
+		return this.rows.size();
+	}
+
 	public String debug() {
 		StringBuffer sb = new StringBuffer();
 		int i = 1;
@@ -386,5 +393,4 @@ public class RawSource {
 		}
 		return sb.toString();
 	}
-
 }
