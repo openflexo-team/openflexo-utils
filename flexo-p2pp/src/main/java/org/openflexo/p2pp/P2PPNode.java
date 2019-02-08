@@ -2,7 +2,7 @@
  * 
  * Copyright (c) 2019, Openflexo
  * 
- * This file is part of FML-parser, a component of the software infrastructure 
+ * This file is part of flexo-p2pp, a component of the software infrastructure 
  * developed at Openflexo.
  * 
  * 
@@ -72,7 +72,7 @@ public abstract class P2PPNode<N, T> {
 	private static final Logger logger = Logger.getLogger(P2PPNode.class.getPackage().getName());
 
 	private N astNode;
-	protected T fmlObject;
+	protected T modelObject;
 
 	private P2PPNode<?, ?> parent;
 	private ArrayList<P2PPNode<?, ?>> children = new ArrayList<>();
@@ -86,9 +86,9 @@ public abstract class P2PPNode<N, T> {
 	public static final String SPACE = " ";
 	public static final String LINE_SEPARATOR = "\n";
 
-	public P2PPNode(T aFMLObject, N astNode) {
+	public P2PPNode(T aModelObject, N astNode) {
 		this.astNode = astNode;
-		this.fmlObject = aFMLObject;
+		this.modelObject = aModelObject;
 	}
 
 	protected void addToChildren(P2PPNode<?, ?> child, int index) {
@@ -113,7 +113,7 @@ public abstract class P2PPNode<N, T> {
 		return children;
 	}
 
-	public abstract T buildFMLObjectFromAST(N astNode);
+	public abstract T buildModelObjectFromAST(N astNode);
 
 	public abstract P2PPNode<N, T> deserialize();
 
@@ -121,8 +121,13 @@ public abstract class P2PPNode<N, T> {
 		// Override when required
 	}
 
-	public T getFMLObject() {
-		return fmlObject;
+	/**
+	 * Return underlying model object: object beeing represented by referenced AST node through this node
+	 * 
+	 * @return
+	 */
+	public T getModelObject() {
+		return modelObject;
 	}
 
 	/**
@@ -161,7 +166,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Return fragment representing underlying FMLObject as a String in FML language, as it was last parsed
+	 * Return fragment representing underlying model object as a String in textual language, as it was last parsed
 	 * 
 	 * @return
 	 */
@@ -453,7 +458,7 @@ public abstract class P2PPNode<N, T> {
 
 		DerivedRawSource derivedRawSource = new DerivedRawSource(getLastParsedFragment());
 
-		if (getFMLObject() == null) {
+		if (getModelObject() == null) {
 			logger.warning("Unexpected null model object in " + this);
 			return derivedRawSource;
 		}
@@ -484,7 +489,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public <C> P2PPNode<?, C> getObjectNode(C object) {
 		for (P2PPNode<?, ?> objectNode : getChildren()) {
-			if (objectNode.getFMLObject() == object) {
+			if (objectNode.getModelObject() == object) {
 				return (P2PPNode<?, C>) objectNode;
 			}
 		}

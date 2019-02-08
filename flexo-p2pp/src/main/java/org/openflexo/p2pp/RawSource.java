@@ -42,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -314,8 +315,12 @@ public class RawSource {
 	}
 
 	public RawSource(InputStream inputStream) throws IOException {
+		this(new InputStreamReader(inputStream));
+	}
+
+	public RawSource(Reader reader) throws IOException {
 		rows = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+		try (BufferedReader br = new BufferedReader(reader)) {
 			String nextLine = null;
 			do {
 				nextLine = br.readLine();
