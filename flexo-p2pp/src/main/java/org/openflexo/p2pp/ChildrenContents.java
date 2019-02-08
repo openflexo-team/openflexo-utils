@@ -243,8 +243,8 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			// We go to the next line, when possible
 			// TODO: handle the case of this position is in another fragment
 			RawSourcePosition p = node.getLastParsedFragment().getEndPosition();
-			if (p.line <= p.getOuterType().size() - 1) {
-				RawSourcePosition newP = p.getOuterType().makePositionBeforeChar(p.line + 1, 1);
+			if (p.getLine() <= p.getOuterType().size() - 1) {
+				RawSourcePosition newP = p.getOuterType().makePositionBeforeChar(p.getLine() + 1, 1);
 				node.setEndPosition(newP);
 			}
 		}

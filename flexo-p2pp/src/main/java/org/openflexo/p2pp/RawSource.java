@@ -95,8 +95,8 @@ public class RawSource {
 	 *
 	 */
 	public class RawSourcePosition implements Comparable<RawSourcePosition> {
-		public final int line;
-		public final int pos;
+		private final int line;
+		private final int pos;
 
 		public RawSourcePosition(int line, int pos) {
 			super();
@@ -204,6 +204,10 @@ public class RawSource {
 
 		public RawSource getOuterType() {
 			return RawSource.this;
+		}
+
+		public int getLine() {
+			return this.line;
 		}
 	}
 
