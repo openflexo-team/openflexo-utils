@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-import org.openflexo.connie.expr.parser.node.Token;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.p2pp.RawSource.RawSourcePosition;
 
@@ -509,10 +508,11 @@ public abstract class P2PPNode<N, T> {
 	 * @param pos
 	 * @return
 	 */
-	public RawSourcePosition getPositionBefore(Token token) {
+	/* Seems unused and bring dependencies to parser
+	private RawSourcePosition getPositionBefore(Token token) {
 		return getRawSource().makePositionBeforeChar(token.getLine(), token.getPos() - 1);
 	}
-
+	*/
 	/**
 	 * Return position as a cursor AFTER the targeted character
 	 * 
@@ -520,10 +520,11 @@ public abstract class P2PPNode<N, T> {
 	 * @param pos
 	 * @return
 	 */
-	public RawSourcePosition getPositionAfter(Token token) {
+	/* Seems unused and bring dependencies to parser
+	private RawSourcePosition getPositionAfter(Token token) {
 		return getRawSource().makePositionAfterChar(token.getLine(), token.getPos());
 	}
-
+	*/
 	/**
 	 * Return fragment matching supplied node in AST
 	 * 
