@@ -77,6 +77,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		// System.out.println("Type: " + objectType);
 		lastParsedNodes = new ArrayList<>();
 		for (P2PPNode<?, ?> objectNode : parentNode.getChildren()) {
+			// TODO: Y a t'il vraiment besoin de se lier à connie ici ?
 			if (TypeUtils.isOfType(objectNode.getModelObject(), objectType)) {
 				lastParsedNodes.add((P2PPNode<?, T>) objectNode);
 			}
