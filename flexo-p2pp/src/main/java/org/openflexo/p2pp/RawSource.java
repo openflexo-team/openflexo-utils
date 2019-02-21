@@ -207,7 +207,11 @@ public class RawSource {
 		}
 
 		public int getLine() {
-			return this.line;
+			return line;
+		}
+
+		public int getPos() {
+			return pos;
 		}
 	}
 
@@ -256,6 +260,7 @@ public class RawSource {
 		}
 
 		public String getRawText() {
+
 			int startLine = start.line;
 			int startPos = start.pos;
 			int endLine = end.line;
@@ -264,6 +269,7 @@ public class RawSource {
 				if (startLine == endLine) {
 					// All in one line
 					// System.out.println("On retourne [" + getRawSource().get(startLine - 1).substring(startChar - 1, endChar) + "]");
+					// System.out.println("row: " + (startLine - 1) + "[" + rows.get(startLine - 1) + "]");
 					return rows.get(startLine - 1).substring(startPos, endPos);
 				}
 				StringBuffer sb = new StringBuffer();
@@ -383,7 +389,14 @@ public class RawSource {
 	 * @return the size of the source, its number of rows
 	 */
 	public int size() {
-		return this.rows.size();
+		return rows.size();
+	}
+
+	/**
+	 * @return row identified by its index
+	 */
+	public String getRow(int rowIndex) {
+		return rows.get(rowIndex);
 	}
 
 	public String debug() {
