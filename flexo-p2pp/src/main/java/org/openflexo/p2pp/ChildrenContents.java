@@ -202,14 +202,16 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	public void handlePreludeAndPosludeExtensions() {
 		for (T childObject : childrenObjectsSupplier.get()) {
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
-			System.out
-					.println("Faudrait gerer l'extension eventuelle du noeud " + childNode + " was: " + childNode.getLastParsedFragment());
+			// System.out.println("Handle prelude and postlude extension " + childNode + " was: " + childNode.getLastParsedFragment());
 			handlePreludeExtension(childNode);
 			handlePostludeExtension(childNode);
-			System.out.println("On a gere l'extension eventuelle du noeud " + childNode + " now: " + childNode.getLastParsedFragment());
+			// System.out.println("Handle prelude and postlude extension " + childNode + " now: " + childNode.getLastParsedFragment());
 		}
 	}
 
+	// TODO
+	// Provide better implementation by researching in backward direction first occurence of prelude
+	// while text is not associated by any semantics
 	private void handlePreludeExtension(P2PPNode<?, T> node) {
 		if (node.getLastParsedFragment() == null) {
 			return;
@@ -232,6 +234,9 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		}
 	}
 
+	// TODO
+	// Provide better implementation by researching in forward direction first occurence of postlude
+	// while text is not associated by any semantics
 	private void handlePostludeExtension(P2PPNode<?, T> node) {
 
 		if (node.getLastParsedFragment() == null) {
