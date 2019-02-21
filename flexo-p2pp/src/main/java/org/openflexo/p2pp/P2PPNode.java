@@ -291,7 +291,9 @@ public abstract class P2PPNode<N, T> {
 	public void appendStaticContents(String prelude, String staticContents, RawSourceFragment fragment) {
 		StaticContents newContents = new StaticContents(prelude, staticContents, null, fragment);
 		ppContents.add(newContents);
-		defaultInsertionPoint = fragment.getEndPosition();
+		if (fragment != null) {
+			defaultInsertionPoint = fragment.getEndPosition();
+		}
 	}
 
 	/**
@@ -308,7 +310,9 @@ public abstract class P2PPNode<N, T> {
 	public void appendStaticContents(String prelude, String staticContents, String postlude, RawSourceFragment fragment) {
 		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, fragment);
 		ppContents.add(newContents);
-		defaultInsertionPoint = fragment.getEndPosition();
+		if (fragment != null) {
+			defaultInsertionPoint = fragment.getEndPosition();
+		}
 	}
 
 	/**
@@ -321,7 +325,9 @@ public abstract class P2PPNode<N, T> {
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier, RawSourceFragment fragment) {
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, null, fragment);
 		ppContents.add(newContents);
-		defaultInsertionPoint = fragment.getEndPosition();
+		if (fragment != null) {
+			defaultInsertionPoint = fragment.getEndPosition();
+		}
 	}
 
 	/**
@@ -400,7 +406,10 @@ public abstract class P2PPNode<N, T> {
 	 * Append {@link ChildContents} managing pretty-print for supplied childObject<br>
 	 * Either this object is already serialized, or should be created
 	 * 
+	 * @param prelude
 	 * @param childObject
+	 * @param postude
+	 * @param indentationLevel
 	 */
 	protected <C> void appendToChildPrettyPrintContents(String prelude, C childObject, String postude, int indentationLevel) {
 
@@ -417,14 +426,68 @@ public abstract class P2PPNode<N, T> {
 	 * Called to indicate that supplied childObject must be serialized at this pretty-print level<br>
 	 * Either this object is already serialized, or should be created
 	 * 
-	 * @param childObject
+	 * This method is used for example to render a vertical layout in pretty-printed text
+	 * 
+	 * @param prelude
+	 * @param childrenObjects
+	 * @param postude
+	 * @param indentationLevel
+	 * @param childrenType
+	 * @return
 	 */
-	protected <C> void appendToChildrenPrettyPrintContents(String prelude, Supplier<List<? extends C>> childrenObjects, String postude,
-			int indentationLevel, Class<C> childrenType) {
+	protected <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String prelude, Supplier<List<? extends C>> childrenObjects,
+			String postude, int indentationLevel, Class<C> childrenType) {
 
 		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(prelude, childrenObjects, postude, indentationLevel, this,
 				childrenType);
 		ppContents.add(newChildrenContents);
+		return newChildrenContents;
+	}
+
+	/**
+	 * Called to indicate that supplied childObject must be serialized at this pretty-print level<br>
+	 * Either this object is already serialized, or should be created
+	 * 
+	 * This method is used for example to render an horizontal layout in pretty-printed text (a comma-separated list for example)
+	 * 
+	 * @param preludeForFirstItem
+	 * @param prelude
+	 * @param childrenObjects
+	 * @param postude
+	 * @param postludeForLastItem
+	 * @param indentationLevel
+	 * @param childrenType
+	 * @return
+	 */
+	protected <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
+			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, int indentationLevel,
+			Class<C> childrenType) {
+
+		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(preludeForFirstItem, prelude, childrenObjects, postude,
+				postludeForLastItem, indentationLevel, this, childrenType);
+		ppContents.add(newChildrenContents);
+		return newChildrenContents;
+	}
+
+	/**
+	 * Called to indicate that supplied childObject must be serialized at this pretty-print level<br>
+	 * Either this object is already serialized, or should be created
+	 * 
+	 * This method is used for example to render an horizontal layout in pretty-printed text (a comma-separated list for example)
+	 * 
+	 * @param preludeForFirstItem
+	 * @param prelude
+	 * @param childrenObjects
+	 * @param postude
+	 * @param postludeForLastItem
+	 * @param childrenType
+	 * @return
+	 */
+	protected <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
+			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, Class<C> childrenType) {
+
+		return appendToChildrenPrettyPrintContents(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem, 0,
+				childrenType);
 	}
 
 	/**

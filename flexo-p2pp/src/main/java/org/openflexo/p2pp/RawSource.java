@@ -270,7 +270,12 @@ public class RawSource {
 					// All in one line
 					// System.out.println("On retourne [" + getRawSource().get(startLine - 1).substring(startChar - 1, endChar) + "]");
 					// System.out.println("row: " + (startLine - 1) + "[" + rows.get(startLine - 1) + "]");
-					return rows.get(startLine - 1).substring(startPos, endPos);
+					if (endPos <= rows.get(startLine - 1).length()) {
+						return rows.get(startLine - 1).substring(startPos, endPos);
+					}
+					else {
+						logger.warning("Cannot append substring(" + startPos + "," + endPos + ") of [" + rows.get(startLine - 1) + "]");
+					}
 				}
 				StringBuffer sb = new StringBuffer();
 				for (int i = startLine; i <= endLine; i++) {

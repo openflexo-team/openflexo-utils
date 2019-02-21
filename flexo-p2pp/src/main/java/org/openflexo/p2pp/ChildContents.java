@@ -52,8 +52,8 @@ public class ChildContents<T> extends PrettyPrintableContents {
 
 	private P2PPNode<?, T> childNode;
 
-	public ChildContents(String prelude, P2PPNode<?, T> childNode, String postlude, int identationLevel) {
-		super(prelude, postlude, identationLevel);
+	public ChildContents(String prelude, P2PPNode<?, T> childNode, String postlude, int relativeIndentation) {
+		super(prelude, postlude, relativeIndentation);
 		this.childNode = childNode;
 		setFragment(childNode.getLastParsedFragment());
 	}

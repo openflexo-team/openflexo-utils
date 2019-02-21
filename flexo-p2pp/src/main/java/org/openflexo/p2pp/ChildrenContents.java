@@ -55,6 +55,9 @@ import org.openflexo.toolbox.StringUtils;
  */
 public class ChildrenContents<T> extends PrettyPrintableContents {
 
+	private final String preludeForFirstItem;
+	private final String postludeForLastItem;
+
 	private P2PPNode<?, ?> parentNode;
 	// Unused private Class<T> objectType;
 	private Supplier<List<? extends T>> childrenObjectsSupplier;
@@ -64,9 +67,16 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 	private RawSourcePosition defaultInsertionPoint;
 
-	public ChildrenContents(String prelude, Supplier<List<? extends T>> childrenObjects, String postlude, int identationLevel,
+	public ChildrenContents(String prelude, Supplier<List<? extends T>> childrenObjects, String postlude, int relativeIndentation,
 			P2PPNode<?, ?> parentNode, Class<T> objectType) {
-		super(prelude, postlude, identationLevel);
+		this(null, prelude, childrenObjects, postlude, null, relativeIndentation, parentNode, objectType);
+	}
+
+	public ChildrenContents(String preludeForFirstItem, String prelude, Supplier<List<? extends T>> childrenObjects, String postlude,
+			String postludeForLastItem, int relativeIndentation, P2PPNode<?, ?> parentNode, Class<T> objectType) {
+		super(prelude, postlude, relativeIndentation);
+		this.preludeForFirstItem = preludeForFirstItem;
+		this.postludeForLastItem = postludeForLastItem;
 		this.parentNode = parentNode;
 		// Unused this.objectType = objectType;
 		// setFragment(childNode.getLastParsedFragment());
@@ -91,6 +101,8 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		}*/
 
 		if (lastParsedNodes.size() > 0) {
+			// System.out.println("Hop: " + lastParsedNodes.get(0) + " of " + lastParsedNodes.get(0).getClass());
+			// System.out.println("Fragment: " + lastParsedNodes.get(0).getLastParsedFragment());
 			defaultInsertionPoint = lastParsedNodes.get(0).getLastParsedFragment().getStartPosition();
 		}
 		else {
@@ -107,7 +119,17 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
 		StringBuffer sb = new StringBuffer();
 
-		for (T childObject : childrenObjectsSupplier.get()) {
+		List<? extends T> allObjects = childrenObjectsSupplier.get();
+		for (int i = 0; i < allObjects.size(); i++) {
+			T childObject = allObjects.get(i);
+			String applicablePrelude = getPrelude();
+			if (i == 0 && preludeForFirstItem != null) {
+				applicablePrelude = preludeForFirstItem;
+			}
+			String applicablePostlude = getPostlude();
+			if (i == allObjects.size() - 1 && postludeForLastItem != null) {
+				applicablePostlude = postludeForLastItem;
+			}
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
@@ -115,12 +137,12 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			}
 			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getRelativeIndentation()));
 			if (StringUtils.isNotEmpty(childPrettyPrint)) {
-				if (StringUtils.isNotEmpty(getPrelude())) {
-					sb.append(getPrelude());
+				if (StringUtils.isNotEmpty(applicablePrelude)) {
+					sb.append(applicablePrelude);
 				}
 				sb.append(childPrettyPrint);
-				if (StringUtils.isNotEmpty(getPostlude())) {
-					sb.append(getPostlude());
+				if (StringUtils.isNotEmpty(applicablePostlude)) {
+					sb.append(applicablePostlude);
 				}
 			}
 		}
