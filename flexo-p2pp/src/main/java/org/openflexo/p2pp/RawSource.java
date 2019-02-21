@@ -276,7 +276,12 @@ public class RawSource {
 				for (int i = startLine; i <= endLine; i++) {
 					if (i == startLine) {
 						// First line
-						sb.append(rows.get(i - 1).substring(startPos) + "\n");
+						if (startPos >= 0 && startPos <= rows.get(i - 1).length()) {
+							sb.append(rows.get(i - 1).substring(startPos) + "\n");
+						}
+						else {
+							logger.warning("Cannot append substring(" + startPos + ") of [" + rows.get(i - 1) + "]");
+						}
 					}
 					else if (i == endLine) {
 						// Last line
