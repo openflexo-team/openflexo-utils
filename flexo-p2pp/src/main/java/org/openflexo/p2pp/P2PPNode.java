@@ -187,7 +187,7 @@ public abstract class P2PPNode<N, T> {
 
 	public final void initializePrettyPrint() {
 		preparePrettyPrint(getASTNode() != null);
-		System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
+		// System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
 
 		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
 			prettyPrintableContents.handlePreludeAndPosludeExtensions();
@@ -240,8 +240,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
 		StaticContents newContents = new StaticContents(null, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -257,8 +256,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -276,8 +274,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -336,8 +333,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -366,8 +362,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void addDynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
 		DynamicContents newContents = new DynamicContents(prelude, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -396,8 +391,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
