@@ -62,7 +62,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	// Unused private Class<T> objectType;
 	private Supplier<List<? extends T>> childrenObjectsSupplier;
 
-	private List<P2PPNode<?, T>> lastParsedNodes;
+	private ArrayList<P2PPNode<?, T>> lastParsedNodes;
 	private List<P2PPNode<?, T>> childrenNodes;
 
 	private RawSourcePosition defaultInsertionPoint;
@@ -166,7 +166,9 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 		PrettyPrintContext derivedContext = context.derive(getRelativeIndentation());
 
-		for (T childObject : childrenObjectsSupplier.get()) {
+		List<? extends T> childrenObjectsList = childrenObjectsSupplier.get();
+
+		for (T childObject : childrenObjectsList) {
 			// System.out.println("*** Je m'occupe de " + childObject);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			if (childNode == null) {
@@ -198,15 +200,54 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		}
 
 		for (P2PPNode<?, T> removedNode : nodesToBeRemoved) {
+			boolean wasFirst = (lastParsedNodes.get(0) == removedNode);
+			boolean wasLast = (lastParsedNodes.get(lastParsedNodes.size() - 1) == removedNode);
+			// boolean isFirst = (childrenObjectsList.get(0) == removedNode.getModelObject());
+			// boolean isLast = (childrenObjectsList.get(childrenObjectsList.size() - 1) == removedNode.getModelObject());
 			RawSourcePosition startPosition = removedNode.getLastParsedFragment().getStartPosition();
-			/*for (int i = 0; i < getPrelude().length(); i++) {
-				startPosition = startPosition.decrement();
-			}*/
 			RawSourcePosition endPosition = removedNode.getLastParsedFragment().getEndPosition();
-			/*for (int i = 0; i < getPostlude().length(); i++) {
-				endPosition = endPosition.increment();
-			}*/
-			derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
+			if (wasFirst && wasLast) {
+				if (removedNode.getPrelude() != null) {
+					startPosition = removedNode.getPrelude().getStartPosition();
+				}
+				if (removedNode.getPostlude() != null) {
+					endPosition = removedNode.getPostlude().getEndPosition();
+				}
+				derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
+			}
+			if (wasFirst) {
+				if (StringUtils.isNotEmpty(preludeForFirstItem)) {
+					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
+					P2PPNode<?, T> newFirstNode = parentNode.getObjectNode(childrenObjectsList.get(0));
+					derivedRawSource.remove(newFirstNode.getPrelude());
+				}
+				else {
+					if (removedNode.getPrelude() != null) {
+						startPosition = removedNode.getPrelude().getStartPosition();
+					}
+					if (removedNode.getPostlude() != null) {
+						endPosition = removedNode.getPostlude().getEndPosition();
+					}
+					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
+				}
+			}
+			if (wasLast) {
+				if (StringUtils.isNotEmpty(postludeForLastItem)) {
+					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
+					P2PPNode<?, T> newLastNode = parentNode.getObjectNode(childrenObjectsList.get(childrenObjectsList.size() - 1));
+					derivedRawSource.remove(newLastNode.getPostlude());
+				}
+				else {
+					if (removedNode.getPrelude() != null) {
+						startPosition = removedNode.getPrelude().getStartPosition();
+					}
+					if (removedNode.getPostlude() != null) {
+						endPosition = removedNode.getPostlude().getEndPosition();
+					}
+					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
+				}
+			}
+
 		}
 
 		/*FMLObjectNode<?, ?> childNode = getObjectNode(childObject);
@@ -221,20 +262,40 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	}
 
 	@Override
-	public void handlePreludeAndPosludeExtensions() {
-		for (T childObject : childrenObjectsSupplier.get()) {
+	public void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode) {
+		/*for (T childObject : childrenObjectsSupplier.get()) {
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			// System.out.println("Handle prelude and postlude extension " + childNode + " was: " + childNode.getLastParsedFragment());
-			handlePreludeExtension(childNode);
-			handlePostludeExtension(childNode);
+			// handlePreludeExtension(childNode);
+			// handlePostludeExtension(childNode);
 			// System.out.println("Handle prelude and postlude extension " + childNode + " now: " + childNode.getLastParsedFragment());
+		}*/
+
+		List<? extends T> allObjects = childrenObjectsSupplier.get();
+		for (int i = 0; i < allObjects.size(); i++) {
+			T childObject = allObjects.get(i);
+			String applicablePrelude = getPrelude();
+			if (i == 0 && preludeForFirstItem != null) {
+				applicablePrelude = preludeForFirstItem;
+			}
+			String applicablePostlude = getPostlude();
+			if (i == allObjects.size() - 1 && postludeForLastItem != null) {
+				applicablePostlude = postludeForLastItem;
+			}
+			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			if (StringUtils.isNotEmpty(applicablePrelude)) {
+				childNode.tryToIdentifyPrelude(applicablePrelude, rootNode);
+			}
+			if (StringUtils.isNotEmpty(applicablePostlude)) {
+				childNode.tryToIdentifyPrelude(applicablePostlude, rootNode);
+			}
 		}
 	}
 
 	// TODO
 	// Provide better implementation by researching in backward direction first occurence of prelude
 	// while text is not associated by any semantics
-	private void handlePreludeExtension(P2PPNode<?, T> node) {
+	/*private void handlePreludeExtension(P2PPNode<?, T> node) {
 		if (node.getLastParsedFragment() == null) {
 			return;
 		}
@@ -247,20 +308,26 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				node.setStartPosition(node.getStartPosition().decrement());
 			}
 		}
-
+		else if (getPrelude().equals(",")) {
+			System.out.println("Tiens c'est bon, j'ai ma virgule");
+			if (node.getStartPosition().canDecrement()) {
+				node.setStartPosition(node.getStartPosition().decrement());
+			}
+		}
+	
 		// Workaround to handle indentation: please do better here !!!
 		if (getRelativeIndentation() == 1) {
 			if (node.getStartPosition().canDecrement()) {
 				node.setStartPosition(node.getStartPosition().decrement());
 			}
 		}
-	}
+	}*/
 
 	// TODO
 	// Provide better implementation by researching in forward direction first occurence of postlude
 	// while text is not associated by any semantics
-	private void handlePostludeExtension(P2PPNode<?, T> node) {
-
+	/*private void handlePostludeExtension(P2PPNode<?, T> node) {
+	
 		if (node.getLastParsedFragment() == null) {
 			return;
 		}
@@ -276,6 +343,6 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				node.setEndPosition(newP);
 			}
 		}
-	}
+	}*/
 
 }

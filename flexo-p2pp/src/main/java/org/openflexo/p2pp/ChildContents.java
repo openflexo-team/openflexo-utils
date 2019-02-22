@@ -87,7 +87,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 	}
 
 	@Override
-	public void handlePreludeAndPosludeExtensions() {
+	public void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode) {
 		// TODO Auto-generated method stub
 
 	}

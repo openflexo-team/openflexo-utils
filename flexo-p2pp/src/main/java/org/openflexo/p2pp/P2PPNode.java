@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.p2pp.RawSource.RawSourcePosition;
+import org.openflexo.toolbox.StringUtils;
 
 /**
  * Parser/PrettyPrinter node<br>
@@ -79,15 +80,23 @@ public abstract class P2PPNode<N, T> {
 	protected RawSourcePosition startPosition;
 	protected RawSourcePosition endPosition;
 	protected RawSourceFragment parsedFragment;
+	protected RawSourceFragment prelude;
+	protected RawSourceFragment postlude;
 
 	private List<PrettyPrintableContents> ppContents = new ArrayList<>();
 
 	public static final String SPACE = " ";
 	public static final String LINE_SEPARATOR = "\n";
 
-	public P2PPNode(T aModelObject, N astNode) {
+	public P2PPNode(T aModelObject, N astNode, FragmentRetriever<?> fragmentRetriever) {
 		this.astNode = astNode;
 		this.modelObject = aModelObject;
+
+		if (astNode != null) {
+			RawSourceFragment fragment = ((FragmentRetriever) fragmentRetriever).retrieveFragment(astNode);
+			setStartPosition(fragment.getStartPosition());
+			setEndPosition(fragment.getEndPosition());
+		}
 	}
 
 	protected void addToChildren(P2PPNode<?, ?> child, int index) {
@@ -176,6 +185,14 @@ public abstract class P2PPNode<N, T> {
 		return parsedFragment;
 	}
 
+	public RawSourceFragment getPrelude() {
+		return prelude;
+	}
+
+	public RawSourceFragment getPostlude() {
+		return postlude;
+	}
+
 	/**
 	 * Build and return a new pretty-print context
 	 * 
@@ -185,12 +202,12 @@ public abstract class P2PPNode<N, T> {
 		return new DefaultPrettyPrintContext(0);
 	}
 
-	public final void initializePrettyPrint() {
+	public final void initializePrettyPrint(P2PPNode<?, ?> rootNode) {
 		preparePrettyPrint(getASTNode() != null);
 		// System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
 
 		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
-			prettyPrintableContents.handlePreludeAndPosludeExtensions();
+			prettyPrintableContents.handlePreludeAndPoslude(rootNode);
 		}
 
 	}
@@ -558,44 +575,160 @@ public abstract class P2PPNode<N, T> {
 		return null;
 	}
 
-	/**
-	 * Return position as a cursor BEFORE the targeted character
-	 * 
-	 * @param line
-	 * @param pos
-	 * @return
-	 */
-	/* Seems unused and bring dependencies to parser
-	private RawSourcePosition getPositionBefore(Token token) {
-		return getRawSource().makePositionBeforeChar(token.getLine(), token.getPos() - 1);
+	protected RawSourceFragment tryToIdentifyPrelude(String expectedPrelude, P2PPNode<?, ?> rootNode) {
+		if (getLastParsedFragment() == null) {
+			return null;
+		}
+		if (StringUtils.isEmpty(expectedPrelude)) {
+			return null;
+		}
+		// System.out.println("On " + getClass().getSimpleName() + " trying to identify prelude [" + expectedPrelude + "]");
+		prelude = findUnmappedSegmentBackwardFrom(expectedPrelude, getLastParsedFragment().getStartPosition(), rootNode);
+		if (prelude == null) {
+			// Try to find after trimming
+			// System.out.println("cannot find, looking for [" + expectedPrelude.trim() + "]");
+			prelude = findUnmappedSegmentBackwardFrom(expectedPrelude.trim(), getLastParsedFragment().getStartPosition(), rootNode);
+		}
+		/*System.out.println("Finally found " + returned);
+		if (returned != null) {
+			System.out.println("RawText: [" + returned.getRawText() + "]");
+		}*/
+		return prelude;
 	}
-	*/
-	/**
-	 * Return position as a cursor AFTER the targeted character
-	 * 
-	 * @param line
-	 * @param pos
-	 * @return
-	 */
-	/* Seems unused and bring dependencies to parser
-	private RawSourcePosition getPositionAfter(Token token) {
-		return getRawSource().makePositionAfterChar(token.getLine(), token.getPos());
+
+	protected RawSourceFragment tryToIdentifyPostlude(String expectedPostlude, P2PPNode<?, ?> rootNode) {
+		if (getLastParsedFragment() == null) {
+			return null;
+		}
+		if (StringUtils.isEmpty(expectedPostlude)) {
+			return null;
+		}
+		// System.out.println("On " + getClass().getSimpleName() + " trying to identify prelude [" + expectedPrelude + "]");
+		postlude = findUnmappedSegmentForwardFrom(expectedPostlude, getLastParsedFragment().getEndPosition(), rootNode);
+		if (postlude == null) {
+			// Try to find after trimming
+			// System.out.println("cannot find, looking for [" + expectedPrelude.trim() + "]");
+			postlude = findUnmappedSegmentForwardFrom(expectedPostlude.trim(), getLastParsedFragment().getEndPosition(), rootNode);
+		}
+		/*System.out.println("Finally found " + returned);
+		if (returned != null) {
+			System.out.println("RawText: [" + returned.getRawText() + "]");
+		}*/
+		return postlude;
 	}
-	*/
-	/**
-	 * Return fragment matching supplied node in AST
-	 * 
-	 * @param token
-	 * @return
-	 */
-	// public abstract RawSourceFragment getFragment(N node);
+
+	private RawSourceFragment findUnmappedSegmentBackwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
+		int length = expected.length();
+		int i = 0;
+		// System.out.println("Backward looking for [" + expected + "] from " + position);
+		boolean positionStillValid = true;
+		while (positionStillValid) {
+			try {
+				RawSourcePosition start = position.decrement(length + i);
+				RawSourcePosition end = position.decrement(i);
+				RawSourceFragment f = position.getOuterType().makeFragment(start, end);
+				// System.out.println("Test fragment " + f + " [" + f.getRawText() + "]");
+				if (rootNode.isFragmentMapped(f)) {
+					// This fragment intersects another mapped fragment, abort
+					return null;
+				}
+				if (f.getRawText().equals(expected)) {
+					return f;
+				}
+				i++;
+			} catch (ArrayIndexOutOfBoundsException e) {
+				positionStillValid = false;
+			}
+		}
+		return null;
+	}
+
+	private RawSourceFragment findUnmappedSegmentForwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
+		int length = expected.length();
+		int i = 0;
+		// System.out.println("Forward looking for [" + expected + "] from " + position);
+		boolean positionStillValid = true;
+		while (positionStillValid) {
+			try {
+				RawSourcePosition start = position.increment(i);
+				RawSourcePosition end = position.increment(length + i);
+				RawSourceFragment f = position.getOuterType().makeFragment(start, end);
+				// System.out.println("Test fragment " + f + " [" + f.getRawText() + "]");
+				if (rootNode.isFragmentMapped(f)) {
+					// This fragment intersects another mapped fragment, abort
+					return null;
+				}
+				if (f.getRawText().equals(expected)) {
+					return f;
+				}
+				i++;
+			} catch (ArrayIndexOutOfBoundsException e) {
+				positionStillValid = false;
+			}
+		}
+		return null;
+	}
 
 	/**
-	 * Return fragment matching supplied nodes in AST
+	 * Search if supplied fragment is entirely or partially mapped in any of this node's subtree, either by the lastParsedFragment, or the
+	 * prelude, or the postlude
 	 * 
-	 * @param token
+	 * @param fragment
 	 * @return
 	 */
-	// public abstract RawSourceFragment getFragment(N node, List<? extends N> otherNodes);
+	public boolean isFragmentMapped(RawSourceFragment fragment) {
+		if (getChildren().size() == 0) {
+			// This is a leaf node
+			if (fragment.intersects(getLastParsedFragment())) {
+				return true;
+			}
+			if (getPrelude() != null && fragment.intersects(getPrelude())) {
+				return true;
+			}
+			if (getPostlude() != null && fragment.intersects(getPostlude())) {
+				return true;
+			}
+		}
+		else {
+			// Otherwise, look in children
+			for (P2PPNode<?, ?> child : getChildren()) {
+				if (child.isFragmentMapped(fragment)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	// TODO
+	// Provide better implementation by researching in backward direction first occurence of prelude
+	// while text is not associated by any semantics
+	/*private void handlePreludeExtension(P2PPNode<?, T> node) {
+		if (node.getLastParsedFragment() == null) {
+			return;
+		}
+		if (getPrelude() == null || getPrelude().equals("")) {
+			// Nothing to do
+		}
+		else if (getPrelude().equals(P2PPNode.LINE_SEPARATOR)) {
+			// We go to previous line, when possible
+			if (node.getStartPosition().canDecrement()) {
+				node.setStartPosition(node.getStartPosition().decrement());
+			}
+		}
+		else if (getPrelude().equals(",")) {
+			System.out.println("Tiens c'est bon, j'ai ma virgule");
+			if (node.getStartPosition().canDecrement()) {
+				node.setStartPosition(node.getStartPosition().decrement());
+			}
+		}
+	
+		// Workaround to handle indentation: please do better here !!!
+		if (getRelativeIndentation() == 1) {
+			if (node.getStartPosition().canDecrement()) {
+				node.setStartPosition(node.getStartPosition().decrement());
+			}
+		}
+	}*/
 
 }

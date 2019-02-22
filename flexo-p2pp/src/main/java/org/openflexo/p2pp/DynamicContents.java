@@ -91,7 +91,7 @@ public class DynamicContents extends PrettyPrintableContents {
 	}
 
 	@Override
-	public void handlePreludeAndPosludeExtensions() {
+	public void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode) {
 		// Nothing to do
 	}
 

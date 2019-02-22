@@ -48,6 +48,7 @@ import java.io.InputStream;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.p2pp.RawSource.RawSourcePosition;
 import org.openflexo.test.OrderedRunner;
 import org.openflexo.test.TestOrder;
@@ -140,5 +141,53 @@ public class TestRawSource {
 		RawSourcePosition p3 = rawSource.makePositionBeforeChar(1, 2);
 		RawSourcePosition p4 = rawSource.makePositionAfterChar(3, 1);
 		assertEquals("BCD\nEFG\nH", rawSource.makeFragment(p3, p4).getRawText());
+	}
+
+	@Test
+	@TestOrder(4)
+	public void testIntersectSingleLine() throws IOException {
+		System.out.println(rawSource.debug());
+		RawSourceFragment f1 = rawSource.makeFragment(1, 0, 1, 3);
+		System.out.println("f1=" + f1 + " [" + f1.getRawText() + "]");
+		RawSourceFragment f2 = rawSource.makeFragment(1, 1, 1, 4);
+		System.out.println("f2=" + f2 + " [" + f2.getRawText() + "]");
+		assertTrue(f1.intersects(f2));
+		assertTrue(f2.intersects(f1));
+		RawSourceFragment f3 = rawSource.makeFragment(1, 0, 1, 2);
+		System.out.println("f3=" + f3 + " [" + f3.getRawText() + "]");
+		RawSourceFragment f4 = rawSource.makeFragment(1, 2, 1, 4);
+		System.out.println("f4=" + f4 + " [" + f4.getRawText() + "]");
+		assertFalse(f3.intersects(f4));
+		assertFalse(f4.intersects(f3));
+		assertTrue(f1.intersects(f3));
+		assertTrue(f3.intersects(f1));
+		RawSourceFragment f5 = rawSource.makeFragment(1, 0, 1, 1);
+		System.out.println("f5=" + f5 + " [" + f5.getRawText() + "]");
+		assertFalse(f5.intersects(f4));
+		assertFalse(f4.intersects(f5));
+	}
+
+	@Test
+	@TestOrder(4)
+	public void testIntersectMultipleLine() throws IOException {
+		System.out.println(rawSource.debug());
+		RawSourceFragment f1 = rawSource.makeFragment(1, 0, 3, 2);
+		System.out.println("f1=" + f1 + " [" + f1.getRawText() + "]");
+		RawSourceFragment f2 = rawSource.makeFragment(2, 2, 5, 1);
+		System.out.println("f2=" + f2 + " [" + f2.getRawText() + "]");
+		assertTrue(f1.intersects(f2));
+		assertTrue(f2.intersects(f1));
+		RawSourceFragment f3 = rawSource.makeFragment(1, 0, 2, 2);
+		System.out.println("f3=" + f3 + " [" + f3.getRawText() + "]");
+		RawSourceFragment f4 = rawSource.makeFragment(3, 1, 5, 2);
+		System.out.println("f4=" + f4 + " [" + f4.getRawText() + "]");
+		assertFalse(f3.intersects(f4));
+		assertFalse(f4.intersects(f3));
+		assertTrue(f1.intersects(f3));
+		assertTrue(f3.intersects(f1));
+		RawSourceFragment f5 = rawSource.makeFragment(2, 2, 2, 3);
+		System.out.println("f5=" + f5 + " [" + f5.getRawText() + "]");
+		assertFalse(f5.intersects(f3));
+		assertFalse(f3.intersects(f5));
 	}
 }

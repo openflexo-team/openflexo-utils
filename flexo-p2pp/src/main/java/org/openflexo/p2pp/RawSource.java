@@ -122,6 +122,14 @@ public class RawSource {
 			return new RawSourcePosition(newLine, newPos);
 		}
 
+		public RawSourcePosition decrement(int n) {
+			RawSourcePosition returned = this;
+			for (int i = 0; i < n; i++) {
+				returned = returned.decrement();
+			}
+			return returned;
+		}
+
 		public boolean canIncrement() {
 			// System.out.println("pos=" + pos);
 			// System.out.println("rows.get(rows.size() - 1).length()=" + (rows.get(rows.size() - 1).length()));
@@ -146,6 +154,14 @@ public class RawSource {
 				newPos = 0;
 			}
 			return new RawSourcePosition(newLine, newPos);
+		}
+
+		public RawSourcePosition increment(int n) {
+			RawSourcePosition returned = this;
+			for (int i = 0; i < n; i++) {
+				returned = returned.increment();
+			}
+			return returned;
 		}
 
 		@Override
@@ -298,10 +314,11 @@ public class RawSource {
 							sb.append(rows.get(i - 1).substring(0, endPos));
 						}
 						/*} catch (StringIndexOutOfBoundsException e) {
-							System.out.println("Bizarre, pour " + getClass().getSimpleName() + " from " + startLine + ":" + startChar
-									+ " to " + endLine + ":" + endChar);
+							System.out.println(
+									"Bizarre, pour " + this + " from " + startLine + ":" + endPos + " to " + endLine + ":" + endPos);
+							System.out.println(getRawSource().debug());
 							System.out.println("String = [" + rows.get(i - 1) + "]");
-							System.out.println("Je cherche a extraire 0-" + endChar);
+							System.out.println("Je cherche a extraire 0-" + endPos);
 							sb.append("ERROR!");
 							Thread.dumpStack();
 						}*/
@@ -315,21 +332,80 @@ public class RawSource {
 			return null;
 		}
 
-		/*public RawSource makeRowSource() {
-			String rawSourceAsText = getRawText();
-			InputStream targetStream = new ByteArrayInputStream(rawSourceAsText.getBytes());
-			try {
-				return new RawSource(targetStream);
-			} catch (IOException e) {
-				logger.warning("Unexpected IOException " + e);
-				e.printStackTrace();
-				return null;
+		public boolean intersects(RawSourceFragment otherFragment) {
+			if (!getRawSource().equals(otherFragment.getRawSource()))
+				return false;
+			RawSourcePosition s1 = getStartPosition();
+			RawSourcePosition e1 = getEndPosition();
+			RawSourcePosition s2 = otherFragment.getStartPosition();
+			RawSourcePosition e2 = otherFragment.getEndPosition();
+			if (s1.compareTo(s2) < 0) {
+				// s1 is BEFORE s2
+				if (e1.compareTo(s2) <= 0) {
+					// e1 is BEFORE s2
+					return false; // This fragment is located BEFORE other fragment
+				}
+				else {
+					return true; // Fragments intersects
+				}
 			}
-		
-		}*/
+			else if (s2.compareTo(s1) < 0) {
+				// s2 is BEFORE s1
+				if (e2.compareTo(s1) <= 0) {
+					// e2 is BEFORE s1
+					return false; // Other fragment is located BEFORE this fragment
+				}
+				else {
+					return true; // Fragments intersects
+				}
+			}
+			else { // s1==s2
+				return getLength() > 0 && otherFragment.getLength() > 0;
+			}
+		}
+
+		public int getLength() {
+			return getRawText().length();
+		}
 
 		public RawSource getRawSource() {
 			return RawSource.this;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getRawSource().hashCode();
+			result = prime * result + ((end == null) ? 0 : end.hashCode());
+			result = prime * result + ((start == null) ? 0 : start.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RawSourceFragment other = (RawSourceFragment) obj;
+			if (!getRawSource().equals(other.getRawSource()))
+				return false;
+			if (end == null) {
+				if (other.end != null)
+					return false;
+			}
+			else if (!end.equals(other.end))
+				return false;
+			if (start == null) {
+				if (other.start != null)
+					return false;
+			}
+			else if (!start.equals(other.start))
+				return false;
+			return true;
 		}
 
 	}
@@ -389,10 +465,23 @@ public class RawSource {
 	 * @param start
 	 *            start position (index of first character to take)
 	 * @param end
-	 *            end position (index of first character to exclude)
+	 *            end position (index of last character to take)
 	 */
 	public RawSourceFragment makeFragment(RawSourcePosition start, RawSourcePosition end) {
 		return new RawSourceFragment(start, end);
+	}
+
+	/**
+	 * Build new fragment, identified by start position and end position
+	 * 
+	 * @param startLine
+	 * @param startCharacter
+	 * @param endLine
+	 * @param endCharacter
+	 * @return
+	 */
+	public RawSourceFragment makeFragment(int startLine, int startCharacter, int endLine, int endCharacter) {
+		return makeFragment(makePositionAfterChar(startLine, startCharacter), makePositionAfterChar(endLine, endCharacter));
 	}
 
 	/**
@@ -420,4 +509,5 @@ public class RawSource {
 		}
 		return sb.toString();
 	}
+
 }

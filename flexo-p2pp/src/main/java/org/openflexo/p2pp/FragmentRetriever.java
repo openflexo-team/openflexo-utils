@@ -1,8 +1,8 @@
 /**
  * 
- * Copyright (c) 2019, Openflexo
+ * Copyright (c) 2014-2015, Openflexo
  * 
- * This file is part of FML-parser, a component of the software infrastructure 
+ * This file is part of Flexo-foundation, a component of the software infrastructure 
  * developed at Openflexo.
  * 
  * 
@@ -39,60 +39,22 @@
 package org.openflexo.p2pp;
 
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
-import org.openflexo.toolbox.StringUtils;
 
 /**
- * A static contents (a keyword for example)
+ * An object that provide Fragment reference from parsed node<br>
  * 
  * @author sylvain
  *
- * @param <T>
+ * @param <N>
+ *            type of nodes beeing parsed
  */
-public class StaticContents extends PrettyPrintableContents {
+public interface FragmentRetriever<N> {
 
-	private final String staticContents;
-
-	public StaticContents(String staticContents, RawSourceFragment fragment) {
-		super(0);
-		this.staticContents = staticContents;
-	}
-
-	public StaticContents(String prelude, String staticContents, RawSourceFragment fragment) {
-		super(prelude, null, 0);
-		this.staticContents = staticContents;
-	}
-
-	public StaticContents(String prelude, String staticContents, String postlude, RawSourceFragment fragment) {
-		super(prelude, postlude, 0);
-		this.staticContents = staticContents;
-	}
-
-	public String getStaticContents() {
-		return staticContents;
-	}
-
-	@Override
-	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
-		StringBuffer sb = new StringBuffer();
-		if (StringUtils.isNotEmpty(getPrelude())) {
-			sb.append(getPrelude());
-		}
-		if (StringUtils.isNotEmpty(getStaticContents())) {
-			sb.append(getStaticContents());
-		}
-		if (StringUtils.isNotEmpty(getPostlude())) {
-			sb.append(getPostlude());
-		}
-		return sb.toString();
-	}
-
-	@Override
-	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
-		// Nothing to do
-	}
-
-	@Override
-	public void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode) {
-		// Nothing to do
-	}
+	/**
+	 * Retrieve fragment from supplied parsed node
+	 * 
+	 * @param parsedNode
+	 * @return
+	 */
+	public RawSourceFragment retrieveFragment(N parsedNode);
 }
