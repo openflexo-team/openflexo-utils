@@ -139,5 +139,5 @@ public abstract class PrettyPrintableContents {
 
 	public abstract void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context);
 
-	public abstract void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode);
+	public abstract void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context);
 }

@@ -91,7 +91,7 @@ public class DynamicContents extends PrettyPrintableContents {
 	}
 
 	@Override
-	public void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode) {
+	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		// Nothing to do
 	}
 

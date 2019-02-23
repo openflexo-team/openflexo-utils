@@ -77,6 +77,9 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		super(prelude, postlude, relativeIndentation);
 		this.preludeForFirstItem = preludeForFirstItem;
 		this.postludeForLastItem = postludeForLastItem;
+		// System.out.println("ChildrenContents for " + objectType);
+		// System.out.println("prelude=[" + getPrelude() + "]");
+		// System.out.println("postlude=[" + getPostlude() + "]");
 		this.parentNode = parentNode;
 		// Unused this.objectType = objectType;
 		// setFragment(childNode.getLastParsedFragment());
@@ -186,9 +189,9 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 					// OK, this is an update
 					derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.getTextualRepresentation(context));
 					insertionPoint = childNode.getLastParsedFragment().getEndPosition();
-					/*for (int i = 0; i < getPostlude().length(); i++) {
-						insertionPoint = insertionPoint.increment();
-					}*/
+					if (childNode.getPostlude() != null) {
+						insertionPoint = childNode.getPostlude().getEndPosition();
+					}
 				}
 				else {
 					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
@@ -215,7 +218,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				}
 				derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
 			}
-			if (wasFirst) {
+			else if (wasFirst) {
 				if (StringUtils.isNotEmpty(preludeForFirstItem)) {
 					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
 					P2PPNode<?, T> newFirstNode = parentNode.getObjectNode(childrenObjectsList.get(0));
@@ -231,7 +234,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
 				}
 			}
-			if (wasLast) {
+			else if (wasLast) {
 				if (StringUtils.isNotEmpty(postludeForLastItem)) {
 					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
 					P2PPNode<?, T> newLastNode = parentNode.getObjectNode(childrenObjectsList.get(childrenObjectsList.size() - 1));
@@ -246,6 +249,15 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 					}
 					derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
 				}
+			}
+			else {
+				if (removedNode.getPrelude() != null) {
+					startPosition = removedNode.getPrelude().getStartPosition();
+				}
+				if (removedNode.getPostlude() != null) {
+					endPosition = removedNode.getPostlude().getEndPosition();
+				}
+				derivedRawSource.remove(startPosition.getOuterType().makeFragment(startPosition, endPosition));
 			}
 
 		}
@@ -262,7 +274,17 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	}
 
 	@Override
-	public void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode) {
+	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
+		handlePreludeAndPoslude(rootNode, context);
+		List<? extends T> allObjects = childrenObjectsSupplier.get();
+		for (int i = 0; i < allObjects.size(); i++) {
+			T childObject = allObjects.get(i);
+			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			childNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
+		}
+	}
+
+	private void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		/*for (T childObject : childrenObjectsSupplier.get()) {
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			// System.out.println("Handle prelude and postlude extension " + childNode + " was: " + childNode.getLastParsedFragment());
@@ -275,11 +297,14 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		for (int i = 0; i < allObjects.size(); i++) {
 			T childObject = allObjects.get(i);
 			String applicablePrelude = getPrelude();
-			if (i == 0 && preludeForFirstItem != null) {
+			if (i == 0 && StringUtils.isNotEmpty(preludeForFirstItem)) {
 				applicablePrelude = preludeForFirstItem;
 			}
+			if (StringUtils.isEmpty(applicablePrelude) && context.getIndentation() > 0) {
+				applicablePrelude = context.getResultingIndentation();
+			}
 			String applicablePostlude = getPostlude();
-			if (i == allObjects.size() - 1 && postludeForLastItem != null) {
+			if (i == allObjects.size() - 1 && StringUtils.isNotEmpty(postludeForLastItem)) {
 				applicablePostlude = postludeForLastItem;
 			}
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
@@ -287,9 +312,10 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				childNode.tryToIdentifyPrelude(applicablePrelude, rootNode);
 			}
 			if (StringUtils.isNotEmpty(applicablePostlude)) {
-				childNode.tryToIdentifyPrelude(applicablePostlude, rootNode);
+				childNode.tryToIdentifyPostlude(applicablePostlude, rootNode);
 			}
 		}
+
 	}
 
 	// TODO

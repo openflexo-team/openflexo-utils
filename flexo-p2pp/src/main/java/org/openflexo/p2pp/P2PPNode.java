@@ -202,12 +202,12 @@ public abstract class P2PPNode<N, T> {
 		return new DefaultPrettyPrintContext(0);
 	}
 
-	public final void initializePrettyPrint(P2PPNode<?, ?> rootNode) {
+	public final void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		preparePrettyPrint(getASTNode() != null);
 		// System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
 
 		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
-			prettyPrintableContents.handlePreludeAndPoslude(rootNode);
+			prettyPrintableContents.initializePrettyPrint(rootNode, context.derive(prettyPrintableContents.getRelativeIndentation()));
 		}
 
 	}
@@ -604,10 +604,10 @@ public abstract class P2PPNode<N, T> {
 			// System.out.println("cannot find, looking for [" + expectedPrelude.trim() + "]");
 			prelude = findUnmappedSegmentBackwardFrom(expectedPrelude.trim(), getLastParsedFragment().getStartPosition(), rootNode);
 		}
-		/*System.out.println("Finally found " + returned);
-		if (returned != null) {
-			System.out.println("RawText: [" + returned.getRawText() + "]");
-		}*/
+		// System.out.println("Finally found " + prelude);
+		// if (prelude != null) {
+		// System.out.println("RawText: [" + prelude.getRawText() + "]");
+		// }
 		return prelude;
 	}
 
@@ -618,17 +618,17 @@ public abstract class P2PPNode<N, T> {
 		if (StringUtils.isEmpty(expectedPostlude)) {
 			return null;
 		}
-		// System.out.println("On " + getClass().getSimpleName() + " trying to identify prelude [" + expectedPrelude + "]");
+		// System.out.println("On " + getClass().getSimpleName() + " trying to identify postlude [" + expectedPostlude + "]");
 		postlude = findUnmappedSegmentForwardFrom(expectedPostlude, getLastParsedFragment().getEndPosition(), rootNode);
 		if (postlude == null) {
 			// Try to find after trimming
 			// System.out.println("cannot find, looking for [" + expectedPrelude.trim() + "]");
 			postlude = findUnmappedSegmentForwardFrom(expectedPostlude.trim(), getLastParsedFragment().getEndPosition(), rootNode);
 		}
-		/*System.out.println("Finally found " + returned);
-		if (returned != null) {
-			System.out.println("RawText: [" + returned.getRawText() + "]");
-		}*/
+		// System.out.println("Finally found " + postlude);
+		// if (postlude != null) {
+		// System.out.println("RawText: [" + postlude.getRawText() + "]");
+		// }
 		return postlude;
 	}
 
@@ -642,7 +642,7 @@ public abstract class P2PPNode<N, T> {
 				RawSourcePosition start = position.decrement(length + i);
 				RawSourcePosition end = position.decrement(i);
 				RawSourceFragment f = position.getOuterType().makeFragment(start, end);
-				// System.out.println("Test fragment " + f + " [" + f.getRawText() + "]");
+				// System.out.println("Test backward fragment " + f + " [" + f.getRawText() + "]");
 				if (rootNode.isFragmentMapped(f)) {
 					// This fragment intersects another mapped fragment, abort
 					return null;
@@ -668,7 +668,7 @@ public abstract class P2PPNode<N, T> {
 				RawSourcePosition start = position.increment(i);
 				RawSourcePosition end = position.increment(length + i);
 				RawSourceFragment f = position.getOuterType().makeFragment(start, end);
-				// System.out.println("Test fragment " + f + " [" + f.getRawText() + "]");
+				// System.out.println("Test forward fragment " + f + " [" + f.getRawText() + "]");
 				if (rootNode.isFragmentMapped(f)) {
 					// This fragment intersects another mapped fragment, abort
 					return null;

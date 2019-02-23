@@ -87,8 +87,8 @@ public class ChildContents<T> extends PrettyPrintableContents {
 	}
 
 	@Override
-	public void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode) {
-		// TODO Auto-generated method stub
-
+	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
+		childNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
 	}
+
 }

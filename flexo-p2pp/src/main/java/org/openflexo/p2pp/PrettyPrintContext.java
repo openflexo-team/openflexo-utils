@@ -13,6 +13,8 @@ public interface PrettyPrintContext {
 	 */
 	public PrettyPrintContext derive(int indentation);
 
+	public int getIndentation();
+
 	public String getResultingIndentation();
 
 	public String indent(String stringToIndent);

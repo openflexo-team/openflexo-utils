@@ -45,6 +45,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.openflexo.toolbox.StringUtils;
+
 /**
  * @author sylvain
  * 
@@ -60,6 +62,11 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 
 	public DefaultPrettyPrintContext(int indentation) {
 		this.indentation = indentation;
+	}
+
+	@Override
+	public int getIndentation() {
+		return indentation;
 	}
 
 	/**
@@ -98,9 +105,13 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 
 	@Override
 	public String indent(String stringToIndent) {
+
 		if (indentation == 0) {
 			return stringToIndent;
 		}
+
+		System.out.println("On indente: [" + stringToIndent + "]");
+
 		List<String> rows = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new StringReader(stringToIndent))) {
 			String nextLine = null;
@@ -117,7 +128,9 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 
 		StringBuffer sb = new StringBuffer();
 		for (String row : rows) {
-			sb.append(getResultingIndentation() + row);
+			if (StringUtils.isNotEmpty(row.trim())) {
+				sb.append(getResultingIndentation() + row);
+			}
 		}
 		return sb.toString();
 	}
