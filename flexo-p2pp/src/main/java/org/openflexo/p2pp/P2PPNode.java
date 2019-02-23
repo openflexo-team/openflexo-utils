@@ -426,16 +426,21 @@ public abstract class P2PPNode<N, T> {
 	 * @param prelude
 	 * @param childObject
 	 * @param postude
-	 * @param indentationLevel
+	 * @param relativeIndentation
+	 *            <ul>
+	 *            <li>When relativeIndentation is zero, keep current indentation</li>
+	 *            <li>When relativeIndentation is positive, increment current indentation with that value</li>
+	 *            <li>When relativeIndentation is negative (-1), discard current indentation</li>
+	 *            </ul>
 	 */
-	protected <C> void appendToChildPrettyPrintContents(String prelude, C childObject, String postude, int indentationLevel) {
+	protected <C> void appendToChildPrettyPrintContents(String prelude, C childObject, String postude, int relativeIndentation) {
 
 		P2PPNode<?, C> childNode = getObjectNode(childObject);
 		if (childNode == null) {
 			childNode = makeObjectNode(childObject);
 			addToChildren(childNode);
 		}
-		ChildContents<?> newChildContents = new ChildContents<>(prelude, childNode, postude, indentationLevel);
+		ChildContents<?> newChildContents = new ChildContents<>(prelude, childNode, postude, relativeIndentation);
 		ppContents.add(newChildContents);
 	}
 
@@ -448,14 +453,19 @@ public abstract class P2PPNode<N, T> {
 	 * @param prelude
 	 * @param childrenObjects
 	 * @param postude
-	 * @param indentationLevel
+	 * @param relativeIndentation
+	 *            <ul>
+	 *            <li>When relativeIndentation is zero, keep current indentation</li>
+	 *            <li>When relativeIndentation is positive, increment current indentation with that value</li>
+	 *            <li>When relativeIndentation is negative (-1), discard current indentation</li>
+	 *            </ul>
 	 * @param childrenType
 	 * @return
 	 */
 	protected <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String prelude, Supplier<List<? extends C>> childrenObjects,
-			String postude, int indentationLevel, Class<C> childrenType) {
+			String postude, int relativeIndentation, Class<C> childrenType) {
 
-		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(prelude, childrenObjects, postude, indentationLevel, this,
+		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(prelude, childrenObjects, postude, relativeIndentation, this,
 				childrenType);
 		ppContents.add(newChildrenContents);
 		return newChildrenContents;
@@ -472,16 +482,21 @@ public abstract class P2PPNode<N, T> {
 	 * @param childrenObjects
 	 * @param postude
 	 * @param postludeForLastItem
-	 * @param indentationLevel
+	 * @param relativeIndentation
+	 *            <ul>
+	 *            <li>When relativeIndentation is zero, keep current indentation</li>
+	 *            <li>When relativeIndentation is positive, increment current indentation with that value</li>
+	 *            <li>When relativeIndentation is negative (-1), discard current indentation</li>
+	 *            </ul>
 	 * @param childrenType
 	 * @return
 	 */
 	protected <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
-			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, int indentationLevel,
+			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, int relativeIndentation,
 			Class<C> childrenType) {
 
 		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(preludeForFirstItem, prelude, childrenObjects, postude,
-				postludeForLastItem, indentationLevel, this, childrenType);
+				postludeForLastItem, relativeIndentation, this, childrenType);
 		ppContents.add(newChildrenContents);
 		return newChildrenContents;
 	}
@@ -503,7 +518,7 @@ public abstract class P2PPNode<N, T> {
 	protected <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
 			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, Class<C> childrenType) {
 
-		return appendToChildrenPrettyPrintContents(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem, 0,
+		return appendToChildrenPrettyPrintContents(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem, -1,
 				childrenType);
 	}
 

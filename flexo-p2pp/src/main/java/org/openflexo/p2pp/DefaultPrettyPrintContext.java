@@ -62,8 +62,20 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 		this.indentation = indentation;
 	}
 
+	/**
+	 * Derive a PrettyPrintContext from this PrettyPrintContext
+	 * 
+	 * <ul>
+	 * <li>When relativeIndentation is zero, keep current indentation</li>
+	 * <li>When relativeIndentation is positive, increment current indentation with that value</li>
+	 * <li>When relativeIndentation is negative (-1), discard current indentation</li>
+	 * </ul>
+	 */
 	@Override
 	public PrettyPrintContext derive(int relativeIndentation) {
+		if (relativeIndentation == -1) {
+			return new DefaultPrettyPrintContext(0);
+		}
 		return new DefaultPrettyPrintContext(indentation + relativeIndentation);
 	}
 
