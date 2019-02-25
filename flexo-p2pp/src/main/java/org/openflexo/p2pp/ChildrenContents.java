@@ -178,10 +178,50 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			// System.out.println("*** Handling " + childObject);
 			// System.out.println("insertionPoint=" + insertionPoint);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
-
-			// TODO: factoriser le code plus bas
-
 			if (childNode == null) {
+				childNode = parentNode.makeObjectNode(childObject);
+				parentNode.addToChildren(childNode);
+			}
+
+			if (!lastParsedNodes.contains(childNode)) {
+				// In this case manage insertion
+				if (postludeForLastItem != null && childObject == childrenObjectsList.get(childrenObjectsList.size() - 1)) {
+					// We have a special postlude for last item and this is the last item
+					String insertThis = (getPostlude() != null ? getPostlude() : "") + (getPrelude() != null ? getPrelude() : "")
+							+ childNode.getTextualRepresentation(derivedContext);
+					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
+					derivedRawSource.insert(insertionPoint, insertThis);
+				}
+				else {
+					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
+							+ (getPostlude() != null ? getPostlude() : "");
+					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
+					derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
+				}
+
+				/*if (postludeForLastItem == null) { // TODO tester si dernier element
+					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
+					+ (getPostlude() != null ? getPostlude() : "");
+					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
+					derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
+				}
+				else {
+					// There is a special postlude for the last element
+				}*/
+			}
+			else {
+				// OK, this is an update
+				derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.getTextualRepresentation(context));
+				insertionPoint = childNode.getLastParsedFragment().getEndPosition();
+				insertionPointAfterPostlude = childNode.getLastParsedFragment().getEndPosition();
+				System.out.println("Hop, pour " + childObject + " insertionPoint =" + insertionPoint);
+				if (childNode.getPostlude() != null) {
+					insertionPointAfterPostlude = childNode.getPostlude().getEndPosition();
+					System.out.println("Hop, pour " + childObject + " je decale en =" + insertionPoint);
+				}
+			}
+
+			/*if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
 				parentNode.addToChildren(childNode);
 				// System.out.println("Nouveau childNode for " + childObject);
@@ -228,7 +268,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 						derivedRawSource.insert(insertionPoint, insertThis);
 					}
 				}
-			}
+			}*/
 			nodesToBeRemoved.remove(childNode);
 		}
 
