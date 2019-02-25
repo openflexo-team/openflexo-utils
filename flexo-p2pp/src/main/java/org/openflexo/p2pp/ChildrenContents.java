@@ -199,15 +199,6 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 					derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
 				}
 
-				/*if (postludeForLastItem == null) { // TODO tester si dernier element
-					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
-					+ (getPostlude() != null ? getPostlude() : "");
-					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
-					derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
-				}
-				else {
-					// There is a special postlude for the last element
-				}*/
 			}
 			else {
 				// OK, this is an update
@@ -221,54 +212,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				}
 			}
 
-			/*if (childNode == null) {
-				childNode = parentNode.makeObjectNode(childObject);
-				parentNode.addToChildren(childNode);
-				// System.out.println("Nouveau childNode for " + childObject);
-				// System.out.println("ASTNode " + childNode.getASTNode());
-				// System.out.println("FML= " + childNode.getFMLRepresentation(context));
-				if (postludeForLastItem == null) { // TODO tester si dernier element
-					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
-							+ (getPostlude() != null ? getPostlude() : "");
-					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
-					derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
-				}
-				else {
-					// There is a special postlude for the last element
-					String insertThis = (getPostlude() != null ? getPostlude() : "") + (getPrelude() != null ? getPrelude() : "")
-							+ childNode.getTextualRepresentation(derivedContext);
-					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
-					derivedRawSource.insert(insertionPoint, insertThis);
-				}
-			}
-			else {
-				if (lastParsedNodes.contains(childNode)) {
-					// OK, this is an update
-					derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.getTextualRepresentation(context));
-					insertionPoint = childNode.getLastParsedFragment().getEndPosition();
-					insertionPointAfterPostlude = childNode.getLastParsedFragment().getEndPosition();
-					System.out.println("Hop, pour " + childObject + " insertionPoint =" + insertionPoint);
-					if (childNode.getPostlude() != null) {
-						insertionPointAfterPostlude = childNode.getPostlude().getEndPosition();
-						System.out.println("Hop, pour " + childObject + " je decale en =" + insertionPoint);
-					}
-				}
-				else {
-					if (postludeForLastItem == null) {
-						String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
-								+ (getPostlude() != null ? getPostlude() : "");
-						System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
-						derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
-					}
-					else {
-						// There is a special postlude for the last element
-						String insertThis = (getPostlude() != null ? getPostlude() : "") + (getPrelude() != null ? getPrelude() : "")
-								+ childNode.getTextualRepresentation(derivedContext);
-						System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
-						derivedRawSource.insert(insertionPoint, insertThis);
-					}
-				}
-			}*/
+			// Marks the node beeing handled
 			nodesToBeRemoved.remove(childNode);
 		}
 
@@ -332,15 +276,6 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 		}
 
-		/*FMLObjectNode<?, ?> childNode = getObjectNode(childObject);
-		if (childNode == null) {
-			childNode = makeObjectNode(childObject);
-			addToChildren(childNode);
-		}*/
-
-		/*System.out.println("> Pour ChildContents " + childNode.getFMLObject() + " c'est plus complique");
-		System.out.println("Et on calcule la nouvelle valeur:");
-		derivedRawSource.replace(getFragment(), childNode.computeFMLRepresentation(context));*/
 	}
 
 	@Override
@@ -355,14 +290,6 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	}
 
 	private void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
-		/*for (T childObject : childrenObjectsSupplier.get()) {
-			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
-			// System.out.println("Handle prelude and postlude extension " + childNode + " was: " + childNode.getLastParsedFragment());
-			// handlePreludeExtension(childNode);
-			// handlePostludeExtension(childNode);
-			// System.out.println("Handle prelude and postlude extension " + childNode + " now: " + childNode.getLastParsedFragment());
-		}*/
-
 		List<? extends T> allObjects = childrenObjectsSupplier.get();
 		for (int i = 0; i < allObjects.size(); i++) {
 			T childObject = allObjects.get(i);
@@ -388,57 +315,5 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 	}
 
-	// TODO
-	// Provide better implementation by researching in backward direction first occurence of prelude
-	// while text is not associated by any semantics
-	/*private void handlePreludeExtension(P2PPNode<?, T> node) {
-		if (node.getLastParsedFragment() == null) {
-			return;
-		}
-		if (getPrelude() == null || getPrelude().equals("")) {
-			// Nothing to do
-		}
-		else if (getPrelude().equals(P2PPNode.LINE_SEPARATOR)) {
-			// We go to previous line, when possible
-			if (node.getStartPosition().canDecrement()) {
-				node.setStartPosition(node.getStartPosition().decrement());
-			}
-		}
-		else if (getPrelude().equals(",")) {
-			System.out.println("Tiens c'est bon, j'ai ma virgule");
-			if (node.getStartPosition().canDecrement()) {
-				node.setStartPosition(node.getStartPosition().decrement());
-			}
-		}
-	
-		// Workaround to handle indentation: please do better here !!!
-		if (getRelativeIndentation() == 1) {
-			if (node.getStartPosition().canDecrement()) {
-				node.setStartPosition(node.getStartPosition().decrement());
-			}
-		}
-	}*/
-
-	// TODO
-	// Provide better implementation by researching in forward direction first occurence of postlude
-	// while text is not associated by any semantics
-	/*private void handlePostludeExtension(P2PPNode<?, T> node) {
-	
-		if (node.getLastParsedFragment() == null) {
-			return;
-		}
-		if (getPostlude() == null || getPostlude().equals("")) {
-			// Nothing to do
-		}
-		else if (getPostlude().equals(P2PPNode.LINE_SEPARATOR)) {
-			// We go to the next line, when possible
-			// TODO: handle the case of this position is in another fragment
-			RawSourcePosition p = node.getLastParsedFragment().getEndPosition();
-			if (p.getLine() <= p.getOuterType().size() - 1) {
-				RawSourcePosition newP = p.getOuterType().makePositionBeforeChar(p.getLine() + 1, 1);
-				node.setEndPosition(newP);
-			}
-		}
-	}*/
 
 }
