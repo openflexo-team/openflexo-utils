@@ -185,6 +185,14 @@ public class RawSource {
 			}
 		}
 
+		public boolean isBefore(RawSourcePosition other) {
+			return compareTo(other) < 0;
+		}
+
+		public boolean isAfter(RawSourcePosition other) {
+			return compareTo(other) > 0;
+		}
+
 		@Override
 		public String toString() {
 			return "(" + line + ":" + pos + ")";

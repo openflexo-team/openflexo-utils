@@ -164,6 +164,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		// System.out.println("Tous les nodes qu'on considere: " + nodesToBeRemoved);
 
 		RawSourcePosition insertionPoint = defaultInsertionPoint;
+		RawSourcePosition insertionPointAfterPostlude = defaultInsertionPoint;
 
 		// System.out.println("Insertion point pour commencer: " + insertionPoint);
 
@@ -171,32 +172,61 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 		List<? extends T> childrenObjectsList = childrenObjectsSupplier.get();
 
+		// System.out.println("Handling children: " + childrenObjectsList);
+
 		for (T childObject : childrenObjectsList) {
-			// System.out.println("*** Je m'occupe de " + childObject);
+			// System.out.println("*** Handling " + childObject);
+			// System.out.println("insertionPoint=" + insertionPoint);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+
+			// TODO: factoriser le code plus bas
+
 			if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
 				parentNode.addToChildren(childNode);
 				// System.out.println("Nouveau childNode for " + childObject);
 				// System.out.println("ASTNode " + childNode.getASTNode());
 				// System.out.println("FML= " + childNode.getFMLRepresentation(context));
-				String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
-						+ (getPostlude() != null ? getPostlude() : "");
-				derivedRawSource.insert(insertionPoint, insertThis);
+				if (postludeForLastItem == null) { // TODO tester si dernier element
+					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
+							+ (getPostlude() != null ? getPostlude() : "");
+					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
+					derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
+				}
+				else {
+					// There is a special postlude for the last element
+					String insertThis = (getPostlude() != null ? getPostlude() : "") + (getPrelude() != null ? getPrelude() : "")
+							+ childNode.getTextualRepresentation(derivedContext);
+					System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
+					derivedRawSource.insert(insertionPoint, insertThis);
+				}
 			}
 			else {
 				if (lastParsedNodes.contains(childNode)) {
 					// OK, this is an update
 					derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.getTextualRepresentation(context));
 					insertionPoint = childNode.getLastParsedFragment().getEndPosition();
+					insertionPointAfterPostlude = childNode.getLastParsedFragment().getEndPosition();
+					System.out.println("Hop, pour " + childObject + " insertionPoint =" + insertionPoint);
 					if (childNode.getPostlude() != null) {
-						insertionPoint = childNode.getPostlude().getEndPosition();
+						insertionPointAfterPostlude = childNode.getPostlude().getEndPosition();
+						System.out.println("Hop, pour " + childObject + " je decale en =" + insertionPoint);
 					}
 				}
 				else {
-					String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
-							+ (getPostlude() != null ? getPostlude() : "");
-					derivedRawSource.insert(insertionPoint, insertThis);
+					if (postludeForLastItem == null) {
+						String insertThis = (getPrelude() != null ? getPrelude() : "") + childNode.getTextualRepresentation(derivedContext)
+								+ (getPostlude() != null ? getPostlude() : "");
+						System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
+						derivedRawSource.insert(insertionPointAfterPostlude, insertThis);
+					}
+					else {
+						// There is a special postlude for the last element
+						String insertThis = (getPostlude() != null ? getPostlude() : "") + (getPrelude() != null ? getPrelude() : "")
+								+ childNode.getTextualRepresentation(derivedContext);
+						System.out.println("Et donc j'insere en " + insertionPoint + " value=[" + insertThis + "]");
+						derivedRawSource.insert(insertionPoint, insertThis);
+					}
 				}
 			}
 			nodesToBeRemoved.remove(childNode);

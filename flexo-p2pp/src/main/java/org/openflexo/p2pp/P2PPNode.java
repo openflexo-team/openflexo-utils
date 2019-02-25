@@ -604,6 +604,9 @@ public abstract class P2PPNode<N, T> {
 			// System.out.println("cannot find, looking for [" + expectedPrelude.trim() + "]");
 			prelude = findUnmappedSegmentBackwardFrom(expectedPrelude.trim(), getLastParsedFragment().getStartPosition(), rootNode);
 		}
+		if (prelude != null && prelude.getStartPosition().isBefore(getParent().getStartPosition())) {
+			getParent().setStartPosition(prelude.getStartPosition());
+		}
 		// System.out.println("Finally found " + prelude);
 		// if (prelude != null) {
 		// System.out.println("RawText: [" + prelude.getRawText() + "]");
@@ -624,6 +627,9 @@ public abstract class P2PPNode<N, T> {
 			// Try to find after trimming
 			// System.out.println("cannot find, looking for [" + expectedPrelude.trim() + "]");
 			postlude = findUnmappedSegmentForwardFrom(expectedPostlude.trim(), getLastParsedFragment().getEndPosition(), rootNode);
+		}
+		if (postlude != null && postlude.getEndPosition().isAfter(getParent().getEndPosition())) {
+			getParent().setEndPosition(postlude.getEndPosition());
 		}
 		// System.out.println("Finally found " + postlude);
 		// if (postlude != null) {
