@@ -110,7 +110,7 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 			return stringToIndent;
 		}
 
-		System.out.println("On indente: [" + stringToIndent + "]");
+		// System.out.println("Indenting: [" + stringToIndent + "]");
 
 		List<String> rows = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new StringReader(stringToIndent))) {
