@@ -127,9 +127,10 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 		}
 
 		StringBuffer sb = new StringBuffer();
-		for (String row : rows) {
+		for (int i = 0; i < rows.size(); i++) {
+			String row = rows.get(i);
 			if (StringUtils.isNotEmpty(row.trim())) {
-				sb.append(getResultingIndentation() + row);
+				sb.append(getResultingIndentation() + row + (i == rows.size() - 1 ? "" : StringUtils.LINE_SEPARATOR));
 			}
 		}
 		return sb.toString();
