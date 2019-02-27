@@ -38,6 +38,8 @@
 
 package org.openflexo.p2pp;
 
+import java.util.function.Supplier;
+
 import org.openflexo.toolbox.StringUtils;
 
 /**
@@ -50,45 +52,89 @@ import org.openflexo.toolbox.StringUtils;
  */
 public class ChildContents<T> extends PrettyPrintableContents {
 
-	private P2PPNode<?, T> childNode;
+	private Supplier<T> childObjectSupplier;
+	private P2PPNode<?, ?> parentNode;
+	private P2PPNode<?, T> parsedChildNode;
 
-	public ChildContents(String prelude, P2PPNode<?, T> childNode, String postlude, int relativeIndentation) {
+	public ChildContents(String prelude, Supplier<T> childObjectSupplier, String postlude, int relativeIndentation,
+			P2PPNode<?, ?> parentNode) {
 		super(prelude, postlude, relativeIndentation);
-		this.childNode = childNode;
-		setFragment(childNode.getLastParsedFragment());
+		this.childObjectSupplier = childObjectSupplier;
+		this.parentNode = parentNode;
+		T childObject = childObjectSupplier.get();
+		parsedChildNode = parentNode.getObjectNode(childObject);
+		if (parsedChildNode != null) {
+			setFragment(parsedChildNode.getLastParsedFragment());
+		}
 	}
 
-	public P2PPNode<?, T> getChildNode() {
-		return childNode;
+	public P2PPNode<?, T> getParsedChildNode() {
+		return parsedChildNode;
 	}
 
 	@Override
 	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
-		StringBuffer sb = new StringBuffer();
-		String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getRelativeIndentation()));
-		if (StringUtils.isNotEmpty(childPrettyPrint)) {
-			if (StringUtils.isNotEmpty(getPrelude())) {
-				sb.append(getPrelude());
+
+		T childObject = childObjectSupplier.get();
+		if (childObject != null) {
+			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			if (childNode == null) {
+				childNode = parentNode.makeObjectNode(childObject);
+				parentNode.addToChildren(childNode);
 			}
-			sb.append(childPrettyPrint);
-			if (StringUtils.isNotEmpty(getPostlude())) {
-				sb.append(getPostlude());
+			StringBuffer sb = new StringBuffer();
+			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getRelativeIndentation()));
+			if (StringUtils.isNotEmpty(childPrettyPrint)) {
+				if (StringUtils.isNotEmpty(getPrelude())) {
+					sb.append(getPrelude());
+				}
+				sb.append(childPrettyPrint);
+				if (StringUtils.isNotEmpty(getPostlude())) {
+					sb.append(getPostlude());
+				}
 			}
+			return sb.toString();
 		}
-		return sb.toString();
+		return null;
 	}
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
+
+		T childObject = childObjectSupplier.get();
+		if (childObject != null) {
+			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			if (childNode == null) {
+				childNode = parentNode.makeObjectNode(childObject);
+				parentNode.addToChildren(childNode);
+			}
+			PrettyPrintContext derivedContext = context.derive(getRelativeIndentation());
+			if (parsedChildNode != null) {
+				// replace existing by new
+				derivedRawSource.replace(getFragment(), childNode.computeTextualRepresentation(derivedContext));
+			}
+			else {
+				derivedRawSource.insert(parentNode.getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
+			}
+		}
+		else {
+			// new child is null
+			if (parsedChildNode != null) {
+				// object has been removed
+				derivedRawSource.remove(getFragment());
+			}
+		}
+
 		// System.out.println("> Pour ChildContents " + childNode.getFMLObject() + " c'est plus complique");
 		// System.out.println("Et on calcule la nouvelle valeur:");
 		// System.out.println(childNode.computeFMLRepresentation(context));
-		derivedRawSource.replace(getFragment(), childNode.computeTextualRepresentation(context));
 	}
 
 	@Override
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
-		childNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
+		if (parsedChildNode != null) {
+			parsedChildNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
+		}
 	}
 
 }

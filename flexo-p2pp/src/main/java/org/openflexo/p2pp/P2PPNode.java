@@ -221,7 +221,10 @@ public abstract class P2PPNode<N, T> {
 	public final String getNormalizedTextualRepresentation(PrettyPrintContext context) {
 		StringBuffer sb = new StringBuffer();
 		for (PrettyPrintableContents child : ppContents) {
-			sb.append(child.getNormalizedPrettyPrint(context));
+			String normalizedPP = child.getNormalizedPrettyPrint(context);
+			if (normalizedPP != null) {
+				sb.append(normalizedPP);
+			}
 		}
 		// System.out.println("On indente pour indentation=[" + context.getResultingIndentation() + "]");
 		// System.out.println("Ce qu'on indente: " + sb.toString());
@@ -433,15 +436,12 @@ public abstract class P2PPNode<N, T> {
 	 *            <li>When relativeIndentation is negative (-1), discard current indentation</li>
 	 *            </ul>
 	 */
-	protected <C> void appendToChildPrettyPrintContents(String prelude, C childObject, String postude, int relativeIndentation) {
+	protected <C> ChildContents<C> appendToChildPrettyPrintContents(String prelude, Supplier<C> childObjectSupplier, String postude,
+			int relativeIndentation) {
 
-		P2PPNode<?, C> childNode = getObjectNode(childObject);
-		if (childNode == null) {
-			childNode = makeObjectNode(childObject);
-			addToChildren(childNode);
-		}
-		ChildContents<?> newChildContents = new ChildContents<>(prelude, childNode, postude, relativeIndentation);
+		ChildContents<C> newChildContents = new ChildContents<>(prelude, childObjectSupplier, postude, relativeIndentation, this);
 		ppContents.add(newChildContents);
+		return newChildContents;
 	}
 
 	/**
