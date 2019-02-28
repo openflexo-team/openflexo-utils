@@ -85,6 +85,9 @@ public abstract class P2PPNode<N, T> {
 
 	private List<PrettyPrintableContents> ppContents = new ArrayList<>();
 
+	// Indicates that ths P2PPNode was registered in parent P2PPNode relatively to that contents
+	private PrettyPrintableContents registeredForContents;
+
 	public static final String SPACE = " ";
 	public static final String LINE_SEPARATOR = "\n";
 
@@ -107,6 +110,14 @@ public abstract class P2PPNode<N, T> {
 	protected void addToChildren(P2PPNode<?, ?> child) {
 		child.parent = this;
 		children.add(child);
+	}
+
+	public PrettyPrintableContents getRegisteredForContents() {
+		return registeredForContents;
+	}
+
+	protected void setRegisteredForContents(PrettyPrintableContents registeredForContents) {
+		this.registeredForContents = registeredForContents;
 	}
 
 	public N getASTNode() {
@@ -549,6 +560,14 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	protected DerivedRawSource computeTextualRepresentation(PrettyPrintContext context) {
+
+		/*RawSourceFragment completeFragment = getLastParsedFragment();
+		if (getPrelude() != null) {
+			completeFragment = completeFragment.union(getPrelude());
+		}
+		if (getPostlude() != null) {
+			completeFragment = completeFragment.union(getPostlude());
+		}*/
 
 		DerivedRawSource derivedRawSource = new DerivedRawSource(getLastParsedFragment());
 

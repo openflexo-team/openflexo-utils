@@ -65,6 +65,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 		parsedChildNode = parentNode.getObjectNode(childObject);
 		if (parsedChildNode != null) {
 			setFragment(parsedChildNode.getLastParsedFragment());
+			parsedChildNode.setRegisteredForContents(this);
 		}
 	}
 
@@ -82,6 +83,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 				childNode = parentNode.makeObjectNode(childObject);
 				parentNode.addToChildren(childNode);
 			}
+			childNode.setRegisteredForContents(this);
 			StringBuffer sb = new StringBuffer();
 			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getRelativeIndentation()));
 			if (StringUtils.isNotEmpty(childPrettyPrint)) {
@@ -108,6 +110,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 				childNode = parentNode.makeObjectNode(childObject);
 				parentNode.addToChildren(childNode);
 			}
+			childNode.setRegisteredForContents(this);
 			PrettyPrintContext derivedContext = context.derive(getRelativeIndentation());
 			if (parsedChildNode != null) {
 				// replace existing by new
@@ -134,6 +137,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		if (parsedChildNode != null) {
 			parsedChildNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
+			parsedChildNode.setRegisteredForContents(this);
 		}
 	}
 

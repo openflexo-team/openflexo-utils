@@ -138,6 +138,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				childNode = parentNode.makeObjectNode(childObject);
 				parentNode.addToChildren(childNode);
 			}
+			childNode.setRegisteredForContents(this);
 			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getRelativeIndentation()));
 			if (StringUtils.isNotEmpty(childPrettyPrint)) {
 				if (StringUtils.isNotEmpty(applicablePrelude)) {
@@ -159,7 +160,11 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		// System.out.println("Children: " + parentNode.getChildren());
 		// System.out.println("Type: " + objectType);
 		List<P2PPNode<?, T>> nodesToBeRemoved = new ArrayList<>();
-		nodesToBeRemoved.addAll(lastParsedNodes);
+		for (P2PPNode<?, T> lastParsedNode : lastParsedNodes) {
+			if (lastParsedNode.getRegisteredForContents() == this) {
+				nodesToBeRemoved.add(lastParsedNode);
+			}
+		}
 
 		// System.out.println("Considered nodes: " + nodesToBeRemoved);
 
@@ -183,6 +188,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				childNode = parentNode.makeObjectNode(childObject);
 				parentNode.addToChildren(childNode);
 			}
+			childNode.setRegisteredForContents(this);
 			if (!lastParsedNodes.contains(childNode)) {
 				// In this case manage insertion
 
@@ -313,6 +319,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			T childObject = allObjects.get(i);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			childNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
+			childNode.setRegisteredForContents(this);
 		}
 	}
 

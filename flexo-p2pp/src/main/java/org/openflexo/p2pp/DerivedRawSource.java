@@ -100,6 +100,9 @@ public class DerivedRawSource {
 	}
 
 	public String getStringRepresentation() {
+
+		DEBUG = false;
+
 		try {
 			checkNoModificationsOverlapping();
 		} catch (ModificationOverlapping e) {
@@ -112,23 +115,36 @@ public class DerivedRawSource {
 			}
 		});
 
-		if (DEBUG) {
-			System.out.println("DEBUGGING DerivedRowSource");
-			for (Modification modification : modifications) {
-				System.out.println(" > " + modification);
-			}
-		}
 		if (modifications.size() == 0) {
 			return getSourceFragment().getRawText();
 		}
 
 		RawSourcePosition current = getSourceFragment().getStartPosition();
 		StringBuffer sb = new StringBuffer();
+
+		if (DEBUG) {
+			System.out.println("DEBUGGING DerivedRowSource " + sourceFragment);
+			for (Modification modification : modifications) {
+				System.out.println(" > " + modification);
+			}
+			System.out.println("current=" + current);
+		}
+
 		for (Modification modification : modifications) {
 			RawSourceFragment replacedFragment = modification.getInitialFragment();
 			RawSourcePosition toPosition = replacedFragment.getStartPosition();
-			RawSourceFragment prelude = getSourceFragment().getRawSource().makeFragment(current, toPosition);
-			sb.append(prelude.getRawText());
+			if (current.isBefore(toPosition)) {
+				RawSourceFragment prelude = getSourceFragment().getRawSource().makeFragment(current, toPosition);
+				sb.append(prelude.getRawText());
+			}
+			else if (toPosition.isBefore(current)) {
+				logger.warning("Weird case: " + toPosition + " < " + current + " see logs for details");
+				System.out.println("DEBUGGING DerivedRowSource " + sourceFragment);
+				for (Modification m2 : modifications) {
+					System.out.println(" > " + m2);
+				}
+				System.out.println("current=" + current);
+			}
 			if (modification instanceof StringReplacement) {
 				sb.append(((StringReplacement) modification).getReplacement());
 			}
@@ -142,9 +158,16 @@ public class DerivedRawSource {
 				// Do not append it !
 			}
 			current = replacedFragment.getEndPosition();
+			if (DEBUG) {
+				System.out.println("current is now: " + current);
+			}
 		}
 		RawSourceFragment postlude = getSourceFragment().getRawSource().makeFragment(current, getSourceFragment().getEndPosition());
 		sb.append(postlude.getRawText());
+
+		if (DEBUG) {
+			System.out.println("END DEBUGGING DerivedRowSource " + sourceFragment);
+		}
 
 		return sb.toString();
 
