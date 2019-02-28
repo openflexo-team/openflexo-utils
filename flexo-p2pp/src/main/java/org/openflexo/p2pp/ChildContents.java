@@ -114,7 +114,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 			PrettyPrintContext derivedContext = context.derive(getRelativeIndentation());
 			if (parsedChildNode != null) {
 				// replace existing by new
-				derivedRawSource.replace(getFragment(), childNode.computeTextualRepresentation(derivedContext));
+				derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.computeTextualRepresentation(derivedContext));
 			}
 			else {
 				derivedRawSource.insert(parentNode.getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
