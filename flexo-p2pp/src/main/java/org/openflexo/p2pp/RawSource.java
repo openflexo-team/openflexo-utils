@@ -292,7 +292,7 @@ public class RawSource {
 			if (startLine > -1 && startPos > -1 && endLine > -1 && endPos > -1 && startLine <= endLine) {
 				if (startLine == endLine) {
 					// All in one line
-					// System.out.println("On retourne [" + getRawSource().get(startLine - 1).substring(startChar - 1, endChar) + "]");
+					// System.out.println("Computing rawText for " + this);
 					// System.out.println("row: " + (startLine - 1) + "[" + rows.get(startLine - 1) + "]");
 					if (endPos <= rows.get(startLine - 1).length()) {
 						return rows.get(startLine - 1).substring(startPos, endPos);
@@ -370,6 +370,21 @@ public class RawSource {
 			else { // s1==s2
 				return getLength() > 0 && otherFragment.getLength() > 0;
 			}
+		}
+
+		public RawSourceFragment union(RawSourceFragment f) {
+			if (f == null) {
+				return this;
+			}
+			RawSourcePosition s = getStartPosition();
+			RawSourcePosition e = getEndPosition();
+			if (f.getStartPosition().isBefore(s)) {
+				s = f.getStartPosition();
+			}
+			if (f.getEndPosition().isAfter(e)) {
+				e = f.getEndPosition();
+			}
+			return getRawSource().makeFragment(s, e);
 		}
 
 		public int getLength() {
