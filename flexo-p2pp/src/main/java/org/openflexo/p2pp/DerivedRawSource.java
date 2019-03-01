@@ -162,6 +162,14 @@ public class DerivedRawSource {
 				System.out.println("current is now: " + current);
 			}
 		}
+		if (getSourceFragment().getEndPosition().isBefore(current)) {
+			logger.warning("Weird case: " + getSourceFragment().getEndPosition() + " < " + current + " see logs for details");
+			System.out.println("DEBUGGING DerivedRowSource " + sourceFragment);
+			for (Modification m2 : modifications) {
+				System.out.println(" > " + m2);
+			}
+			System.out.println("current=" + current);
+		}
 		RawSourceFragment postlude = getSourceFragment().getRawSource().makeFragment(current, getSourceFragment().getEndPosition());
 		sb.append(postlude.getRawText());
 

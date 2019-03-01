@@ -236,7 +236,12 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			}
 			else {
 				// OK, this is an update
+				// try {
 				derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.getTextualRepresentation(context));
+				/*} catch (StringIndexOutOfBoundsException e) {
+					System.out.println("Ca foire quand on traite: " + childNode.getLastParsedFragment());
+					System.out.println("soit: [" + childNode.getLastParsedFragment().getRawText() + "]");
+				}*/
 				insertionPoint = childNode.getLastParsedFragment().getEndPosition();
 				insertionPointAfterPostlude = childNode.getLastParsedFragment().getEndPosition();
 				// System.out.println("Updating " + childObject + " insertionPoint =" + insertionPoint);

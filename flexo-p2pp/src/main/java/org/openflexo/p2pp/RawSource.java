@@ -292,7 +292,7 @@ public class RawSource {
 			if (startLine > -1 && startPos > -1 && endLine > -1 && endPos > -1 && startLine <= endLine) {
 				if (startLine == endLine) {
 					// All in one line
-					// System.out.println("Computing rawText for " + this);
+					// System.out.println("Computing rawText for " + this + " from " + startPos + " to " + endPos);
 					// System.out.println("row: " + (startLine - 1) + "[" + rows.get(startLine - 1) + "]");
 					if (endPos <= rows.get(startLine - 1).length()) {
 						return rows.get(startLine - 1).substring(startPos, endPos);
