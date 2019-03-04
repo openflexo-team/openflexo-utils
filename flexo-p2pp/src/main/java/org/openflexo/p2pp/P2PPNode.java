@@ -386,7 +386,9 @@ public abstract class P2PPNode<N, T> {
 	public void appendDynamicContents(String prelude, Supplier<String> stringRepresentationSupplier, RawSourceFragment fragment) {
 		DynamicContents newContents = new DynamicContents(prelude, stringRepresentationSupplier, null, fragment);
 		ppContents.add(newContents);
-		defaultInsertionPoint = fragment.getEndPosition();
+		if (fragment != null) {
+			defaultInsertionPoint = fragment.getEndPosition();
+		}
 	}
 
 	/**
@@ -415,7 +417,9 @@ public abstract class P2PPNode<N, T> {
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier, String postlude, RawSourceFragment fragment) {
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, postlude, fragment);
 		ppContents.add(newContents);
-		defaultInsertionPoint = fragment.getEndPosition();
+		if (fragment != null) {
+			defaultInsertionPoint = fragment.getEndPosition();
+		}
 	}
 
 	/**
