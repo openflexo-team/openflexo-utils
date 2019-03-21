@@ -102,6 +102,10 @@ public abstract class P2PPNode<N, T> {
 		}
 	}
 
+	public void setModelObject(T modelObject) {
+		this.modelObject = modelObject;
+	}
+
 	protected void addToChildren(P2PPNode<?, ?> child, int index) {
 		child.parent = this;
 		children.add(index, child);

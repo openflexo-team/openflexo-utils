@@ -54,6 +54,15 @@ public interface PrettyPrintDelegate<T> {
 	public T getModelObject();
 
 	/**
+	 * Set model object beeing pretty-printed by this delegate
+	 * 
+	 * This method is generally used while reparsing source of an existing model object
+	 * 
+	 * @param modelObject
+	 */
+	public void setModelObject(T modelObject);
+
+	/**
 	 * Return normalized representation for that object
 	 * 
 	 * @return
