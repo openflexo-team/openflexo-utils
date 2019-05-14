@@ -130,7 +130,7 @@ public class ChainedCollection<T> implements Collection<T> {
 	@Override
 	public boolean contains(Object o) {
 		for (Collection<? extends T> collection : new ArrayList<>(collections)) {
-			if (collection.contains(o)) {
+			if (collection != null && collection.contains(o)) {
 				return true;
 			}
 		}
