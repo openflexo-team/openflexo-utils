@@ -222,7 +222,7 @@ public abstract class DirectoryWatcher extends TimerTask {
 				watcher.fileModified(f);
 			}
 
-			for (File k : subNodes.keySet()) {
+			for (File k : new ArrayList<File>(subNodes.keySet())) {
 				NodeDirectoryWatcher w = subNodes.get(k);
 				// System.out.println("now watch for " + w.directory);
 				if (!w.watch()) {
