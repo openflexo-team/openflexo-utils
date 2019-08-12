@@ -85,7 +85,7 @@ public abstract class P2PPNode<N, T> {
 
 	private List<PrettyPrintableContents> ppContents = new ArrayList<>();
 
-	// Indicates that ths P2PPNode was registered in parent P2PPNode relatively to that contents
+	// Indicates that this P2PPNode was registered in parent P2PPNode relatively to that contents
 	private PrettyPrintableContents registeredForContents;
 
 	public static final String SPACE = " ";
@@ -275,7 +275,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(null, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -291,7 +292,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -309,7 +311,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -374,7 +377,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -405,7 +409,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void addDynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(prelude, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -436,7 +441,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
