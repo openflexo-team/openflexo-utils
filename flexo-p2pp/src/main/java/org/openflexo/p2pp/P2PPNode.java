@@ -85,7 +85,7 @@ public abstract class P2PPNode<N, T> {
 
 	private List<PrettyPrintableContents> ppContents = new ArrayList<>();
 
-	// Indicates that ths P2PPNode was registered in parent P2PPNode relatively to that contents
+	// Indicates that this P2PPNode was registered in parent P2PPNode relatively to that contents
 	private PrettyPrintableContents registeredForContents;
 
 	public static final String SPACE = " ";

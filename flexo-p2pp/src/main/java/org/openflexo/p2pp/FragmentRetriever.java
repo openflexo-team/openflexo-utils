@@ -46,7 +46,7 @@ import org.openflexo.p2pp.RawSource.RawSourceFragment;
  * @author sylvain
  *
  * @param <N>
- *            type of nodes beeing parsed
+ *            type of nodes being parsed
  */
 public interface FragmentRetriever<N> {
 
