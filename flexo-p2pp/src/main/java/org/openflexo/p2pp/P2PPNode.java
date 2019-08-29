@@ -140,7 +140,10 @@ public abstract class P2PPNode<N, T> {
 
 	public abstract P2PPNode<N, T> deserialize();
 
-	public final void finalizeDeserialization() {
+	/**
+	 * Called at the end (after all types resolution)
+	 */
+	public void finalizeDeserialization() {
 		// Override when required
 	}
 
@@ -275,7 +278,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(null, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -291,7 +295,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -309,7 +314,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendStaticContents(String prelude, String staticContents, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -374,7 +380,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -405,7 +412,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void addDynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(prelude, stringRepresentationSupplier, null, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -436,7 +444,8 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void appendDynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
 		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint) : null;
+				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
+				: null;
 		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, postlude, insertionPointFragment);
 		ppContents.add(newContents);
 	}
@@ -609,9 +618,13 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	public <C> P2PPNode<?, C> getObjectNode(C object) {
+		if (getModelObject() == object) {
+			return (P2PPNode<?, C>) this;
+		}
 		for (P2PPNode<?, ?> objectNode : getChildren()) {
-			if (objectNode.getModelObject() == object) {
-				return (P2PPNode<?, C>) objectNode;
+			P2PPNode<?, C> returned = objectNode.getObjectNode(object);
+			if (returned != null) {
+				return returned;
 			}
 		}
 		return null;
