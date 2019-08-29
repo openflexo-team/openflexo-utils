@@ -59,6 +59,7 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 	private String resultingIndentation = null;
 
 	private static final String INDENTATION = "\t";
+	// private static final String INDENTATION = "A";
 
 	public DefaultPrettyPrintContext(int indentation) {
 		this.indentation = indentation;
@@ -110,7 +111,7 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 			return stringToIndent;
 		}
 
-		// System.out.println("Indenting: [" + stringToIndent + "]");
+		// System.out.println("Indenting: [" + stringToIndent + "] level=" + indentation);
 
 		List<String> rows = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new StringReader(stringToIndent))) {
@@ -130,7 +131,7 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 		for (int i = 0; i < rows.size(); i++) {
 			String row = rows.get(i);
 			if (StringUtils.isNotEmpty(row.trim())) {
-				sb.append(getResultingIndentation() + row + (i == rows.size() - 1 ? "" : StringUtils.LINE_SEPARATOR));
+				sb.append(/*getResultingIndentation()*/INDENTATION + row + (i == rows.size() - 1 ? "" : StringUtils.LINE_SEPARATOR));
 			}
 		}
 		return sb.toString();
