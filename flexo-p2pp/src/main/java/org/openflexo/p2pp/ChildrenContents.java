@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.openflexo.connie.type.TypeUtils;
+import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourcePosition;
 import org.openflexo.toolbox.StringUtils;
 
@@ -67,14 +68,14 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 	private RawSourcePosition defaultInsertionPoint;
 
-	public ChildrenContents(String prelude, Supplier<List<? extends T>> childrenObjects, String postlude, int relativeIndentation,
+	public ChildrenContents(String prelude, Supplier<List<? extends T>> childrenObjects, String postlude, Indentation indentation,
 			P2PPNode<?, ?> parentNode, Class<T> objectType) {
-		this(null, prelude, childrenObjects, postlude, null, relativeIndentation, parentNode, objectType);
+		this(null, prelude, childrenObjects, postlude, null, indentation, parentNode, objectType);
 	}
 
 	public ChildrenContents(String preludeForFirstItem, String prelude, Supplier<List<? extends T>> childrenObjects, String postlude,
-			String postludeForLastItem, int relativeIndentation, P2PPNode<?, ?> parentNode, Class<T> objectType) {
-		super(prelude, postlude, relativeIndentation);
+			String postludeForLastItem, Indentation indentation, P2PPNode<?, ?> parentNode, Class<T> objectType) {
+		super(prelude, postlude, indentation);
 		this.preludeForFirstItem = preludeForFirstItem;
 		this.postludeForLastItem = postludeForLastItem;
 		// System.out.println("ChildrenContents for " + objectType);
@@ -139,7 +140,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				parentNode.addToChildren(childNode);
 			}
 			childNode.setRegisteredForContents(this);
-			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getRelativeIndentation()));
+			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getIndentation()));
 			if (StringUtils.isNotEmpty(childPrettyPrint)) {
 				if (StringUtils.isNotEmpty(applicablePrelude)) {
 					sb.append(applicablePrelude);
@@ -171,7 +172,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		RawSourcePosition insertionPoint = defaultInsertionPoint;
 		RawSourcePosition insertionPointAfterPostlude = defaultInsertionPoint;
 
-		PrettyPrintContext derivedContext = context.derive(getRelativeIndentation());
+		PrettyPrintContext derivedContext = context.derive(getIndentation());
 
 		List<? extends T> childrenObjectsList = childrenObjectsSupplier.get();
 
@@ -323,7 +324,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		for (int i = 0; i < allObjects.size(); i++) {
 			T childObject = allObjects.get(i);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
-			childNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
+			childNode.initializePrettyPrint(rootNode, context.derive(getIndentation()));
 			childNode.setRegisteredForContents(this);
 		}
 	}
@@ -336,7 +337,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			if (i == 0 && StringUtils.isNotEmpty(preludeForFirstItem)) {
 				applicablePrelude = preludeForFirstItem;
 			}
-			if (StringUtils.isEmpty(applicablePrelude) && context.getIndentation() > 0) {
+			if (StringUtils.isEmpty(applicablePrelude) && context.getIndentation() != Indentation.DoNotIndent) {
 				applicablePrelude = context.getResultingIndentation();
 			}
 			String applicablePostlude = getPostlude();

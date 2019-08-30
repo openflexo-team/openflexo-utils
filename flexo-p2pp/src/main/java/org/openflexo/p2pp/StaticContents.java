@@ -53,17 +53,17 @@ public class StaticContents extends PrettyPrintableContents {
 	private final String staticContents;
 
 	public StaticContents(String staticContents, RawSourceFragment fragment) {
-		super(0);
+		super();
 		this.staticContents = staticContents;
 	}
 
 	public StaticContents(String prelude, String staticContents, RawSourceFragment fragment) {
-		super(prelude, null, 0);
+		super(prelude, null);
 		this.staticContents = staticContents;
 	}
 
 	public StaticContents(String prelude, String staticContents, String postlude, RawSourceFragment fragment) {
-		super(prelude, postlude, 0);
+		super(prelude, postlude);
 		this.staticContents = staticContents;
 	}
 

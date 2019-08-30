@@ -63,7 +63,7 @@ public class DynamicContents extends PrettyPrintableContents {
 	 * @param fragment
 	 */
 	public DynamicContents(String prelude, Supplier<String> stringRepresentationSupplier, String postlude, RawSourceFragment fragment) {
-		super(prelude, postlude, 0);
+		super(prelude, postlude);
 		this.stringRepresentationSupplier = stringRepresentationSupplier;
 		setFragment(fragment);
 	}

@@ -40,6 +40,7 @@ package org.openflexo.p2pp;
 
 import java.util.function.Supplier;
 
+import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.toolbox.StringUtils;
 
 /**
@@ -56,9 +57,9 @@ public class ChildContents<T> extends PrettyPrintableContents {
 	private P2PPNode<?, ?> parentNode;
 	private P2PPNode<?, T> parsedChildNode;
 
-	public ChildContents(String prelude, Supplier<T> childObjectSupplier, String postlude, int relativeIndentation,
+	public ChildContents(String prelude, Supplier<T> childObjectSupplier, String postlude, Indentation indentation,
 			P2PPNode<?, ?> parentNode) {
-		super(prelude, postlude, relativeIndentation);
+		super(prelude, postlude, indentation);
 		this.childObjectSupplier = childObjectSupplier;
 		this.parentNode = parentNode;
 		T childObject = childObjectSupplier.get();
@@ -85,7 +86,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 			}
 			childNode.setRegisteredForContents(this);
 			StringBuffer sb = new StringBuffer();
-			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getRelativeIndentation()));
+			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getIndentation()));
 			if (StringUtils.isNotEmpty(childPrettyPrint)) {
 				if (StringUtils.isNotEmpty(getPrelude())) {
 					sb.append(getPrelude());
@@ -111,7 +112,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 				parentNode.addToChildren(childNode);
 			}
 			childNode.setRegisteredForContents(this);
-			PrettyPrintContext derivedContext = context.derive(getRelativeIndentation());
+			PrettyPrintContext derivedContext = context.derive(getIndentation());
 			if (parsedChildNode != null) {
 				// replace existing by new
 				derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.computeTextualRepresentation(derivedContext));
@@ -136,7 +137,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 	@Override
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		if (parsedChildNode != null) {
-			parsedChildNode.initializePrettyPrint(rootNode, context.derive(getRelativeIndentation()));
+			parsedChildNode.initializePrettyPrint(rootNode, context.derive(getIndentation()));
 			parsedChildNode.setRegisteredForContents(this);
 		}
 	}

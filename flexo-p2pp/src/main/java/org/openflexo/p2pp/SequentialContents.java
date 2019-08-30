@@ -63,7 +63,7 @@ public class SequentialContents extends PrettyPrintableContents {
 	 * @param node
 	 */
 	public SequentialContents(P2PPNode<?, ?> node) {
-		super(0);
+		super();
 		this.node = node;
 		ppContents = new ArrayList<PrettyPrintableContents>();
 	}

@@ -2,6 +2,10 @@ package org.openflexo.p2pp;
 
 public interface PrettyPrintContext {
 
+	public enum Indentation {
+		Indent, DoNotIndent
+	}
+
 	/**
 	 * Derive a PrettyPrintContext from this PrettyPrintContext
 	 * 
@@ -11,9 +15,9 @@ public interface PrettyPrintContext {
 	 * <li>When relativeIndentation is negative (-1), discard current indentation</li>
 	 * </ul>
 	 */
-	public PrettyPrintContext derive(int indentation);
+	public PrettyPrintContext derive(Indentation indentation);
 
-	public int getIndentation();
+	public Indentation getIndentation();
 
 	public String getResultingIndentation();
 

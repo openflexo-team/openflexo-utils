@@ -71,7 +71,7 @@ public class ConditionalContents extends PrettyPrintableContents {
 	 * @param fragment
 	 */
 	public ConditionalContents(Supplier<Boolean> conditionSupplier, P2PPNode<?, ?> node) {
-		super(0);
+		super();
 		this.node = node;
 		this.conditionSupplier = conditionSupplier;
 		// setFragment(fragment);

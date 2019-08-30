@@ -55,47 +55,35 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 
 	private static final Logger logger = Logger.getLogger(DefaultPrettyPrintContext.class.getPackage().getName());
 
-	private int indentation;
+	private Indentation indentation;
 	private String resultingIndentation = null;
 
 	private static final String INDENTATION = "\t";
 	// private static final String INDENTATION = "A";
 
-	public DefaultPrettyPrintContext(int indentation) {
+	public DefaultPrettyPrintContext(Indentation indentation) {
 		this.indentation = indentation;
 	}
 
 	@Override
-	public int getIndentation() {
+	public Indentation getIndentation() {
 		return indentation;
 	}
 
 	/**
 	 * Derive a PrettyPrintContext from this PrettyPrintContext
 	 * 
-	 * <ul>
-	 * <li>When relativeIndentation is zero, keep current indentation</li>
-	 * <li>When relativeIndentation is positive, increment current indentation with that value</li>
-	 * <li>When relativeIndentation is negative (-1), discard current indentation</li>
-	 * </ul>
 	 */
 	@Override
-	public PrettyPrintContext derive(int relativeIndentation) {
-		if (relativeIndentation == -1) {
-			return new DefaultPrettyPrintContext(0);
-		}
-		return new DefaultPrettyPrintContext(indentation + relativeIndentation);
+	public PrettyPrintContext derive(Indentation indentation) {
+		return new DefaultPrettyPrintContext(indentation);
 	}
 
 	@Override
 	public String getResultingIndentation() {
 		if (resultingIndentation == null) {
-			if (indentation > 0) {
-				StringBuffer sb = new StringBuffer();
-				for (int i = 0; i < indentation; i++) {
-					sb.append(INDENTATION);
-				}
-				resultingIndentation = sb.toString();
+			if (indentation == Indentation.Indent) {
+				resultingIndentation = INDENTATION;
 			}
 			else {
 				resultingIndentation = "";
@@ -107,34 +95,38 @@ public class DefaultPrettyPrintContext implements PrettyPrintContext {
 	@Override
 	public String indent(String stringToIndent) {
 
-		if (indentation == 0) {
-			return stringToIndent;
+		switch (getIndentation()) {
+			case DoNotIndent:
+				return stringToIndent;
+			case Indent:
+				List<String> rows = new ArrayList<>();
+				try (BufferedReader br = new BufferedReader(new StringReader(stringToIndent))) {
+					String nextLine = null;
+					do {
+						nextLine = br.readLine();
+						if (nextLine != null) {
+							rows.add(nextLine);
+						}
+					} while (nextLine != null);
+				} catch (IOException e) {
+					logger.warning("Unexpected exception " + e.getMessage());
+					return stringToIndent;
+				}
+
+				StringBuffer sb = new StringBuffer();
+				for (int i = 0; i < rows.size(); i++) {
+					String row = rows.get(i);
+					if (StringUtils.isNotEmpty(row.trim())) {
+						sb.append(getResultingIndentation() + row + (i == rows.size() - 1 ? "" : StringUtils.LINE_SEPARATOR));
+					}
+				}
+				return sb.toString();
+			default:
+				return stringToIndent;
 		}
 
 		// System.out.println("Indenting: [" + stringToIndent + "] level=" + indentation);
 
-		List<String> rows = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new StringReader(stringToIndent))) {
-			String nextLine = null;
-			do {
-				nextLine = br.readLine();
-				if (nextLine != null) {
-					rows.add(nextLine);
-				}
-			} while (nextLine != null);
-		} catch (IOException e) {
-			logger.warning("Unexpected exception " + e.getMessage());
-			return stringToIndent;
-		}
-
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < rows.size(); i++) {
-			String row = rows.get(i);
-			if (StringUtils.isNotEmpty(row.trim())) {
-				sb.append(/*getResultingIndentation()*/INDENTATION + row + (i == rows.size() - 1 ? "" : StringUtils.LINE_SEPARATOR));
-			}
-		}
-		return sb.toString();
 	}
 
 }

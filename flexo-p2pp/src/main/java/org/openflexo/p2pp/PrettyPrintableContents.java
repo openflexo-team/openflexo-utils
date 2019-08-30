@@ -38,6 +38,7 @@
 
 package org.openflexo.p2pp;
 
+import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 
 /**
@@ -51,24 +52,34 @@ public abstract class PrettyPrintableContents {
 
 	private final String prelude;
 	private final String postlude;
-	private final int relativeIndentation;
+	private Indentation indentation;
 
 	private RawSourceFragment fragment = null;
-	// private RawSourcePosition startPosition = null;
-	// private RawSourcePosition endPosition = null;
 
-	public PrettyPrintableContents(String prelude, String postlude, int relativeIndentation) {
+	public PrettyPrintableContents(String prelude, String postlude, Indentation indentation) {
 		super();
 		this.prelude = prelude;
 		this.postlude = postlude;
-		this.relativeIndentation = relativeIndentation;
+		this.indentation = indentation;
 	}
 
-	public PrettyPrintableContents(int relativeIndentation) {
+	public PrettyPrintableContents(String prelude, String postlude) {
+		super();
+		this.prelude = prelude;
+		this.postlude = postlude;
+	}
+
+	public PrettyPrintableContents(Indentation indentation) {
 		super();
 		this.prelude = null;
 		this.postlude = null;
-		this.relativeIndentation = relativeIndentation;
+		this.indentation = indentation;
+	}
+
+	public PrettyPrintableContents() {
+		super();
+		this.prelude = null;
+		this.postlude = null;
 	}
 
 	public String getPrelude() {
@@ -79,48 +90,11 @@ public abstract class PrettyPrintableContents {
 		return postlude;
 	}
 
-	public int getRelativeIndentation() {
-		return relativeIndentation;
+	public Indentation getIndentation() {
+		return indentation;
 	}
-
-	/*public RawSourcePosition getStartPosition() {
-		if (fragment != null) {
-			return fragment.getStartPosition();
-		}
-		return startPosition;
-	}
-	
-	protected void setStartPosition(RawSourcePosition startPosition) {
-		this.startPosition = startPosition;
-		fragment = null;
-	}
-	
-	public RawSourcePosition getEndPosition() {
-		if (fragment != null) {
-			return fragment.getEndPosition();
-		}
-		return endPosition;
-	}
-	
-	protected void setEndPosition(RawSourcePosition endPosition) {
-		this.endPosition = endPosition;
-		fragment = null;
-	}*/
-
-	/**
-	 * Called when a {@link DynamicContents} is registered at a location where no current contents was parsed in initial raw source
-	 * 
-	 * @param expectedLocation
-	 */
-	/*protected void setExpectedLocation(RawSourcePosition expectedLocation) {
-		setStartPosition(expectedLocation);
-		setEndPosition(expectedLocation);
-	}*/
 
 	public RawSourceFragment getFragment() {
-		/*if (fragment == null && getStartPosition() != null && getEndPosition() != null) {
-			fragment = getStartPosition().RawSource.this.makeFragment(getStartPosition(), getEndPosition());
-		}*/
 		return fragment;
 	}
 
@@ -130,8 +104,6 @@ public abstract class PrettyPrintableContents {
 	 * @param fragment
 	 */
 	public void setFragment(RawSourceFragment fragment) {
-		// setStartPosition(fragment.getStartPosition());
-		// setEndPosition(fragment.getEndPosition());
 		this.fragment = fragment;
 	}
 

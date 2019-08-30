@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.p2pp.RawSource.RawSourcePosition;
 import org.openflexo.toolbox.StringUtils;
@@ -217,7 +218,7 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	public PrettyPrintContext makePrettyPrintContext() {
-		return new DefaultPrettyPrintContext(0);
+		return new DefaultPrettyPrintContext(Indentation.DoNotIndent);
 	}
 
 	public final void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
@@ -225,7 +226,7 @@ public abstract class P2PPNode<N, T> {
 		// System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
 
 		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
-			prettyPrintableContents.initializePrettyPrint(rootNode, context.derive(prettyPrintableContents.getRelativeIndentation()));
+			prettyPrintableContents.initializePrettyPrint(rootNode, context.derive(prettyPrintableContents.getIndentation()));
 		}
 
 	}
@@ -280,8 +281,8 @@ public abstract class P2PPNode<N, T> {
 		return new DynamicContents(null, stringRepresentationSupplier, postlude, null);
 	}
 
-	public <C> ChildContents<C> childContents(String prelude, Supplier<C> childObjectSupplier, String postude, int relativeIndentation) {
-		return new ChildContents<>(prelude, childObjectSupplier, postude, relativeIndentation, this);
+	public <C> ChildContents<C> childContents(String prelude, Supplier<C> childObjectSupplier, String postude, Indentation indentation) {
+		return new ChildContents<>(prelude, childObjectSupplier, postude, indentation, this);
 	}
 
 	public void append(PrettyPrintableContents contents, RawSourceFragment fragment) {
@@ -552,9 +553,9 @@ public abstract class P2PPNode<N, T> {
 	 */
 	@Deprecated
 	public <C> ChildContents<C> appendToChildPrettyPrintContents(String prelude, Supplier<C> childObjectSupplier, String postude,
-			int relativeIndentation) {
+			Indentation indentation) {
 
-		ChildContents<C> newChildContents = new ChildContents<>(prelude, childObjectSupplier, postude, relativeIndentation, this);
+		ChildContents<C> newChildContents = new ChildContents<>(prelude, childObjectSupplier, postude, indentation, this);
 		ppContents.add(newChildContents);
 		return newChildContents;
 	}
@@ -579,9 +580,9 @@ public abstract class P2PPNode<N, T> {
 	 */
 	@Deprecated
 	public <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String prelude, Supplier<List<? extends C>> childrenObjects,
-			String postude, int relativeIndentation, Class<C> childrenType) {
+			String postude, Indentation indentation, Class<C> childrenType) {
 
-		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(prelude, childrenObjects, postude, relativeIndentation, this,
+		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(prelude, childrenObjects, postude, indentation, this,
 				childrenType);
 		ppContents.add(newChildrenContents);
 		return newChildrenContents;
@@ -609,11 +610,11 @@ public abstract class P2PPNode<N, T> {
 	 */
 	@Deprecated
 	public <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
-			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, int relativeIndentation,
+			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, Indentation indentation,
 			Class<C> childrenType) {
 
 		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(preludeForFirstItem, prelude, childrenObjects, postude,
-				postludeForLastItem, relativeIndentation, this, childrenType);
+				postludeForLastItem, indentation, this, childrenType);
 		ppContents.add(newChildrenContents);
 		return newChildrenContents;
 	}
@@ -636,8 +637,8 @@ public abstract class P2PPNode<N, T> {
 	public <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
 			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, Class<C> childrenType) {
 
-		return appendToChildrenPrettyPrintContents(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem, -1,
-				childrenType);
+		return appendToChildrenPrettyPrintContents(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem,
+				Indentation.DoNotIndent, childrenType);
 	}
 
 	/**
