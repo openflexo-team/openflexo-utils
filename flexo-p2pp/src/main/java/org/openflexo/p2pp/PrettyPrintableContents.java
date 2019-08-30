@@ -129,7 +129,7 @@ public abstract class PrettyPrintableContents {
 	 * 
 	 * @param fragment
 	 */
-	protected void setFragment(RawSourceFragment fragment) {
+	public void setFragment(RawSourceFragment fragment) {
 		// setStartPosition(fragment.getStartPosition());
 		// setEndPosition(fragment.getEndPosition());
 		this.fragment = fragment;
