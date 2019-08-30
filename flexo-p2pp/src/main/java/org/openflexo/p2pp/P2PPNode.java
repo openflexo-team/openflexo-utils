@@ -261,31 +261,159 @@ public abstract class P2PPNode<N, T> {
 		this.defaultInsertionPoint = defaultInsertionPoint;
 	}
 
+	/**
+	 * Make new {@link StaticContents}, whose value is intended to reference a static text (a keyword or a known litteral)
+	 * 
+	 * @param staticContents
+	 * @return
+	 */
 	public StaticContents staticContents(String staticContents) {
 		return new StaticContents(null, staticContents, null, null);
 	}
 
+	/**
+	 * Make new {@link StaticContents}, whose value is intended to reference a static text (a keyword or a known litteral)
+	 * 
+	 * @param prelude
+	 *            A String to append before the static contents
+	 * @param staticContents
+	 *            The String to serialize (the keyword or known litteral)
+	 * @param postlude
+	 *            A String to append after the static contents
+	 * @return
+	 */
 	public StaticContents staticContents(String prelude, String staticContents, String postlude) {
 		return new StaticContents(prelude, staticContents, postlude, null);
 	}
 
+	/**
+	 * Make new {@link DynamicContents}, whose value is intended to serialize a dynamic (variable or computed) text
+	 * 
+	 * @param stringRepresentationSupplier
+	 *            gives dynamic value of that contents
+	 * @return
+	 */
 	public DynamicContents dynamicContents(Supplier<String> stringRepresentationSupplier) {
 		return new DynamicContents(null, stringRepresentationSupplier, null, null);
 	}
 
+	/**
+	 * Make new {@link DynamicContents}, whose value is intended to serialize a dynamic (variable or computed) text
+	 * 
+	 * @param prelude
+	 *            A String to append before the dynamic contents
+	 * @param stringRepresentationSupplier
+	 * @return
+	 */
 	public DynamicContents dynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
 		return new DynamicContents(prelude, stringRepresentationSupplier, null, null);
 	}
 
+	/**
+	 * Make new {@link DynamicContents}, whose value is intended to serialize a dynamic (variable or computed) text
+	 * 
+	 * @param stringRepresentationSupplier
+	 * @param postlude
+	 *            A String to append after the dynamic contents
+	 * @return
+	 */
 	public DynamicContents dynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
 		return new DynamicContents(null, stringRepresentationSupplier, postlude, null);
 	}
 
+	/**
+	 * Make new {@link DynamicContents}, whose value is intended to serialize a dynamic (variable or computed) text
+	 * 
+	 * @param prelude
+	 *            A String to append before the dynamic contents
+	 * @param stringRepresentationSupplier
+	 * @param postlude
+	 *            A String to append after the dynamic contents
+	 * @return
+	 */
+	public DynamicContents dynamicContents(String prelude, Supplier<String> stringRepresentationSupplier, String postlude) {
+		return new DynamicContents(prelude, stringRepresentationSupplier, postlude, null);
+	}
+
+	/**
+	 * Make new {@link ChildContents}, indicating that a child referenced by the supplier must be serialized at this pretty-print level
+	 * 
+	 * @param <C>
+	 * @param prelude
+	 *            A String to append before serialized object
+	 * @param childObjectSupplier
+	 *            Supply object to be serialized here
+	 * @param postude
+	 *            A String to append after serialized object
+	 * @param indentation
+	 *            Indentation for the serialization of children
+	 * @return
+	 */
 	public <C> ChildContents<C> childContents(String prelude, Supplier<C> childObjectSupplier, String postude, Indentation indentation) {
 		return new ChildContents<>(prelude, childObjectSupplier, postude, indentation, this);
 	}
 
-	public void append(PrettyPrintableContents contents, RawSourceFragment fragment) {
+	/**
+	 * Make new {@link ChildrenContents}, indicating that some children referenced by the supplier must be serialized at this pretty-print
+	 * level
+	 * 
+	 * @param <C>
+	 * @param preludeForFirstItem
+	 *            A String to append before the first object of the list
+	 * @param prelude
+	 *            A String to append for each object of the list except the first one
+	 * @param childrenObjects
+	 *            Supply all objects to be serialized here
+	 * @param postude
+	 *            A String to append after each object of the list except the last one
+	 * @param postludeForLastItem
+	 *            A String to append after last object of the list
+	 * @param indentation
+	 *            Indentation for the serialization of children
+	 * @param childrenType
+	 *            Type (class) of addressed children
+	 * @return
+	 */
+	public <C> ChildrenContents<C> childrenContents(String preludeForFirstItem, String prelude, Supplier<List<? extends C>> childrenObjects,
+			String postude, String postludeForLastItem, Indentation indentation, Class<C> childrenType) {
+
+		return new ChildrenContents<>(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem, indentation, this,
+				childrenType);
+	}
+
+	/**
+	 * Make new {@link ChildrenContents}, indicating that some children referenced by the supplier must be serialized at this pretty-print
+	 * level
+	 * 
+	 * @param <C>
+	 * @param prelude
+	 *            A String to append for each object of the list
+	 * @param childrenObjects
+	 *            Supply all objects to be serialized here
+	 * @param postude
+	 *            A String to append after each object of the list
+	 * @param indentation
+	 *            Indentation for the serialization of children
+	 * @param childrenType
+	 *            Type (class) of addressed children
+	 * @return
+	 */
+	public <C> ChildrenContents<C> childrenContents(String prelude, Supplier<List<? extends C>> childrenObjects, String postude,
+			Indentation indentation, Class<C> childrenType) {
+
+		return new ChildrenContents<>(prelude, childrenObjects, postude, indentation, this, childrenType);
+	}
+
+	/**
+	 * Sequentially append supplied {@link PrettyPrintableContents}, declaring a contents to serialize at this point
+	 * 
+	 * @param contents
+	 *            contents to serialize
+	 * @param fragment
+	 *            current serialized fragment in original textual version, not null if contents was parsed
+	 * @return supplied contents, for cascading calls
+	 */
+	public PrettyPrintableContents append(PrettyPrintableContents contents, RawSourceFragment fragment) {
 		if (fragment == null) {
 			fragment = defaultInsertionPoint != null
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
@@ -296,8 +424,36 @@ public abstract class P2PPNode<N, T> {
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
 		}
+		return contents;
 	}
 
+	/**
+	 * Convenient method to append a {@link ChildContents} (fragment is not required in this case)
+	 * 
+	 * @param contents
+	 * @return supplied contents, for cascading calls
+	 */
+	public ChildContents<?> append(ChildContents<?> contents) {
+		return (ChildContents<?>) append(contents, null);
+	}
+
+	/**
+	 * Convenient method to append a {@link ChildrenContents} (fragment is not required in this case)
+	 * 
+	 * @param contents
+	 * @return supplied contents, for cascading calls
+	 */
+	public ChildrenContents<?> append(ChildrenContents<?> contents) {
+		return (ChildrenContents<?>) append(contents, null);
+	}
+
+	/**
+	 * Declare and append a new conditional contents
+	 * 
+	 * @param conditionSupplier
+	 *            determines the condition to compute at run-time
+	 * @return
+	 */
 	public ConditionalContents when(Supplier<Boolean> conditionSupplier) {
 		ConditionalContents conditionalContents = new ConditionalContents(conditionSupplier, this);
 		ppContents.add(conditionalContents);
