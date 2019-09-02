@@ -160,17 +160,11 @@ public class ConditionalContents extends PrettyPrintableContents {
 	@Override
 	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
 
-		System.out.println("Prout j'arrive ici");
-		System.out.println("condition=" + conditionSupplier.get());
-		System.out.println("THEN:" + getThenContents());
-		System.out.println("ELSE:" + getElseContents());
-
 		if (conditionSupplier.get()) {
 			if (getThenContents() != null) {
 				return getThenContents().getNormalizedPrettyPrint(context);
 			}
 			else {
-				logger.warning("Unexpected null THEN contents");
 				return "<???>";
 			}
 		}
