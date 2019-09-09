@@ -41,6 +41,7 @@ package org.openflexo.p2pp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import org.openflexo.connie.type.TypeUtils;
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
@@ -55,6 +56,8 @@ import org.openflexo.toolbox.StringUtils;
  * @param <T>
  */
 public class ChildrenContents<T> extends PrettyPrintableContents {
+
+	private static final Logger logger = Logger.getLogger(ChildrenContents.class.getPackage().getName());
 
 	private final String preludeForFirstItem;
 	private final String postludeForLastItem;
@@ -137,17 +140,25 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
-				parentNode.addToChildren(childNode);
-			}
-			childNode.setRegisteredForContents(this);
-			String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getIndentation()));
-			if (StringUtils.isNotEmpty(childPrettyPrint)) {
-				if (StringUtils.isNotEmpty(applicablePrelude)) {
-					sb.append(applicablePrelude);
+				if (childNode == null) {
+					logger.severe("Cannot make node for " + childObject);
+					Thread.dumpStack();
 				}
-				sb.append(childPrettyPrint);
-				if (StringUtils.isNotEmpty(applicablePostlude)) {
-					sb.append(applicablePostlude);
+				else {
+					parentNode.addToChildren(childNode);
+				}
+			}
+			if (childNode != null) {
+				childNode.setRegisteredForContents(this);
+				String childPrettyPrint = childNode.getNormalizedTextualRepresentation(context.derive(getIndentation()));
+				if (StringUtils.isNotEmpty(childPrettyPrint)) {
+					if (StringUtils.isNotEmpty(applicablePrelude)) {
+						sb.append(applicablePrelude);
+					}
+					sb.append(childPrettyPrint);
+					if (StringUtils.isNotEmpty(applicablePostlude)) {
+						sb.append(applicablePostlude);
+					}
 				}
 			}
 		}
