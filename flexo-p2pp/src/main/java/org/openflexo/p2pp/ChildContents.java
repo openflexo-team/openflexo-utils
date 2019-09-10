@@ -39,6 +39,7 @@
 package org.openflexo.p2pp;
 
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.toolbox.StringUtils;
@@ -52,6 +53,8 @@ import org.openflexo.toolbox.StringUtils;
  *            Type of child object beeing handled in this {@link ChildContents}
  */
 public class ChildContents<T> extends PrettyPrintableContents {
+
+	private static final Logger logger = Logger.getLogger(ChildContents.class.getPackage().getName());
 
 	private Supplier<T> childObjectSupplier;
 	private P2PPNode<?, ?> parentNode;
@@ -82,7 +85,13 @@ public class ChildContents<T> extends PrettyPrintableContents {
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
+				if (childNode != null) {
 				parentNode.addToChildren(childNode);
+				}
+				else {
+					logger.severe("Cannot create P2PPNode for "+childObject);
+					return "";
+				}
 			}
 			childNode.setRegisteredForContents(this);
 			StringBuffer sb = new StringBuffer();
