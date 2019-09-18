@@ -94,6 +94,11 @@ public abstract class PrettyPrintableContents {
 		return indentation;
 	}
 
+	public PrettyPrintableContents indent() {
+		indentation = Indentation.Indent;
+		return this;
+	}
+
 	public RawSourceFragment getFragment() {
 		return fragment;
 	}

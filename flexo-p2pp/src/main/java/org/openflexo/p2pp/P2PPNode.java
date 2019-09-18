@@ -90,6 +90,7 @@ public abstract class P2PPNode<N, T> {
 	private PrettyPrintableContents registeredForContents;
 
 	public static final String SPACE = " ";
+	public static final String DOUBLE_SPACE = SPACE + SPACE;
 	public static final String LINE_SEPARATOR = "\n";
 
 	public P2PPNode(T aModelObject, N astNode, FragmentRetriever<?> fragmentRetriever) {
