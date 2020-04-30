@@ -115,7 +115,19 @@ public abstract class P2PPNode<N, T> {
 
 	protected void addToChildren(P2PPNode<?, ?> child) {
 		child.parent = this;
-		children.add(child);
+		/*if (child.getClass().getName().contains("ExpressionActionNode")) {
+			System.out.println("regardons ce qu'on a deja");
+			for (P2PPNode<?, ?> c : children) {
+				System.out.println(" > " + c);
+				if (c.getClass().getName().contains("ExpressionActionNode")) {
+					System.out.println("C'est la !!!");
+					System.exit(-1);
+				}
+			}
+		}*/
+		if (!children.contains(child)) {
+			children.add(child);
+		}
 	}
 
 	public PrettyPrintableContents getRegisteredForContents() {
@@ -136,6 +148,10 @@ public abstract class P2PPNode<N, T> {
 
 	public List<P2PPNode<?, ?>> getChildren() {
 		return children;
+	}
+
+	public int getIndex() {
+		return parent.children.indexOf(this);
 	}
 
 	public abstract T buildModelObjectFromAST(N astNode);
