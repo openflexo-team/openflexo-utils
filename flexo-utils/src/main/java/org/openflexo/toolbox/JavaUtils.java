@@ -42,8 +42,10 @@
 
 package org.openflexo.toolbox;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,7 +95,7 @@ public class JavaUtils {
 	public static String getConstantName(String name) {
 		return name == null ? name : getJavaName(name, false).toUpperCase();
 	}
-	*/
+	 */
 	/**
 	 * Transform the specified {@code value} to be used as a java class name. <br>
 	 * Basically, it will remove all special/whiteSpace characters, ensure it starts with a upper case and ensure it doesn't start with a
@@ -139,7 +141,7 @@ public class JavaUtils {
 		}
 		return sb.toString();
 	}
-	*/
+	 */
 
 	/**
 	 * Transform the specified {@code value} to be used as a java string. <br>
@@ -166,7 +168,7 @@ public class JavaUtils {
 		}
 		return sb.toString().replaceAll("[\n]", "\\\\n");
 	}
-	*/
+	 */
 
 	/**
 	 * Transform the specified {@code value} to be used as javadoc. <br>
@@ -195,7 +197,7 @@ public class JavaUtils {
 			}
 			return sb.toString();
 		}
-	*/
+	 */
 
 	private static String getJavaName(String name, boolean lowerFirstChar) {
 		return getJavaName(name, lowerFirstChar, true);
@@ -233,5 +235,42 @@ public class JavaUtils {
 
 	public static String getJavaName(String name) {
 		return getJavaName(name, false, false);
+	}
+
+	public static String getConstantJavaName(String name) {
+		List<String> groups = new ArrayList<>();
+		StringBuffer current = null;
+		boolean isLowerCase = false;
+		for (int i = 0; i < name.length(); i++) {
+			char c = name.charAt(i);
+			if (current == null) {
+				current = new StringBuffer();
+				current.append(c);
+				isLowerCase = Character.isLowerCase(c);
+			}
+			else {
+				if (isLowerCase && Character.isUpperCase(c)) {
+					groups.add(current.toString());
+					current = new StringBuffer();
+					current.append(c);
+					isLowerCase = Character.isLowerCase(c);
+				}
+				else {
+					current.append(c);
+					isLowerCase = Character.isLowerCase(c);
+				}
+			}
+		}
+		if (current != null) {
+			groups.add(current.toString());
+		}
+
+		StringBuffer returned = new StringBuffer();
+		boolean isFirst = true;
+		for (String group : groups) {
+			returned.append((isFirst ? "" : "_") + group.toUpperCase());
+			isFirst = false;
+		}
+		return returned.toString();
 	}
 }
