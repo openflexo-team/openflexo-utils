@@ -127,6 +127,11 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		StringBuffer sb = new StringBuffer();
 
 		List<? extends T> allObjects = childrenObjectsSupplier.get();
+
+		if (allObjects == null) {
+			return "";
+		}
+
 		for (int i = 0; i < allObjects.size(); i++) {
 			T childObject = allObjects.get(i);
 			String applicablePrelude = getPrelude();
