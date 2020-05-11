@@ -86,10 +86,10 @@ public class ChildContents<T> extends PrettyPrintableContents {
 			if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
 				if (childNode != null) {
-				parentNode.addToChildren(childNode);
+					parentNode.addToChildren(childNode);
 				}
 				else {
-					logger.severe("Cannot create P2PPNode for "+childObject);
+					logger.severe("Cannot create P2PPNode for " + childObject);
 					return "";
 				}
 			}

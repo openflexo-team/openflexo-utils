@@ -121,7 +121,6 @@ public abstract class P2PPNode<N, T> {
 				System.out.println(" > " + c);
 				if (c.getClass().getName().contains("ExpressionActionNode")) {
 					System.out.println("C'est la !!!");
-					System.exit(-1);
 				}
 			}
 		}*/

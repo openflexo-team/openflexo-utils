@@ -74,6 +74,7 @@ public class DerivedRawSource {
 	public void replace(RawSourceFragment fragment, String replacement) {
 		if (fragment == null) {
 			logger.warning("Unexpected null fragment");
+			Thread.dumpStack();
 			return;
 		}
 		if (!fragment.getRawText().equals(replacement)) {
