@@ -144,7 +144,6 @@ public class RawSource {
 				System.out.println("rows.size()=" + rows.size());
 				System.out.println("pos=" + pos);
 				System.out.println("rows.get(rows.size() - 1).length()=" + rows.get(rows.size() - 1).length());*/
-				// System.exit(-1);
 				throw new ArrayIndexOutOfBoundsException("Cannot increment from position " + this);
 			}
 			int newPos = pos + 1;
@@ -236,6 +235,14 @@ public class RawSource {
 
 		public int getPos() {
 			return pos;
+		}
+
+		public int getOffset() {
+			int returned = 0;
+			for (int i = 0; i < getLine() - 1; i++) {
+				returned += (rows.get(i).length() + 1);
+			}
+			return returned + getPos();
 		}
 	}
 
