@@ -107,14 +107,8 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			System.out.println("> fragment " + objectNode.getLastParsedFragment());
 		}*/
 
-		if (lastParsedNodes.size() > 0) {
-			// System.out.println("Hop: " + lastParsedNodes.get(0) + " of " + lastParsedNodes.get(0).getClass());
-			// System.out.println("Fragment: " + lastParsedNodes.get(0).getLastParsedFragment());
-			defaultInsertionPoint = lastParsedNodes.get(0).getLastParsedFragment().getStartPosition();
-		}
-		else {
-			defaultInsertionPoint = parentNode.getDefaultInsertionPoint();
-		}
+		// Find a new default insertion point
+		updateDefaultInsertionPoint();
 
 	}
 
@@ -171,6 +165,17 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		return sb.toString();
 	}
 
+	private void updateDefaultInsertionPoint() {
+		if (lastParsedNodes.size() > 0) {
+			// System.out.println("Hop: " + lastParsedNodes.get(0) + " of " + lastParsedNodes.get(0).getClass());
+			// System.out.println("Fragment: " + lastParsedNodes.get(0).getLastParsedFragment());
+			defaultInsertionPoint = lastParsedNodes.get(0).getLastParsedFragment().getStartPosition();
+		}
+		else {
+			defaultInsertionPoint = parentNode.getDefaultInsertionPoint();
+		}
+	}
+
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
 
@@ -183,7 +188,8 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			}
 		}
 
-		// System.out.println("Considered nodes: " + nodesToBeRemoved);
+		// Find a new default insertion point
+		updateDefaultInsertionPoint();
 
 		RawSourcePosition insertionPoint = defaultInsertionPoint;
 		RawSourcePosition insertionPointAfterPostlude = defaultInsertionPoint;
@@ -193,6 +199,8 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		List<? extends T> childrenObjectsList = childrenObjectsSupplier.get();
 
 		// System.out.println("Handling children: " + childrenObjectsList);
+		// System.out.println("insertionPoint=" + insertionPoint);
+		// System.out.println("PARENT insertionPoint=" + parentNode.getDefaultInsertionPoint());
 
 		for (int i = 0; i < childrenObjectsList.size(); i++) {
 			T childObject = childrenObjectsList.get(i);
@@ -331,6 +339,8 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 		}
 
+		// Update parent default insertion point
+		parentNode.setDefaultInsertionPoint(insertionPointAfterPostlude);
 	}
 
 	@Override
