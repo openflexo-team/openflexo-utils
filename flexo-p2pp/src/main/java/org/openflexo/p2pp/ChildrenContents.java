@@ -209,9 +209,11 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 			// System.out.println("*** Handling " + childObject);
 			// System.out.println("insertionPoint=" + insertionPoint);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			boolean childNodeWasRebuild = false;
 			if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
 				parentNode.addToChildren(childNode);
+				childNodeWasRebuild = true;
 			}
 			childNode.setRegisteredForContents(this);
 			if (!lastParsedNodes.contains(childNode)) {
@@ -245,10 +247,22 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				else {
 					if (handleSpecificPostlude) {
 						// We have a special postlude for last item and this is the last item
-						String insertThis = (getPostlude() != null ? getPostlude() : "") + (getPrelude() != null ? getPrelude() : "")
-								+ childNode.getTextualRepresentation(derivedContext)
-								+ (lastParsedNodes.size() > 0 ? "" : applicablePostlude);
-						System.out.println("Case 3: Inserting in " + insertionPoint + " value=[" + insertThis + "]");
+						// System.out.println("****** For node " + childNode);
+						// System.out.println("ASTNode=" + childNode.getASTNode());
+						// System.out.println("childNodeWasRebuild=" + childNodeWasRebuild);
+						String insertThis;
+						if (!childNodeWasRebuild) {
+							// This is the last item, and previous item didn't serialize any postude, do it now
+							insertThis = (getPostlude() != null ? getPostlude() : "") + applicablePrelude
+									+ childNode.getTextualRepresentation(derivedContext)
+									+ (lastParsedNodes.size() > 0 ? "" : applicablePostlude);
+							System.out.println("Case 3.1: Inserting in " + insertionPoint + " value=[" + insertThis + "]");
+						}
+						else {
+							insertThis = applicablePrelude + childNode.getTextualRepresentation(derivedContext)
+									+ (lastParsedNodes.size() > 0 ? "" : applicablePostlude);
+							System.out.println("Case 3.2: Inserting in " + insertionPoint + " value=[" + insertThis + "]");
+						}
 						derivedRawSource.insert(insertionPoint, insertThis);
 					}
 					else {
