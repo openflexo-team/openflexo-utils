@@ -238,6 +238,7 @@ public class JavaUtils {
 	}
 
 	public static String getConstantJavaName(String name) {
+		name = getJavaName(name);
 		List<String> groups = new ArrayList<>();
 		StringBuffer current = null;
 		boolean isLowerCase = false;
