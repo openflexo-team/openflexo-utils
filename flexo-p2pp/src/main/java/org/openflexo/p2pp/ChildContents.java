@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
+import org.openflexo.p2pp.RawSource.RawSourcePosition;
 import org.openflexo.toolbox.StringUtils;
 
 /**
@@ -60,6 +61,8 @@ public class ChildContents<T> extends PrettyPrintableContents {
 	private P2PPNode<?, ?> parentNode;
 	private P2PPNode<?, T> parsedChildNode;
 
+	private RawSourcePosition defaultInsertionPoint;
+
 	public ChildContents(String prelude, Supplier<T> childObjectSupplier, String postlude, Indentation indentation,
 			P2PPNode<?, ?> parentNode) {
 		super(prelude, postlude, indentation);
@@ -71,6 +74,8 @@ public class ChildContents<T> extends PrettyPrintableContents {
 			setFragment(parsedChildNode.getLastParsedFragment());
 			parsedChildNode.setRegisteredForContents(this);
 		}
+		// Find a new default insertion point
+		updateDefaultInsertionPoint();
 	}
 
 	public P2PPNode<?, T> getParsedChildNode() {
@@ -110,6 +115,26 @@ public class ChildContents<T> extends PrettyPrintableContents {
 		return null;
 	}
 
+	private void updateDefaultInsertionPoint() {
+		if (parsedChildNode != null) {
+			defaultInsertionPoint = parsedChildNode.getLastParsedFragment().getStartPosition();
+		}
+		else {
+			defaultInsertionPoint = parentNode.getDefaultInsertionPoint();
+		}
+		if (defaultInsertionPoint == null) {
+			System.out.println("Zut alors, pas de defaultInsertionPoint");
+			System.out.println("parsedChildNode=" + parsedChildNode);
+			System.out.println("parentNode=" + parentNode);
+			System.out.println("parentNode.getDefaultInsertionPoint()=" + parentNode.getDefaultInsertionPoint());
+			System.out.println("parentNode.parentNode=" + parentNode.getParent());
+			if (parentNode.getParent() != null) {
+				System.out.println("parentNode.parentNode.getDefaultInsertionPoint()=" + parentNode.getParent().getDefaultInsertionPoint());
+				defaultInsertionPoint = parentNode.getParent().getDefaultInsertionPoint();
+			}
+		}
+	}
+
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
 
@@ -121,14 +146,32 @@ public class ChildContents<T> extends PrettyPrintableContents {
 				parentNode.addToChildren(childNode);
 			}
 			childNode.setRegisteredForContents(this);
+
+			// Find a new default insertion point
+			updateDefaultInsertionPoint();
+
+			RawSourcePosition insertionPoint = defaultInsertionPoint;
+			RawSourcePosition insertionPointAfterPostlude = defaultInsertionPoint;
+
 			PrettyPrintContext derivedContext = context.derive(getIndentation());
 			if (parsedChildNode != null) {
 				// replace existing by new
+				System.out.println(" @@@@@@@@@@@@");
+				System.out.println("parsedChildNode=" + parsedChildNode);
+				System.out.println("childNode=" + childNode);
+				System.out.println("childNode.getLastParsedFragment()=" + childNode.getLastParsedFragment());
 				derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.computeTextualRepresentation(derivedContext));
+				insertionPoint = childNode.getLastParsedFragment().getEndPosition();
+				if (childNode.getPostlude() != null) {
+					insertionPointAfterPostlude = childNode.getPostlude().getEndPosition();
+				}
 			}
 			else {
-				derivedRawSource.insert(parentNode.getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
+				System.out.println("insertionPoint: " + insertionPoint);
+				derivedRawSource.insert(insertionPoint, childNode.getTextualRepresentation(derivedContext));
 			}
+			// Update parent default insertion point
+			parentNode.setDefaultInsertionPoint(insertionPointAfterPostlude);
 		}
 		else {
 			// new child is null

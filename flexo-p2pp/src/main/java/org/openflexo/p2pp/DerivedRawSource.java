@@ -91,7 +91,7 @@ public class DerivedRawSource {
 	}
 
 	public void insert(RawSourcePosition insertionPoint, String insertion) {
-		// System.out.println("On insere a la position " + insertionPoint + " la valeur [" + insertion + "])");
+		System.out.println("On insere a la position " + insertionPoint + " la valeur [" + insertion + "])");
 		modifications.add(new StringInsertion(insertionPoint, insertion));
 	}
 

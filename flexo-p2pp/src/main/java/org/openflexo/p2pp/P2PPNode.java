@@ -124,8 +124,52 @@ public abstract class P2PPNode<N, T> {
 				}
 			}
 		}*/
+
+		/*System.out.println("--------> addToChildren " + child + " dans " + this);
+		if (this.getClass().getName().contains("FMLSimplePropertyValueNode")) {
+			System.out.println("Bizarre ca");
+			Thread.dumpStack();
+		}*/
+
 		if (!children.contains(child)) {
 			children.add(child);
+		}
+
+		// debug();
+	}
+
+	private P2PPNode<?, ?> getRoot() {
+		if (parent == this) {
+			System.out.println("pas possible ???");
+			System.exit(-1);
+		}
+		if (parent != null) {
+			return parent.getRoot();
+		}
+		return this;
+	}
+
+	private void debug() {
+		debug(getRoot(), 0);
+	}
+
+	/**
+	 * Display in console AbstractSyntaxTree of supplied node
+	 * 
+	 * @param node
+	 *            node to display
+	 * @param indent
+	 *            identation level
+	 */
+	protected static void debug(P2PPNode<?, ?> node, int indent) {
+		System.out.println(StringUtils.buildWhiteSpaceIndentation(indent * 2) + " > " + node.getClass().getSimpleName() + " from "
+				+ node.getLastParsedFragment() /*+ " model:" + node.getModelObject()*/ + " pre=" + node.getPrelude() + " post="
+				+ node.getPostlude() /*+ " astNode=" + node.getASTNode() + " of " + node.getASTNode().getClass()*/);
+		// System.err.println(node.getLastParsed());
+		// node.getLastParsed();
+		indent++;
+		for (P2PPNode<?, ?> child : node.getChildren()) {
+			debug(child, indent);
 		}
 	}
 
@@ -248,6 +292,7 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	protected void preparePrettyPrint(boolean hasParsedVersion) {
+		System.out.println("preparePrettyPrint() for " + this + " defaultInsertionPoint=" + getStartPosition());
 		defaultInsertionPoint = getStartPosition();
 	}
 
@@ -856,7 +901,9 @@ public abstract class P2PPNode<N, T> {
 			return derivedRawSource;
 		}
 
+		System.out.println("########### computeTextualRepresentation()");
 		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+			System.out.println("   > on gere: " + prettyPrintableContents);
 			prettyPrintableContents.updatePrettyPrint(derivedRawSource, context);
 		}
 
