@@ -176,7 +176,7 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		}
 	}
 
-	private boolean DEBUG = false;
+	public static boolean DEBUG = false;
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
@@ -200,16 +200,20 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 
 		List<? extends T> childrenObjectsList = childrenObjectsSupplier.get();
 
-		// System.out.println("Handling children: " + childrenObjectsList);
-		// System.out.println("insertionPoint=" + insertionPoint);
-		// System.out.println("PARENT insertionPoint=" + parentNode.getDefaultInsertionPoint());
+		if (DEBUG) {
+			System.out.println("Handling children: " + childrenObjectsList);
+			System.out.println("insertionPoint=" + insertionPoint);
+			System.out.println("PARENT insertionPoint=" + parentNode.getDefaultInsertionPoint());
+		}
 
 		for (int i = 0; i < childrenObjectsList.size(); i++) {
 			T childObject = childrenObjectsList.get(i);
 			boolean isFirst = (i == 0);
 			boolean isLast = (i == childrenObjectsList.size() - 1);
-			// System.out.println("*** Handling " + childObject);
-			// System.out.println("insertionPoint=" + insertionPoint);
+			if (DEBUG) {
+				System.out.println("*** Handling " + childObject);
+				System.out.println("insertionPoint=" + insertionPoint);
+			}
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
 			if (childNode == null) {
 				childNode = parentNode.makeObjectNode(childObject);
@@ -357,6 +361,9 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		handlePreludeAndPoslude(rootNode, context);
 		List<? extends T> allObjects = childrenObjectsSupplier.get();
+		if (parentNode.getClass().getName().contains("AddVirtualModelInstance")) {
+			System.out.println("childrenObjectsSupplier=" + allObjects);
+		}
 		for (int i = 0; i < allObjects.size(); i++) {
 			T childObject = allObjects.get(i);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);

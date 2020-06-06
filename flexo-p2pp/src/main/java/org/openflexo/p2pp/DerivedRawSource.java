@@ -102,7 +102,7 @@ public class DerivedRawSource {
 
 	public String getStringRepresentation() {
 
-		DEBUG = false;
+		// DEBUG = false;
 
 		try {
 			checkNoModificationsOverlapping();
@@ -120,6 +120,9 @@ public class DerivedRawSource {
 			return getSourceFragment().getRawText();
 		}
 
+		if (DEBUG) {
+			System.out.println("sourceFragment: " + getSourceFragment());
+		}
 		RawSourcePosition current = getSourceFragment().getStartPosition();
 		StringBuffer sb = new StringBuffer();
 

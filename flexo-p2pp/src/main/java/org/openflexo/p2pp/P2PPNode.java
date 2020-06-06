@@ -113,6 +113,10 @@ public abstract class P2PPNode<N, T> {
 		children.add(index, child);
 	}
 
+	public List<PrettyPrintableContents> getPPContents() {
+		return ppContents;
+	}
+
 	protected void addToChildren(P2PPNode<?, ?> child) {
 		child.parent = this;
 		/*if (child.getClass().getName().contains("ExpressionActionNode")) {
@@ -124,6 +128,7 @@ public abstract class P2PPNode<N, T> {
 				}
 			}
 		}*/
+
 		if (!children.contains(child)) {
 			children.add(child);
 		}
@@ -270,6 +275,9 @@ public abstract class P2PPNode<N, T> {
 	private RawSourcePosition defaultInsertionPoint;
 
 	public RawSourcePosition getDefaultInsertionPoint() {
+		if (defaultInsertionPoint == null && getParent() != null) {
+			return getParent().getDefaultInsertionPoint();
+		}
 		return defaultInsertionPoint;
 	}
 

@@ -124,9 +124,22 @@ public class ChildContents<T> extends PrettyPrintableContents {
 			PrettyPrintContext derivedContext = context.derive(getIndentation());
 			if (parsedChildNode != null) {
 				// replace existing by new
-				derivedRawSource.replace(childNode.getLastParsedFragment(), childNode.computeTextualRepresentation(derivedContext));
+				if (childNode.getLastParsedFragment() != null) {
+					// System.out.println("****** Replacing " + childNode.getLastParsedFragment() + " by ["
+					// + childNode.computeTextualRepresentation(derivedContext).getStringRepresentation() + "]");
+					derivedRawSource.replace(parsedChildNode.getLastParsedFragment(),
+							childNode.computeTextualRepresentation(derivedContext));
+				}
+				else {
+					// System.out.println("****** Replacing [" + parsedChildNode.getLastParsedFragment().getRawText() + "] by ["
+					// + childNode.getNormalizedTextualRepresentation(derivedContext) + "]");
+					derivedRawSource.replace(parsedChildNode.getLastParsedFragment(),
+							childNode.getNormalizedTextualRepresentation(derivedContext));
+				}
 			}
 			else {
+				// System.out.println("****** Inserting at " + parentNode.getDefaultInsertionPoint() + " contents: "
+				// + childNode.getTextualRepresentation(derivedContext));
 				derivedRawSource.insert(parentNode.getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
 			}
 		}
@@ -137,10 +150,6 @@ public class ChildContents<T> extends PrettyPrintableContents {
 				derivedRawSource.remove(getFragment());
 			}
 		}
-
-		// System.out.println("> Pour ChildContents " + childNode.getFMLObject() + " c'est plus complique");
-		// System.out.println("Et on calcule la nouvelle valeur:");
-		// System.out.println(childNode.computeFMLRepresentation(context));
 	}
 
 	@Override
