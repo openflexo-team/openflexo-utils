@@ -361,9 +361,6 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		handlePreludeAndPoslude(rootNode, context);
 		List<? extends T> allObjects = childrenObjectsSupplier.get();
-		if (parentNode.getClass().getName().contains("AddVirtualModelInstance")) {
-			System.out.println("childrenObjectsSupplier=" + allObjects);
-		}
 		for (int i = 0; i < allObjects.size(); i++) {
 			T childObject = allObjects.get(i);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
