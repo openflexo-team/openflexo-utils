@@ -93,6 +93,10 @@ public class FileSystemMetaDataManager {
 		return returned;
 	}
 
+	public File getMetaDataPropertiesFile(File f) {
+		return getMetaDataProperties(f).metaDataFile;
+	}
+
 	private class MetaDataProperties extends Properties {
 
 		private final File directory;

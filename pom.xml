@@ -8,7 +8,7 @@
        <!-- ************
    	Component identity and specific information
       -->
-       <version>1.4.1</version>
+       <version>1.5-SNAPSHOT</version>
        <modelVersion>4.0.0</modelVersion>
        <artifactId>openflexo-utils</artifactId>
        <name>Openflexo-Utils</name>
@@ -24,6 +24,7 @@
               <url>https://bugs.openflexo.org/browse/OFUTILS/</url>
        </issueManagement>
        <modules>
+              <module>flexo-utils</module>
               <module>flexohelp</module>
               <!--  <module>flexojavacvs</module>
               <module>flexojavaparser</module>
@@ -34,11 +35,11 @@
 	Properties
       -->
        <properties>
-              <gina.version>2.1.1</gina.version>
-              <connie.version>1.4.1</connie.version>
-              <pamela.version>1.4.1</pamela.version>
-              <diana.version>1.4.1</diana.version>
-              <ofutils.logo>https://media.openflexo.org/images/ofutils_logo64x64.png</ofutils.logo>
+              <gina.version>2.1.2-SNAPSHOT</gina.version>
+              <connie.version>1.4.2-SNAPSHOT</connie.version>
+              <pamela.version>1.4.2-SNAPSHOT</pamela.version>
+              <diana.version>1.4.2-SNAPSHOT</diana.version>
+              <ofutils.logo>https://support.openflexo.org/images/components/utils/Utils64x64.png</ofutils.logo>
 	    	  <sitedeploy.dir>/home/www/sites/ofutils</sitedeploy.dir>
        </properties>
        <!-- ************
