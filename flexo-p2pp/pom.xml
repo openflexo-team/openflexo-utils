@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.openflexo</groupId>
 		<artifactId>openflexo-utils</artifactId>
-        <version>1.5</version>
+        <version>1.5.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>flexo-p2pp</artifactId>
 	<name>Flexo P2PP</name>
