@@ -7,7 +7,7 @@
         <version>1.5</version>
 	</parent>
 	<artifactId>flexohelp</artifactId>
-	<name>Help :: FlexoHelp</name>
+	<name>Flexo Help</name>
 	<dependencies>
 		<dependency>
 			<groupId>javax.help</groupId>
