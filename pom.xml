@@ -8,7 +8,7 @@
        <!-- ************
    	Component identity and specific information
       -->
-       <version>1.5-SNAPSHOT</version>
+       <version>1.5</version>
        <modelVersion>4.0.0</modelVersion>
        <artifactId>openflexo-utils</artifactId>
        <name>Openflexo-Utils</name>
@@ -26,6 +26,7 @@
        <modules>
               <module>flexo-utils</module>
               <module>flexohelp</module>
+              <module>flexo-p2pp</module>
               <!--  <module>flexojavacvs</module>
               <module>flexojavaparser</module>
               <module>jiraclient</module>
