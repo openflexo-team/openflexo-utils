@@ -6,13 +6,9 @@
 		<artifactId>openflexo-utils</artifactId>
         <version>1.5</version>
 	</parent>
-	<artifactId>flexohelp</artifactId>
-	<name>Help :: FlexoHelp</name>
+	<artifactId>flexo-p2pp</artifactId>
+	<name>Flexo P2PP</name>
 	<dependencies>
-		<dependency>
-			<groupId>javax.help</groupId>
-			<artifactId>javahelp</artifactId>
-		</dependency>
 	</dependencies>
 </project>
 
