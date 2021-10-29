@@ -97,7 +97,7 @@ public abstract class P2PPNode<N, T> {
 		this.astNode = astNode;
 		this.modelObject = aModelObject;
 
-		if (astNode != null) {
+		if (astNode != null && fragmentRetriever != null) {
 			RawSourceFragment fragment = ((FragmentRetriever) fragmentRetriever).retrieveFragment(astNode);
 			setStartPosition(fragment.getStartPosition());
 			setEndPosition(fragment.getEndPosition());
