@@ -364,8 +364,13 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 		for (int i = 0; i < allObjects.size(); i++) {
 			T childObject = allObjects.get(i);
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
-			childNode.initializePrettyPrint(rootNode, context.derive(getIndentation()));
-			childNode.setRegisteredForContents(this);
+			if (childNode != null) {
+				childNode.initializePrettyPrint(rootNode, context.derive(getIndentation()));
+				childNode.setRegisteredForContents(this);
+			}
+			else {
+				logger.warning("Cannot find P2PPNode for object " + childObject);
+			}
 		}
 	}
 
@@ -385,11 +390,17 @@ public class ChildrenContents<T> extends PrettyPrintableContents {
 				applicablePostlude = postludeForLastItem;
 			}
 			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
-			if (StringUtils.isNotEmpty(applicablePrelude)) {
-				childNode.tryToIdentifyPrelude(applicablePrelude, rootNode);
+
+			if (childNode != null) {
+				if (StringUtils.isNotEmpty(applicablePrelude)) {
+					childNode.tryToIdentifyPrelude(applicablePrelude, rootNode);
+				}
+				if (StringUtils.isNotEmpty(applicablePostlude)) {
+					childNode.tryToIdentifyPostlude(applicablePostlude, rootNode);
+				}
 			}
-			if (StringUtils.isNotEmpty(applicablePostlude)) {
-				childNode.tryToIdentifyPostlude(applicablePostlude, rootNode);
+			else {
+				logger.warning("Cannot find P2PPNode for object " + childObject);
 			}
 		}
 
