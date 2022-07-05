@@ -334,7 +334,7 @@ public abstract class DirectoryWatcher extends TimerTask {
 	public DirectoryWatcher(File directory) {
 		super();
 		rootDirectoryWatcher = new NodeDirectoryWatcher(directory, this, false);
-		logger.info("Started DirectoryWatcher on " + directory + " ...");
+		logger.fine("Started DirectoryWatcher on " + directory + " ...");
 		status = Status.INIT;
 	}
 
