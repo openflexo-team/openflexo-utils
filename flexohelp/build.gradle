@@ -1,5 +1,0 @@
-dependencies {
-  implementation connieUtils()
-  implementation 'javax.help:javahelp:2.0.05'
-  implementation testUtils()
-}
