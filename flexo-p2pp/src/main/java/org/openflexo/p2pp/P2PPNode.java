@@ -307,7 +307,7 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	public StaticContents staticContents(String prelude, String staticContents, String postlude) {
-		return new StaticContents(prelude, staticContents, postlude, null);
+		return new StaticContents(prelude, staticContents, postlude, null, this);
 	}
 
 	/**
@@ -499,7 +499,7 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		StaticContents newContents = new StaticContents(null, staticContents, null, fragment);
+		StaticContents newContents = new StaticContents(null, staticContents, null, fragment, this);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
@@ -573,7 +573,7 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		StaticContents newContents = new StaticContents(prelude, staticContents, null, fragment);
+		StaticContents newContents = new StaticContents(prelude, staticContents, null, fragment, this);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
@@ -598,7 +598,7 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, fragment);
+		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, fragment, this);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
@@ -949,7 +949,7 @@ public abstract class P2PPNode<N, T> {
 		return postlude;
 	}
 
-	private RawSourceFragment findUnmappedSegmentBackwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
+	private static RawSourceFragment findUnmappedSegmentBackwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
 		int length = expected.length();
 		int i = 0;
 		// System.out.println("Backward looking for [" + expected + "] from " + position);
@@ -975,7 +975,7 @@ public abstract class P2PPNode<N, T> {
 		return null;
 	}
 
-	private RawSourceFragment findUnmappedSegmentForwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
+	private static RawSourceFragment findUnmappedSegmentForwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
 		int length = expected.length();
 		int i = 0;
 		// System.out.println("Forward looking for [" + expected + "] from " + position);
@@ -1027,6 +1027,16 @@ public abstract class P2PPNode<N, T> {
 				if (child.isFragmentMapped(fragment)) {
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+
+	public boolean isFragmentMappedInPPContents(RawSourceFragment fragment) {
+		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+			// System.out.println(" > PPContents " + prettyPrintableContents + " " + prettyPrintableContents.getFragment());
+			if (prettyPrintableContents.getFragment() != null && prettyPrintableContents.getFragment().intersects(fragment)) {
+				return true;
 			}
 		}
 		return false;

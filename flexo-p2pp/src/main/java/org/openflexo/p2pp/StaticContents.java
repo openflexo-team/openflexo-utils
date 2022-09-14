@@ -39,6 +39,7 @@
 package org.openflexo.p2pp;
 
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
+import org.openflexo.p2pp.RawSource.RawSourcePosition;
 import org.openflexo.toolbox.StringUtils;
 
 /**
@@ -51,20 +52,24 @@ import org.openflexo.toolbox.StringUtils;
 public class StaticContents extends PrettyPrintableContents {
 
 	private final String staticContents;
+	private P2PPNode<?, ?> node;
 
-	public StaticContents(String staticContents, RawSourceFragment fragment) {
+	public StaticContents(String staticContents, RawSourceFragment fragment, P2PPNode<?, ?> node) {
 		super();
 		this.staticContents = staticContents;
+		this.node = node;
 	}
 
-	public StaticContents(String prelude, String staticContents, RawSourceFragment fragment) {
+	public StaticContents(String prelude, String staticContents, RawSourceFragment fragment, P2PPNode<?, ?> node) {
 		super(prelude, null);
 		this.staticContents = staticContents;
+		this.node = node;
 	}
 
-	public StaticContents(String prelude, String staticContents, String postlude, RawSourceFragment fragment) {
+	public StaticContents(String prelude, String staticContents, String postlude, RawSourceFragment fragment, P2PPNode<?, ?> node) {
 		super(prelude, postlude);
 		this.staticContents = staticContents;
+		this.node = node;
 	}
 
 	public String getStaticContents() {
@@ -88,11 +93,122 @@ public class StaticContents extends PrettyPrintableContents {
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
-		// Nothing to do
+		if (StringUtils.isNotEmpty(getPrelude()))
+			preludeFragment = findUnmappedSegmentBackwardFrom(getPrelude(), getFragment().getStartPosition());
+		if (StringUtils.isNotEmpty(getPostlude()))
+			postludeFragment = findUnmappedSegmentForwardFrom(getPostlude(), getFragment().getEndPosition());
+
+		/*if (preludeFragment != null && StringUtils.isNotEmpty(getPrelude())) {
+			derivedRawSource.replace(preludeFragment, getPrelude());
+		}*/
+
+		String replacedString = getStaticContents();
+
+		if (StringUtils.isNotEmpty(getPrelude())) {
+			if (preludeFragment == null) {
+				replacedString = getPrelude() + replacedString;
+			}
+		}
+		if (StringUtils.isNotEmpty(getPostlude())) {
+			if (postludeFragment == null) {
+				replacedString = replacedString + getPostlude();
+			}
+		}
+
+		/*if (staticContents.equals("concept")) {
+			System.out.println("Prelude: [" + getPrelude() + "]");
+			System.out.println("Postlude: [" + getPostlude() + "]");
+			System.out.println("Found prelude: " + preludeFragment);
+			System.out.println("Found postlude: " + postludeFragment);
+			System.out.println("replacedString=[" + replacedString + "]");
+		}*/
+
+		derivedRawSource.replace(getFragment(), replacedString);
+
 	}
+
+	/*@Override
+	public void setFragment(RawSourceFragment fragment) {
+		if (staticContents.equals("abstract")) {
+			System.out.println("*********** tiens on me donne le fragment " + fragment);
+		}
+		super.setFragment(fragment);
+	}*/
+
+	private RawSourceFragment preludeFragment;
+	private RawSourceFragment postludeFragment;
 
 	@Override
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		// Nothing to do
+		// System.out.println("*********** tiens j'arrive la pour " + getStaticContents() + " fragment " + getFragment());
+		// System.out.println("rootNode:" + rootNode);
+		/*if (StringUtils.isNotEmpty(getPrelude()))
+			preludeFragment = findUnmappedSegmentBackwardFrom(getPrelude(), getFragment().getStartPosition(), rootNode);
+		if (StringUtils.isNotEmpty(getPostlude()))
+			postludeFragment = findUnmappedSegmentForwardFrom(getPostlude(), getFragment().getEndPosition(), rootNode);
+		System.out.println("Prelude: [" + getPrelude() + "]");
+		System.out.println("Postlude: [" + getPostlude() + "]");
+		System.out.println("Found prelude: " + preludeFragment);
+		System.out.println("Found postlude: " + postludeFragment);*/
+
 	}
+
+	private RawSourceFragment findUnmappedSegmentBackwardFrom(String expected, RawSourcePosition position) {
+		int length = expected.length();
+		int i = 0;
+		// System.out.println("Backward looking for [" + expected + "] from " + position);
+		boolean positionStillValid = true;
+		while (positionStillValid) {
+			try {
+				RawSourcePosition start = position.decrement(length + i);
+				RawSourcePosition end = position.decrement(i);
+				RawSourceFragment f = position.getOuterType().makeFragment(start, end);
+				// System.out.println("Test backward fragment " + f + " [" + f.getRawText() + "]");
+				if (node.isFragmentMappedInPPContents(f)) {
+					// This fragment intersects another mapped fragment, abort
+					return null;
+				}
+				if (f.getRawText().equals(expected)) {
+					return f;
+				}
+				i++;
+				if (start.decrement().isBefore(node.getStartPosition())) {
+					positionStillValid = false;
+				}
+			} catch (ArrayIndexOutOfBoundsException e) {
+				positionStillValid = false;
+			}
+		}
+		return null;
+	}
+
+	private RawSourceFragment findUnmappedSegmentForwardFrom(String expected, RawSourcePosition position) {
+		int length = expected.length();
+		int i = 0;
+		System.out.println("Forward looking for [" + expected + "] from " + position + " in fragment " + node.getLastParsedFragment());
+		boolean positionStillValid = true;
+		while (positionStillValid) {
+			try {
+				RawSourcePosition start = position.increment(i);
+				RawSourcePosition end = position.increment(length + i);
+				RawSourceFragment f = position.getOuterType().makeFragment(start, end);
+				if (node.isFragmentMappedInPPContents(f)) {
+					// This fragment intersects another mapped fragment, abort
+					return null;
+				}
+				if (f.getRawText().equals(expected)) {
+					return f;
+				}
+				i++;
+				if (end.increment().isAfter(node.getEndPosition())) {
+					positionStillValid = false;
+				}
+			} catch (ArrayIndexOutOfBoundsException e) {
+				positionStillValid = false;
+			}
+		}
+		return null;
+	}
+
 }
