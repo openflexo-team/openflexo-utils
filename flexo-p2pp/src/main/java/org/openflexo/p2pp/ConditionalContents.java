@@ -50,17 +50,19 @@ import org.openflexo.p2pp.RawSource.RawSourceFragment;
  * 
  * @author sylvain
  *
+ * @param <N>
+ *            Type of AST node
+ * @param <T>
+ *            General type of pretty-printable object
  */
-public class ConditionalContents extends PrettyPrintableContents {
+public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 
 	private static final Logger logger = Logger.getLogger(ConditionalContents.class.getPackage().getName());
 
 	private final Supplier<Boolean> conditionSupplier;
 
-	private P2PPNode<?, ?> node;
-
-	private PrettyPrintableContents thenContents;
-	private PrettyPrintableContents elseContents;
+	private PrettyPrintableContents<N, T> thenContents;
+	private PrettyPrintableContents<N, T> elseContents;
 
 	/**
 	 * Build a new {@link ConditionalContents}, whose value is intented to replace text determined with supplied fragment
@@ -70,46 +72,44 @@ public class ConditionalContents extends PrettyPrintableContents {
 	 *            gives dynamic value of that contents
 	 * @param fragment
 	 */
-	public ConditionalContents(Supplier<Boolean> conditionSupplier, P2PPNode<?, ?> node) {
-		super();
-		this.node = node;
+	public ConditionalContents(P2PPNode<N, T> node, Supplier<Boolean> conditionSupplier) {
+		super(node);
 		this.conditionSupplier = conditionSupplier;
-		// setFragment(fragment);
 	}
 
-	public PrettyPrintableContents getThenContents() {
+	public PrettyPrintableContents<N, T> getThenContents() {
 		return thenContents;
 	}
 
-	public void setThenContents(PrettyPrintableContents thenContents) {
+	public void setThenContents(PrettyPrintableContents<N, T> thenContents) {
 		this.thenContents = thenContents;
 	}
 
-	public PrettyPrintableContents getElseContents() {
+	public PrettyPrintableContents<N, T> getElseContents() {
 		return elseContents;
 	}
 
-	public void setElseContents(PrettyPrintableContents elseContents) {
+	public void setElseContents(PrettyPrintableContents<N, T> elseContents) {
 		this.elseContents = elseContents;
 	}
 
-	public ConditionalContents thenAppend(PrettyPrintableContents contents, RawSourceFragment fragment) {
+	public ConditionalContents<N, T> thenAppend(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
 		if (thenContents == null) {
 			if (fragment == null) {
-				fragment = node.getDefaultInsertionPoint() != null ? node.getDefaultInsertionPoint().getOuterType()
-						.makeFragment(node.getDefaultInsertionPoint(), node.getDefaultInsertionPoint()) : null;
+				fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
+						.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
 			}
 			contents.setFragment(fragment);
 			thenContents = contents;
 			if (fragment != null) {
-				node.setDefaultInsertionPoint(fragment.getEndPosition());
+				getNode().setDefaultInsertionPoint(fragment.getEndPosition());
 			}
 		}
 		else if (thenContents instanceof SequentialContents) {
-			((SequentialContents) thenContents).append(contents, fragment);
+			((SequentialContents<N, T>) thenContents).append(contents, fragment);
 		}
 		else {
-			SequentialContents sequentialContents = new SequentialContents(node);
+			SequentialContents<N, T> sequentialContents = new SequentialContents<>(getNode());
 			sequentialContents.append(thenContents, thenContents.getFragment());
 			sequentialContents.append(contents, fragment);
 			thenContents = sequentialContents;
@@ -117,31 +117,31 @@ public class ConditionalContents extends PrettyPrintableContents {
 		return this;
 	}
 
-	public ConditionalContents thenAppend(ChildContents<?> contents) {
+	public ConditionalContents<N, T> thenAppend(ChildContents<N, T, ?, ?> contents) {
 		return thenAppend(contents, null);
 	}
 
-	public ConditionalContents thenAppend(ChildrenContents<?> contents) {
+	public ConditionalContents<N, T> thenAppend(ChildrenContents<N, T, ?, ?> contents) {
 		return thenAppend(contents, null);
 	}
 
-	public ConditionalContents elseAppend(PrettyPrintableContents contents, RawSourceFragment fragment) {
+	public ConditionalContents<N, T> elseAppend(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
 		if (elseContents == null) {
 			if (fragment == null) {
-				fragment = node.getDefaultInsertionPoint() != null ? node.getDefaultInsertionPoint().getOuterType()
-						.makeFragment(node.getDefaultInsertionPoint(), node.getDefaultInsertionPoint()) : null;
+				fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
+						.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
 			}
 			contents.setFragment(fragment);
 			elseContents = contents;
 			if (fragment != null) {
-				node.setDefaultInsertionPoint(fragment.getEndPosition());
+				getNode().setDefaultInsertionPoint(fragment.getEndPosition());
 			}
 		}
 		else if (elseContents instanceof SequentialContents) {
-			((SequentialContents) elseContents).append(contents, fragment);
+			((SequentialContents<N, T>) elseContents).append(contents, fragment);
 		}
 		else {
-			SequentialContents sequentialContents = new SequentialContents(node);
+			SequentialContents<N, T> sequentialContents = new SequentialContents<N, T>(getNode());
 			sequentialContents.append(elseContents, elseContents.getFragment());
 			sequentialContents.append(contents, fragment);
 			elseContents = sequentialContents;
@@ -149,11 +149,11 @@ public class ConditionalContents extends PrettyPrintableContents {
 		return this;
 	}
 
-	public ConditionalContents elseAppend(ChildContents<?> contents) {
+	public ConditionalContents<N, T> elseAppend(ChildContents<N, T, ?, ?> contents) {
 		return elseAppend(contents, null);
 	}
 
-	public ConditionalContents elseAppend(ChildrenContents<?> contents) {
+	public ConditionalContents<N, T> elseAppend(ChildrenContents<N, T, ?, ?> contents) {
 		return elseAppend(contents, null);
 	}
 
@@ -181,6 +181,8 @@ public class ConditionalContents extends PrettyPrintableContents {
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
+
+		super.updatePrettyPrint(derivedRawSource, context);
 
 		if (conditionSupplier.get()) {
 			if (getThenContents() != null) {

@@ -49,44 +49,53 @@ import org.openflexo.toolbox.StringUtils;
  * 
  * @author sylvain
  *
- * @param <T>
+ * @param <PN>
+ *            Type of AST node of parent
+ * @param <PT>
+ *            General type of pretty-printable parent object
+ * @param <CN>
+ *            Type of AST node referenced by this {@link ChildContents}
+ * @param <CT>
  *            Type of child object beeing handled in this {@link ChildContents}
  */
-public class ChildContents<T> extends PrettyPrintableContents {
+public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, PT> {
 
 	private static final Logger logger = Logger.getLogger(ChildContents.class.getPackage().getName());
 
-	private Supplier<T> childObjectSupplier;
-	private P2PPNode<?, ?> parentNode;
-	private P2PPNode<?, T> parsedChildNode;
+	private Supplier<CT> childObjectSupplier;
+	private P2PPNode<CN, CT> parsedChildNode;
 
-	public ChildContents(String prelude, Supplier<T> childObjectSupplier, String postlude, Indentation indentation,
-			P2PPNode<?, ?> parentNode) {
-		super(prelude, postlude, indentation);
+	@SuppressWarnings("unchecked")
+	public ChildContents(P2PPNode<PN, PT> parentNode, String prelude, Supplier<CT> childObjectSupplier, String postlude,
+			Indentation indentation) {
+		super(parentNode, prelude, postlude, indentation);
 		this.childObjectSupplier = childObjectSupplier;
-		this.parentNode = parentNode;
-		T childObject = childObjectSupplier.get();
-		parsedChildNode = parentNode.getObjectNode(childObject);
+		CT childObject = childObjectSupplier.get();
+		parsedChildNode = (P2PPNode<CN, CT>) parentNode.getObjectNode(childObject);
 		if (parsedChildNode != null) {
 			setFragment(parsedChildNode.getLastParsedFragment());
 			parsedChildNode.setRegisteredForContents(this);
 		}
 	}
 
-	public P2PPNode<?, T> getParsedChildNode() {
+	public P2PPNode<CN, CT> getParsedChildNode() {
 		return parsedChildNode;
+	}
+
+	public P2PPNode<PN, PT> getParentNode() {
+		return getNode();
 	}
 
 	@Override
 	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
 
-		T childObject = childObjectSupplier.get();
+		CT childObject = childObjectSupplier.get();
 		if (childObject != null) {
-			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			P2PPNode<?, CT> childNode = getParentNode().getObjectNode(childObject);
 			if (childNode == null) {
-				childNode = parentNode.makeObjectNode(childObject);
+				childNode = getParentNode().makeObjectNode(childObject);
 				if (childNode != null) {
-					parentNode.addToChildren(childNode);
+					getParentNode().addToChildren(childNode);
 				}
 				else {
 					logger.severe("Cannot create P2PPNode for " + childObject);
@@ -113,12 +122,14 @@ public class ChildContents<T> extends PrettyPrintableContents {
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
 
-		T childObject = childObjectSupplier.get();
+		super.updatePrettyPrint(derivedRawSource, context);
+
+		CT childObject = childObjectSupplier.get();
 		if (childObject != null) {
-			P2PPNode<?, T> childNode = parentNode.getObjectNode(childObject);
+			P2PPNode<?, CT> childNode = getParentNode().getObjectNode(childObject);
 			if (childNode == null) {
-				childNode = parentNode.makeObjectNode(childObject);
-				parentNode.addToChildren(childNode);
+				childNode = getParentNode().makeObjectNode(childObject);
+				getParentNode().addToChildren(childNode);
 			}
 			childNode.setRegisteredForContents(this);
 			PrettyPrintContext derivedContext = context.derive(getIndentation());
@@ -140,7 +151,7 @@ public class ChildContents<T> extends PrettyPrintableContents {
 			else {
 				// System.out.println("****** Inserting at " + parentNode.getDefaultInsertionPoint() + " contents: "
 				// + childNode.getTextualRepresentation(derivedContext));
-				derivedRawSource.insert(parentNode.getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
+				derivedRawSource.insert(getParentNode().getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
 			}
 		}
 		else {

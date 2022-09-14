@@ -46,44 +46,46 @@ import org.openflexo.p2pp.RawSource.RawSourceFragment;
 /**
  * A sequential content
  * 
- * This is a control-structure whose semantics is to sequentially execute and append contained {@link PrettyPrintableContents}
+ * This is a control-structure whose semantics is to sequentially execute and append contained {@link PrettyPrintableContents} stored as a
+ * {@link List}
  * 
  * @author sylvain
- *
+ * 
+ * @param <N>
+ *            Type of AST node
+ * @param <T>
+ *            General type of pretty-printable object
  */
-public class SequentialContents extends PrettyPrintableContents {
+public class SequentialContents<N, T> extends PrettyPrintableContents<N, T> {
 
-	private final List<PrettyPrintableContents> ppContents;
-
-	private P2PPNode<?, ?> node;
+	private final List<PrettyPrintableContents<N, T>> ppContents;
 
 	/**
 	 * Build a new {@link SequentialContents}
 	 * 
 	 * @param node
 	 */
-	public SequentialContents(P2PPNode<?, ?> node) {
-		super();
-		this.node = node;
-		ppContents = new ArrayList<PrettyPrintableContents>();
+	public SequentialContents(P2PPNode<N, T> node) {
+		super(node);
+		ppContents = new ArrayList<>();
 	}
 
-	public void append(PrettyPrintableContents contents, RawSourceFragment fragment) {
+	public void append(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
 		if (fragment == null) {
-			fragment = node.getDefaultInsertionPoint() != null ? node.getDefaultInsertionPoint().getOuterType()
-					.makeFragment(node.getDefaultInsertionPoint(), node.getDefaultInsertionPoint()) : null;
+			fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
+					.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
 		}
 		contents.setFragment(fragment);
 		ppContents.add(contents);
 		if (fragment != null) {
-			node.setDefaultInsertionPoint(fragment.getEndPosition());
+			getNode().setDefaultInsertionPoint(fragment.getEndPosition());
 		}
 	}
 
 	@Override
 	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
 		StringBuffer sb = new StringBuffer();
-		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			sb.append(prettyPrintableContents.getNormalizedPrettyPrint(context));
 		}
 		return sb.toString();
@@ -91,14 +93,17 @@ public class SequentialContents extends PrettyPrintableContents {
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
-		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+
+		super.updatePrettyPrint(derivedRawSource, context);
+
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			prettyPrintableContents.updatePrettyPrint(derivedRawSource, context);
 		}
 	}
 
 	@Override
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
-		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			prettyPrintableContents.initializePrettyPrint(rootNode, context);
 		}
 	}
