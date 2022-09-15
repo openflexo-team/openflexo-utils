@@ -192,6 +192,25 @@ public class RawSource {
 			return compareTo(other) > 0;
 		}
 
+		public int getLengthTo(RawSourcePosition other) {
+			//System.out.println("getLengthTo from " + this + " to " + other);
+			int returned = 0;
+			RawSourcePosition current = other;
+			while (compareTo(current) != 0) {
+				if (isBefore(current)) {
+					current = current.decrement();
+					returned++;
+				}
+				if (isAfter(current)) {
+					current = current.decrement();
+					returned--;
+				}
+				//System.out.println("current=" + current);
+			}
+			//System.out.println("return " + returned);
+			return returned;
+		}
+
 		@Override
 		public String toString() {
 			return "(" + line + ":" + pos + ")";

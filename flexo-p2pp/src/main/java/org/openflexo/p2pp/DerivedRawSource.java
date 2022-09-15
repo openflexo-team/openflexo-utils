@@ -137,17 +137,18 @@ public class DerivedRawSource {
 		for (Modification modification : modifications) {
 			RawSourceFragment replacedFragment = modification.getInitialFragment();
 			RawSourcePosition toPosition = replacedFragment.getStartPosition();
+			int derive = 0;
 			if (current.isBefore(toPosition)) {
 				RawSourceFragment prelude = getSourceFragment().getRawSource().makeFragment(current, toPosition);
 				sb.append(prelude.getRawText());
 			}
 			else if (toPosition.isBefore(current)) {
-				logger.warning("Weird case: " + toPosition + " < " + current + " see logs for details");
-				System.out.println("DEBUGGING DerivedRowSource " + sourceFragment);
+				derive = toPosition.getLengthTo(current);
+				logger.info("Weird case: " + toPosition + " < " + current + " handling derive " + derive);
+				/*System.out.println("DEBUGGING DerivedRowSource " + sourceFragment + " [" + sourceFragment.getRawText() + "]");
 				for (Modification m2 : modifications) {
 					System.out.println(" > " + m2);
-				}
-				System.out.println("current=" + current);
+				}*/
 			}
 			if (modification instanceof StringReplacement) {
 				sb.append(((StringReplacement) modification).getReplacement());
@@ -162,6 +163,9 @@ public class DerivedRawSource {
 				// Do not append it !
 			}
 			current = replacedFragment.getEndPosition();
+			if (derive > 0) {
+				current = current.increment(derive);
+			}
 			if (DEBUG) {
 				System.out.println("current is now: " + current);
 			}
