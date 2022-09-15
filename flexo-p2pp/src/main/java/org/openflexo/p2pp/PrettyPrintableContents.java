@@ -46,6 +46,14 @@ import org.openflexo.toolbox.StringUtils;
 /**
  * Specification of a part of pretty-print for a pretty-printable object
  * 
+ * Note that the structure of {@link PrettyPrintableContents} is fixed for a given {@link P2PPNode} during its whole life cycle. Once it is
+ * defined, this structure won't change, and the same {@link PrettyPrintableContents} structure may be used to compute multiple
+ * pretty-prints according to underlying model changes. Remember that all PrettyPrintableContents keep reference to the originally parsed
+ * context.
+ * 
+ * When a new parsing is required, all {@link P2PPNode} and underlying {@link PrettyPrintableContents} are newly instantiated and thus
+ * reference new {@link RawSourceFragment}
+ * 
  * @author sylvain
  *
  * @param <N>
@@ -62,6 +70,8 @@ public abstract class PrettyPrintableContents<N, T> {
 	private Indentation indentation;
 
 	private RawSourceFragment fragment = null;
+	private RawSourceFragment preludeFragment;
+	private RawSourceFragment postludeFragment;
 
 	public PrettyPrintableContents(P2PPNode<N, T> node, String prelude, String postlude, Indentation indentation) {
 		super();
@@ -119,6 +129,11 @@ public abstract class PrettyPrintableContents<N, T> {
 		return this;
 	}
 
+	/**
+	 * Return the originally parsed fragment
+	 * 
+	 * @return
+	 */
 	public RawSourceFragment getFragment() {
 		return fragment;
 	}
@@ -135,15 +150,18 @@ public abstract class PrettyPrintableContents<N, T> {
 	public abstract String getNormalizedPrettyPrint(PrettyPrintContext context);
 
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
-		preludeFragment = null;
-		postludeFragment = null;
+		// No need to recompute, since it will not change during the whole life-cycle of this PrettyPrintableContents
+		// preludeFragment = null;
+		// postludeFragment = null;
 	}
 
 	public abstract void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context);
 
-	private RawSourceFragment preludeFragment;
-	private RawSourceFragment postludeFragment;
-
+	/**
+	 * Return the originally parsed prelude as a {@link RawSourceFragment}
+	 * 
+	 * @return
+	 */
 	public RawSourceFragment getPreludeFragment() {
 		if (preludeFragment == null && getFragment() != null && StringUtils.isNotEmpty(getPrelude())) {
 			preludeFragment = findUnmappedSegmentBackwardFrom(getPrelude(), getFragment().getStartPosition());
@@ -151,11 +169,34 @@ public abstract class PrettyPrintableContents<N, T> {
 		return preludeFragment;
 	}
 
+	/**
+	 * Return the originally parsed postlude as a {@link RawSourceFragment}
+	 * 
+	 * @return
+	 */
 	public RawSourceFragment getPostludeFragment() {
 		if (postludeFragment == null && getFragment() != null && StringUtils.isNotEmpty(getPostlude())) {
 			postludeFragment = findUnmappedSegmentForwardFrom(getPostlude(), getFragment().getEndPosition());
 		}
 		return postludeFragment;
+	}
+
+	/**
+	 * Return initially parsed fragment, augmented with the union or originally parsed prelude and postludes
+	 * 
+	 * @return
+	 */
+	public RawSourceFragment getExtendedFragment() {
+		RawSourceFragment returned = getFragment();
+		if (StringUtils.isNotEmpty(getPrelude()) && getPreludeFragment() != null) {
+			// Include prelude when required
+			returned = getFragment().union(getPreludeFragment());
+		}
+		if (StringUtils.isNotEmpty(getPostlude()) && getPostludeFragment() != null) {
+			// Include postlude when required
+			returned = getFragment().union(getPostludeFragment());
+		}
+		return returned;
 	}
 
 	private RawSourceFragment findUnmappedSegmentBackwardFrom(String expected, RawSourcePosition position) {

@@ -104,6 +104,8 @@ public class DynamicContents<N, T> extends PrettyPrintableContents<N, T> {
 
 		String replacedString = stringRepresentationSupplier.get();
 
+		RawSourceFragment fragmentToReplace = getFragment();
+
 		if (StringUtils.isNotEmpty(replacedString)) {
 			if (StringUtils.isNotEmpty(getPrelude())) {
 				if (getPreludeFragment() == null) {
@@ -116,8 +118,15 @@ public class DynamicContents<N, T> extends PrettyPrintableContents<N, T> {
 				}
 			}
 		}
+		else {
+			if (getFragment().getLength() > 0) {
+				// A significant portion of text (length>0) was initially parsed, but the value to pretty-print is empty now
+				// We have to remove eventual prelude and postlude
+				fragmentToReplace = getExtendedFragment();
+			}
+		}
 
-		derivedRawSource.replace(getFragment(), replacedString);
+		derivedRawSource.replace(fragmentToReplace, replacedString);
 
 	}
 
