@@ -196,20 +196,25 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 
 		if (conditionSupplier.get()) {
 			// If initial contents was parsed with ELSE clause, remove that text
-			if (!isFinal() && getElseContents() != null) {
-				if (getElseContents().getFragment() != null && getElseContents().getExtendedFragment().getLength() > 0) {
-					derivedRawSource.replace(getElseContents().getExtendedFragment(), "");
-				}
-			}
-
 			if (getThenContents() != null) {
 				getThenContents().updatePrettyPrint(derivedRawSource, context);
 			}
 			else {
 				logger.warning("Unexpected null THEN contents");
 			}
+
+			if (!isFinal() && getElseContents() != null) {
+				if (getElseContents().getFragment() != null && getElseContents().getExtendedFragment().getLength() > 0) {
+					derivedRawSource.replace(getElseContents().getExtendedFragment(), "");
+				}
+			}
+
 		}
 		else {
+			if (getElseContents() != null) {
+				getElseContents().updatePrettyPrint(derivedRawSource, context);
+			}
+
 			// If initial contents was parsed with THEN clause, remove that text
 			if (!isFinal() && getThenContents() != null) {
 				if (getThenContents().getFragment() != null && getThenContents().getExtendedFragment().getLength() > 0) {
@@ -217,9 +222,6 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 				}
 			}
 
-			if (getElseContents() != null) {
-				getElseContents().updatePrettyPrint(derivedRawSource, context);
-			}
 		}
 
 	}
