@@ -197,8 +197,8 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 		if (conditionSupplier.get()) {
 			// If initial contents was parsed with ELSE clause, remove that text
 			if (!isFinal() && getElseContents() != null) {
-				if (getElseContents().getFragment() != null && getElseContents().getFragment().getLength() > 0) {
-					derivedRawSource.replace(getElseContents().getFragment(), "");
+				if (getElseContents().getFragment() != null && getElseContents().getExtendedFragment().getLength() > 0) {
+					derivedRawSource.replace(getElseContents().getExtendedFragment(), "");
 				}
 			}
 
@@ -212,11 +212,8 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 		else {
 			// If initial contents was parsed with THEN clause, remove that text
 			if (!isFinal() && getThenContents() != null) {
-				if (getThenContents().getFragment() != null && getThenContents().getFragment().getLength() > 0) {
-					derivedRawSource.replace(getThenContents().getFragment(), "");
-					System.out.println("For " + conditionSupplier + " in " + getNode() + " object=" + getNode().getModelObject());
-					System.out.println(
-							"Remove fragment " + getThenContents().getFragment() + " in " + getThenContents().getFragment().getRawText());
+				if (getThenContents().getFragment() != null && getThenContents().getExtendedFragment().getLength() > 0) {
+					derivedRawSource.replace(getThenContents().getExtendedFragment(), "");
 				}
 			}
 

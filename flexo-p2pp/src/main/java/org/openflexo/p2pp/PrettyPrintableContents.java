@@ -163,7 +163,7 @@ public abstract class PrettyPrintableContents<N, T> {
 	 * @return
 	 */
 	public RawSourceFragment getPreludeFragment() {
-		if (preludeFragment == null && getFragment() != null && StringUtils.isNotEmpty(getPrelude())) {
+		if (preludeFragment == null && getFragment() != null && getFragment().getLength() > 0 && StringUtils.isNotEmpty(getPrelude())) {
 			preludeFragment = findUnmappedSegmentBackwardFrom(getPrelude(), getFragment().getStartPosition());
 		}
 		return preludeFragment;
@@ -175,7 +175,7 @@ public abstract class PrettyPrintableContents<N, T> {
 	 * @return
 	 */
 	public RawSourceFragment getPostludeFragment() {
-		if (postludeFragment == null && getFragment() != null && StringUtils.isNotEmpty(getPostlude())) {
+		if (postludeFragment == null && getFragment() != null && getFragment().getLength() > 0 && StringUtils.isNotEmpty(getPostlude())) {
 			postludeFragment = findUnmappedSegmentForwardFrom(getPostlude(), getFragment().getEndPosition());
 		}
 		return postludeFragment;
@@ -195,6 +195,24 @@ public abstract class PrettyPrintableContents<N, T> {
 		if (StringUtils.isNotEmpty(getPostlude()) && getPostludeFragment() != null) {
 			// Include postlude when required
 			returned = getFragment().union(getPostludeFragment());
+		}
+		return returned;
+	}
+
+	/**
+	 * Internally used to retrieve actual extended fragment (We try to avoid here collision between fragments)
+	 * 
+	 * @return
+	 */
+	protected RawSourceFragment getExtendedFragmentNoRecomputation() {
+		RawSourceFragment returned = getFragment();
+		if (StringUtils.isNotEmpty(getPrelude()) && preludeFragment != null) {
+			// Include prelude when required
+			returned = getFragment().union(preludeFragment);
+		}
+		if (StringUtils.isNotEmpty(getPostlude()) && postludeFragment != null) {
+			// Include postlude when required
+			returned = getFragment().union(postludeFragment);
 		}
 		return returned;
 	}

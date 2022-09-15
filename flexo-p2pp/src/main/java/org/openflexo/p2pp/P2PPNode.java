@@ -1005,7 +1005,8 @@ public abstract class P2PPNode<N, T> {
 	public boolean isFragmentMappedInPPContents(RawSourceFragment fragment) {
 		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			// System.out.println(" > PPContents " + prettyPrintableContents + " " + prettyPrintableContents.getFragment());
-			if (prettyPrintableContents.getFragment() != null && prettyPrintableContents.getFragment().intersects(fragment)) {
+			if (prettyPrintableContents.getExtendedFragmentNoRecomputation() != null
+					&& prettyPrintableContents.getExtendedFragmentNoRecomputation().intersects(fragment)) {
 				return true;
 			}
 		}
