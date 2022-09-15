@@ -80,6 +80,48 @@ public class SequentialContents<N, T> extends PrettyPrintableContents<N, T> {
 		if (fragment != null) {
 			getNode().setDefaultInsertionPoint(fragment.getEndPosition());
 		}
+		sequenceFragment = null;
+		sequenceExtendedFragment = null;
+	}
+
+	private RawSourceFragment sequenceFragment;
+	private RawSourceFragment sequenceExtendedFragment;
+
+	@Override
+	public RawSourceFragment getFragment() {
+		if (sequenceFragment == null) {
+			buildSequenceFragment();
+		}
+		return sequenceFragment;
+	}
+
+	@Override
+	public RawSourceFragment getExtendedFragment() {
+		if (sequenceExtendedFragment == null) {
+			buildSequenceFragment();
+		}
+		return sequenceExtendedFragment;
+	}
+
+	private void buildSequenceFragment() {
+		for (PrettyPrintableContents<N, T> ppContent : ppContents) {
+			if (sequenceFragment == null) {
+				sequenceFragment = ppContent.getFragment();
+			}
+			else {
+				sequenceFragment = sequenceFragment.union(ppContent.getFragment());
+			}
+			if (sequenceExtendedFragment == null) {
+				sequenceExtendedFragment = ppContent.getExtendedFragment();
+			}
+			else {
+				sequenceExtendedFragment = sequenceExtendedFragment.union(ppContent.getExtendedFragment());
+			}
+		}
+	}
+
+	public List<PrettyPrintableContents<N, T>> getPPContents() {
+		return ppContents;
 	}
 
 	@Override
