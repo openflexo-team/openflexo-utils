@@ -274,4 +274,11 @@ public abstract class PrettyPrintableContents<N, T> {
 		return null;
 	}
 
+	protected void debug(StringBuffer sb, int identation) {
+		String indent = StringUtils.buildWhiteSpaceIndentation(identation * 2);
+		sb.append(indent + "> " + getClass().getSimpleName() + " fragment=" + getFragment() + "["
+				+ (getFragment() != null ? getFragment().getRawText() : "?") + "] prelude=" + getPreludeFragment() + " postlude="
+				+ getPostludeFragment() + "\n");
+	}
+
 }

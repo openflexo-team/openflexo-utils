@@ -439,7 +439,13 @@ public abstract class P2PPNode<N, T> {
 		contents.setFragment(fragment);
 		ppContents.add(contents);
 		if (fragment != null) {
-			defaultInsertionPoint = fragment.getEndPosition();
+			if (contents.getPostludeFragment() != null) {
+				// In this case, insertion point is after the postlude
+				defaultInsertionPoint = contents.getPostludeFragment().getEndPosition();
+			}
+			else {
+				defaultInsertionPoint = fragment.getEndPosition();
+			}
 		}
 		return contents;
 	}
@@ -1011,6 +1017,18 @@ public abstract class P2PPNode<N, T> {
 			}
 		}
 		return false;
+	}
+
+	public String debug() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("DEBUG PrettyPrint for " + this + "\n");
+		sb.append("fragment=" + getLastParsedFragment() + "\n");
+		sb.append(getLastParsedFragment().getRawText() + "\n");
+
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+			prettyPrintableContents.debug(sb, 2);
+		}
+		return sb.toString();
 	}
 
 	// TODO

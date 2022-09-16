@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
+import org.openflexo.toolbox.StringUtils;
 
 /**
  * A conditional PrettyPrintableContents
@@ -233,6 +234,44 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 		}
 		if (getElseContents() != null) {
 			getElseContents().initializePrettyPrint(rootNode, context);
+		}
+	}
+
+	@Override
+	public RawSourceFragment getFragment() {
+		if (getThenContents() != null && getThenContents().getFragment() != null) {
+			return getThenContents().getFragment();
+		}
+		if (getElseContents() != null && getElseContents().getFragment() != null) {
+			return getElseContents().getFragment();
+		}
+		return null;
+	}
+
+	@Override
+	public RawSourceFragment getExtendedFragment() {
+		if (getThenContents() != null && getThenContents().getExtendedFragment() != null) {
+			return getThenContents().getExtendedFragment();
+		}
+		if (getElseContents() != null && getElseContents().getExtendedFragment() != null) {
+			return getElseContents().getExtendedFragment();
+		}
+		return null;
+	}
+
+	@Override
+	protected void debug(StringBuffer sb, int identation) {
+		String indent = StringUtils.buildWhiteSpaceIndentation(identation * 2);
+		sb.append(indent + "> " + getClass().getSimpleName() + " fragment=" + getFragment() + "["
+				+ (getFragment() != null ? getFragment().getRawText() : "?") + "] prelude=" + getPreludeFragment() + " postlude="
+				+ getPostludeFragment() + "\n");
+		if (getThenContents() != null) {
+			sb.append(indent + "  THEN\n");
+			getThenContents().debug(sb, identation + 2);
+		}
+		if (getElseContents() != null) {
+			sb.append(indent + "  ELSE\n");
+			getElseContents().debug(sb, identation + 2);
 		}
 	}
 
