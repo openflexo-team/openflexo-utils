@@ -136,6 +136,10 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 		return thenAppend(contents, null);
 	}
 
+	/*public ConditionalContents<N, T> thenAppend(ConditionalContents<N, T> contents) {
+		return (ConditionalContents) thenAppend(contents, null);
+	}*/
+
 	public ConditionalContents<N, T> elseAppend(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
 		if (elseContents == null) {
 			if (fragment == null) {
