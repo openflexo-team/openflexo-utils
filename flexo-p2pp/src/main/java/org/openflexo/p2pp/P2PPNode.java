@@ -84,10 +84,10 @@ public abstract class P2PPNode<N, T> {
 	protected RawSourceFragment prelude;
 	protected RawSourceFragment postlude;
 
-	private List<PrettyPrintableContents> ppContents = new ArrayList<>();
+	private List<PrettyPrintableContents<N, T>> ppContents = new ArrayList<>();
 
 	// Indicates that this P2PPNode was registered in parent P2PPNode relatively to that contents
-	private PrettyPrintableContents registeredForContents;
+	private PrettyPrintableContents<?, ?> registeredForContents;
 
 	public static final String SPACE = " ";
 	public static final String DOUBLE_SPACE = SPACE + SPACE;
@@ -97,11 +97,21 @@ public abstract class P2PPNode<N, T> {
 		this.astNode = astNode;
 		this.modelObject = aModelObject;
 
-		if (astNode != null) {
+		if (astNode != null && fragmentRetriever != null) {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			RawSourceFragment fragment = ((FragmentRetriever) fragmentRetriever).retrieveFragment(astNode);
 			setStartPosition(fragment.getStartPosition());
 			setEndPosition(fragment.getEndPosition());
 		}
+	}
+
+	/**
+	 * Return underlying model object: object being represented by referenced AST node through this node
+	 * 
+	 * @return
+	 */
+	public T getModelObject() {
+		return modelObject;
 	}
 
 	public void setModelObject(T modelObject) {
@@ -113,32 +123,22 @@ public abstract class P2PPNode<N, T> {
 		children.add(index, child);
 	}
 
-	public List<PrettyPrintableContents> getPPContents() {
+	public List<PrettyPrintableContents<N, T>> getPPContents() {
 		return ppContents;
 	}
 
 	protected void addToChildren(P2PPNode<?, ?> child) {
 		child.parent = this;
-		/*if (child.getClass().getName().contains("ExpressionActionNode")) {
-			System.out.println("regardons ce qu'on a deja");
-			for (P2PPNode<?, ?> c : children) {
-				System.out.println(" > " + c);
-				if (c.getClass().getName().contains("ExpressionActionNode")) {
-					System.out.println("C'est la !!!");
-				}
-			}
-		}*/
-
 		if (!children.contains(child)) {
 			children.add(child);
 		}
 	}
 
-	public PrettyPrintableContents getRegisteredForContents() {
+	public PrettyPrintableContents<?, ?> getRegisteredForContents() {
 		return registeredForContents;
 	}
 
-	protected void setRegisteredForContents(PrettyPrintableContents registeredForContents) {
+	protected void setRegisteredForContents(PrettyPrintableContents<?, ?> registeredForContents) {
 		this.registeredForContents = registeredForContents;
 	}
 
@@ -167,15 +167,6 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public void finalizeDeserialization() {
 		// Override when required
-	}
-
-	/**
-	 * Return underlying model object: object being represented by referenced AST node through this node
-	 * 
-	 * @return
-	 */
-	public T getModelObject() {
-		return modelObject;
 	}
 
 	/**
@@ -246,7 +237,7 @@ public abstract class P2PPNode<N, T> {
 		preparePrettyPrint(getASTNode() != null);
 		// System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
 
-		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			prettyPrintableContents.initializePrettyPrint(rootNode, context.derive(prettyPrintableContents.getIndentation()));
 		}
 
@@ -260,7 +251,7 @@ public abstract class P2PPNode<N, T> {
 
 	public final String getNormalizedTextualRepresentation(PrettyPrintContext context) {
 		StringBuffer sb = new StringBuffer();
-		for (PrettyPrintableContents child : ppContents) {
+		for (PrettyPrintableContents<N, T> child : ppContents) {
 			String normalizedPP = child.getNormalizedPrettyPrint(context);
 			if (normalizedPP != null) {
 				sb.append(normalizedPP);
@@ -291,8 +282,8 @@ public abstract class P2PPNode<N, T> {
 	 * @param staticContents
 	 * @return
 	 */
-	public StaticContents staticContents(String staticContents) {
-		return new StaticContents(null, staticContents, null, null);
+	public StaticContents<N, T> staticContents(String staticContents) {
+		return new StaticContents<N, T>(this, null, staticContents, null);
 	}
 
 	/**
@@ -306,8 +297,8 @@ public abstract class P2PPNode<N, T> {
 	 *            A String to append after the static contents
 	 * @return
 	 */
-	public StaticContents staticContents(String prelude, String staticContents, String postlude) {
-		return new StaticContents(prelude, staticContents, postlude, null);
+	public StaticContents<N, T> staticContents(String prelude, String staticContents, String postlude) {
+		return new StaticContents<N, T>(this, prelude, staticContents, postlude, null);
 	}
 
 	/**
@@ -317,8 +308,8 @@ public abstract class P2PPNode<N, T> {
 	 *            gives dynamic value of that contents
 	 * @return
 	 */
-	public DynamicContents dynamicContents(Supplier<String> stringRepresentationSupplier) {
-		return new DynamicContents(null, stringRepresentationSupplier, null, null);
+	public DynamicContents<N, T> dynamicContents(Supplier<String> stringRepresentationSupplier) {
+		return new DynamicContents<N, T>(this, null, stringRepresentationSupplier, null, null);
 	}
 
 	/**
@@ -329,8 +320,8 @@ public abstract class P2PPNode<N, T> {
 	 * @param stringRepresentationSupplier
 	 * @return
 	 */
-	public DynamicContents dynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
-		return new DynamicContents(prelude, stringRepresentationSupplier, null, null);
+	public DynamicContents<N, T> dynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
+		return new DynamicContents<N, T>(this, prelude, stringRepresentationSupplier, null, null);
 	}
 
 	/**
@@ -341,8 +332,8 @@ public abstract class P2PPNode<N, T> {
 	 *            A String to append after the dynamic contents
 	 * @return
 	 */
-	public DynamicContents dynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
-		return new DynamicContents(null, stringRepresentationSupplier, postlude, null);
+	public DynamicContents<N, T> dynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
+		return new DynamicContents<N, T>(this, null, stringRepresentationSupplier, postlude, null);
 	}
 
 	/**
@@ -355,8 +346,8 @@ public abstract class P2PPNode<N, T> {
 	 *            A String to append after the dynamic contents
 	 * @return
 	 */
-	public DynamicContents dynamicContents(String prelude, Supplier<String> stringRepresentationSupplier, String postlude) {
-		return new DynamicContents(prelude, stringRepresentationSupplier, postlude, null);
+	public DynamicContents<N, T> dynamicContents(String prelude, Supplier<String> stringRepresentationSupplier, String postlude) {
+		return new DynamicContents<N, T>(this, prelude, stringRepresentationSupplier, postlude, null);
 	}
 
 	/**
@@ -373,8 +364,9 @@ public abstract class P2PPNode<N, T> {
 	 *            Indentation for the serialization of children
 	 * @return
 	 */
-	public <C> ChildContents<C> childContents(String prelude, Supplier<C> childObjectSupplier, String postude, Indentation indentation) {
-		return new ChildContents<>(prelude, childObjectSupplier, postude, indentation, this);
+	public <CN, CT> ChildContents<N, T, CN, CT> childContents(String prelude, Supplier<CT> childObjectSupplier, String postude,
+			Indentation indentation) {
+		return new ChildContents<N, T, CN, CT>(this, prelude, childObjectSupplier, postude, indentation);
 	}
 
 	/**
@@ -398,11 +390,12 @@ public abstract class P2PPNode<N, T> {
 	 *            Type (class) of addressed children
 	 * @return
 	 */
-	public <C> ChildrenContents<C> childrenContents(String preludeForFirstItem, String prelude, Supplier<List<? extends C>> childrenObjects,
-			String postude, String postludeForLastItem, Indentation indentation, Class<C> childrenType) {
+	public <CN, CT> ChildrenContents<N, T, CN, CT> childrenContents(String preludeForFirstItem, String prelude,
+			Supplier<List<? extends CT>> childrenObjects, String postude, String postludeForLastItem, Indentation indentation,
+			Class<CT> childrenType) {
 
-		return new ChildrenContents<>(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem, indentation, this,
-				childrenType);
+		return new ChildrenContents<N, T, CN, CT>(this, preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem,
+				indentation, childrenType);
 	}
 
 	/**
@@ -422,10 +415,10 @@ public abstract class P2PPNode<N, T> {
 	 *            Type (class) of addressed children
 	 * @return
 	 */
-	public <C> ChildrenContents<C> childrenContents(String prelude, Supplier<List<? extends C>> childrenObjects, String postude,
-			Indentation indentation, Class<C> childrenType) {
+	public <CN, CT> ChildrenContents<N, T, CN, CT> childrenContents(String prelude, Supplier<List<? extends CT>> childrenObjects,
+			String postude, Indentation indentation, Class<CT> childrenType) {
 
-		return new ChildrenContents<>(prelude, childrenObjects, postude, indentation, this, childrenType);
+		return new ChildrenContents<N, T, CN, CT>(this, prelude, childrenObjects, postude, indentation, childrenType);
 	}
 
 	/**
@@ -437,7 +430,7 @@ public abstract class P2PPNode<N, T> {
 	 *            current serialized fragment in original textual version, not null if contents was parsed
 	 * @return supplied contents, for cascading calls
 	 */
-	public PrettyPrintableContents append(PrettyPrintableContents contents, RawSourceFragment fragment) {
+	public <PPC extends PrettyPrintableContents<N, T>> PPC append(PPC contents, RawSourceFragment fragment) {
 		if (fragment == null) {
 			fragment = defaultInsertionPoint != null
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
@@ -446,7 +439,13 @@ public abstract class P2PPNode<N, T> {
 		contents.setFragment(fragment);
 		ppContents.add(contents);
 		if (fragment != null) {
-			defaultInsertionPoint = fragment.getEndPosition();
+			if (contents.getPostludeFragment() != null) {
+				// In this case, insertion point is after the postlude
+				defaultInsertionPoint = contents.getPostludeFragment().getEndPosition();
+			}
+			else {
+				defaultInsertionPoint = fragment.getEndPosition();
+			}
 		}
 		return contents;
 	}
@@ -457,8 +456,8 @@ public abstract class P2PPNode<N, T> {
 	 * @param contents
 	 * @return supplied contents, for cascading calls
 	 */
-	public ChildContents<?> append(ChildContents<?> contents) {
-		return (ChildContents<?>) append(contents, null);
+	public <CN, CT> ChildContents<N, T, CN, CT> append(ChildContents<N, T, CN, CT> contents) {
+		return append(contents, null);
 	}
 
 	/**
@@ -467,8 +466,8 @@ public abstract class P2PPNode<N, T> {
 	 * @param contents
 	 * @return supplied contents, for cascading calls
 	 */
-	public ChildrenContents<?> append(ChildrenContents<?> contents) {
-		return (ChildrenContents<?>) append(contents, null);
+	public <CN, CT> ChildrenContents<N, T, CN, CT> append(ChildrenContents<N, T, CN, CT> contents) {
+		return append(contents, null);
 	}
 
 	/**
@@ -478,9 +477,24 @@ public abstract class P2PPNode<N, T> {
 	 *            determines the condition to compute at run-time
 	 * @return
 	 */
-	public ConditionalContents when(Supplier<Boolean> conditionSupplier) {
-		ConditionalContents conditionalContents = new ConditionalContents(conditionSupplier, this);
+	public ConditionalContents<N, T> when(Supplier<Boolean> conditionSupplier) {
+		ConditionalContents<N, T> conditionalContents = new ConditionalContents<N, T>(this, conditionSupplier);
 		ppContents.add(conditionalContents);
+		return conditionalContents;
+	}
+
+	/**
+	 * Declare and append a new conditional contents with final condition
+	 * 
+	 * @param conditionSupplier
+	 *            determines the condition to compute at run-time
+	 * @param isFinal
+	 *            determines if this conditional supports value change
+	 * @return
+	 */
+	public ConditionalContents<N, T> when(Supplier<Boolean> conditionSupplier, boolean isFinal) {
+		ConditionalContents<N, T> conditionalContents = when(conditionSupplier);
+		conditionalContents.setFinal(isFinal);
 		return conditionalContents;
 	}
 
@@ -499,7 +513,7 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		StaticContents newContents = new StaticContents(null, staticContents, null, fragment);
+		StaticContents<N, T> newContents = new StaticContents<N, T>(this, null, staticContents, null, fragment);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
@@ -573,7 +587,7 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		StaticContents newContents = new StaticContents(prelude, staticContents, null, fragment);
+		StaticContents<N, T> newContents = new StaticContents<N, T>(this, prelude, staticContents, null, fragment);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
@@ -598,7 +612,7 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, fragment);
+		StaticContents<N, T> newContents = new StaticContents<N, T>(this, prelude, staticContents, postlude, fragment);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
@@ -619,27 +633,12 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, null, fragment);
+		DynamicContents<N, T> newContents = new DynamicContents<N, T>(this, null, stringRepresentationSupplier, null, fragment);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
 		}
 	}
-
-	/**
-	 * Append {@link DynamicContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
-	 * raw source)
-	 * 
-	 * @param stringRepresentationSupplier
-	 *            gives dynamic value of that contents
-	 */
-	/*public void appendDynamicContents(Supplier<String> stringRepresentationSupplier) {
-		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
-		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, null, insertionPointFragment);
-		ppContents.add(newContents);
-	}*/
 
 	/**
 	 * Append {@link DynamicContents}, whose value is intended to replace text determined with supplied fragment
@@ -656,28 +655,12 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		DynamicContents newContents = new DynamicContents(prelude, stringRepresentationSupplier, null, fragment);
+		DynamicContents<N, T> newContents = new DynamicContents<N, T>(this, prelude, stringRepresentationSupplier, null, fragment);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
 		}
 	}
-
-	/**
-	 * Append {@link DynamicContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
-	 * raw source)
-	 * 
-	 * @param prelude
-	 * @param stringRepresentationSupplier
-	 *            gives dynamic value of that contents
-	 */
-	/*public void addDynamicContents(String prelude, Supplier<String> stringRepresentationSupplier) {
-		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
-		DynamicContents newContents = new DynamicContents(prelude, stringRepresentationSupplier, null, insertionPointFragment);
-		ppContents.add(newContents);
-	}*/
 
 	/**
 	 * Append {@link DynamicContents}, whose value is intended to replace text determined with supplied fragment
@@ -694,28 +677,12 @@ public abstract class P2PPNode<N, T> {
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
 		}
-		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, postlude, fragment);
+		DynamicContents<N, T> newContents = new DynamicContents<N, T>(this, null, stringRepresentationSupplier, postlude, fragment);
 		ppContents.add(newContents);
 		if (fragment != null) {
 			defaultInsertionPoint = fragment.getEndPosition();
 		}
 	}
-
-	/**
-	 * Append {@link DynamicContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
-	 * raw source)
-	 * 
-	 * @param stringRepresentationSupplier
-	 *            gives dynamic value of that contents
-	 * @param postlude
-	 */
-	/*public void appendDynamicContents(Supplier<String> stringRepresentationSupplier, String postlude) {
-		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
-		DynamicContents newContents = new DynamicContents(null, stringRepresentationSupplier, postlude, insertionPointFragment);
-		ppContents.add(newContents);
-	}*/
 
 	/**
 	 * Append {@link ChildContents} managing pretty-print for supplied childObject<br>
@@ -732,10 +699,11 @@ public abstract class P2PPNode<N, T> {
 	 *            </ul>
 	 */
 	@Deprecated
-	public <C> ChildContents<C> appendToChildPrettyPrintContents(String prelude, Supplier<C> childObjectSupplier, String postude,
-			Indentation indentation) {
+	public <CN, CT> ChildContents<N, T, CN, CT> appendToChildPrettyPrintContents(String prelude, Supplier<CT> childObjectSupplier,
+			String postude, Indentation indentation) {
 
-		ChildContents<C> newChildContents = new ChildContents<>(prelude, childObjectSupplier, postude, indentation, this);
+		ChildContents<N, T, CN, CT> newChildContents = new ChildContents<N, T, CN, CT>(this, prelude, childObjectSupplier, postude,
+				indentation);
 		ppContents.add(newChildContents);
 		return newChildContents;
 	}
@@ -759,11 +727,11 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	@Deprecated
-	public <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String prelude, Supplier<List<? extends C>> childrenObjects,
-			String postude, Indentation indentation, Class<C> childrenType) {
+	public <CN, CT> ChildrenContents<N, T, CN, CT> appendToChildrenPrettyPrintContents(String prelude,
+			Supplier<List<? extends CT>> childrenObjects, String postude, Indentation indentation, Class<CT> childrenType) {
 
-		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(prelude, childrenObjects, postude, indentation, this,
-				childrenType);
+		ChildrenContents<N, T, CN, CT> newChildrenContents = new ChildrenContents<N, T, CN, CT>(this, prelude, childrenObjects, postude,
+				indentation, childrenType);
 		ppContents.add(newChildrenContents);
 		return newChildrenContents;
 	}
@@ -789,12 +757,12 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	@Deprecated
-	public <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
-			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, Indentation indentation,
-			Class<C> childrenType) {
+	public <CN, CT> ChildrenContents<N, T, CN, CT> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
+			Supplier<List<? extends CT>> childrenObjects, String postude, String postludeForLastItem, Indentation indentation,
+			Class<CT> childrenType) {
 
-		ChildrenContents<C> newChildrenContents = new ChildrenContents<>(preludeForFirstItem, prelude, childrenObjects, postude,
-				postludeForLastItem, indentation, this, childrenType);
+		ChildrenContents<N, T, CN, CT> newChildrenContents = new ChildrenContents<N, T, CN, CT>(this, preludeForFirstItem, prelude,
+				childrenObjects, postude, postludeForLastItem, indentation, childrenType);
 		ppContents.add(newChildrenContents);
 		return newChildrenContents;
 	}
@@ -814,8 +782,8 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	@Deprecated
-	public <C> ChildrenContents<C> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
-			Supplier<List<? extends C>> childrenObjects, String postude, String postludeForLastItem, Class<C> childrenType) {
+	public <CN, CT> ChildrenContents<N, T, CN, CT> appendToChildrenPrettyPrintContents(String preludeForFirstItem, String prelude,
+			Supplier<List<? extends CT>> childrenObjects, String postude, String postludeForLastItem, Class<CT> childrenType) {
 
 		return appendToChildrenPrettyPrintContents(preludeForFirstItem, prelude, childrenObjects, postude, postludeForLastItem,
 				Indentation.DoNotIndent, childrenType);
@@ -864,7 +832,7 @@ public abstract class P2PPNode<N, T> {
 			return derivedRawSource;
 		}
 
-		for (PrettyPrintableContents prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			prettyPrintableContents.updatePrettyPrint(derivedRawSource, context);
 		}
 
@@ -888,6 +856,7 @@ public abstract class P2PPNode<N, T> {
 	 *            Pretty-printable object
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public <C> P2PPNode<?, C> getObjectNode(C object) {
 		if (getModelObject() == object) {
 			return (P2PPNode<?, C>) this;
@@ -949,7 +918,7 @@ public abstract class P2PPNode<N, T> {
 		return postlude;
 	}
 
-	private RawSourceFragment findUnmappedSegmentBackwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
+	private static RawSourceFragment findUnmappedSegmentBackwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
 		int length = expected.length();
 		int i = 0;
 		// System.out.println("Backward looking for [" + expected + "] from " + position);
@@ -975,7 +944,7 @@ public abstract class P2PPNode<N, T> {
 		return null;
 	}
 
-	private RawSourceFragment findUnmappedSegmentForwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
+	private static RawSourceFragment findUnmappedSegmentForwardFrom(String expected, RawSourcePosition position, P2PPNode<?, ?> rootNode) {
 		int length = expected.length();
 		int i = 0;
 		// System.out.println("Forward looking for [" + expected + "] from " + position);
@@ -1030,6 +999,36 @@ public abstract class P2PPNode<N, T> {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Search if supplied fragment is mapped by {@link PrettyPrintableContents} in the context of this node (this method is really distinct
+	 * from {@link #isFragmentMapped(RawSourceFragment)} where the scope is the whole {@link P2PPNode} hierarchy
+	 * 
+	 * @param fragment
+	 * @return
+	 */
+	public boolean isFragmentMappedInPPContents(RawSourceFragment fragment) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+			// System.out.println(" > PPContents " + prettyPrintableContents + " " + prettyPrintableContents.getFragment());
+			if (prettyPrintableContents.getExtendedFragmentNoRecomputation() != null
+					&& prettyPrintableContents.getExtendedFragmentNoRecomputation().intersects(fragment)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public String debug() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("DEBUG PrettyPrint for " + this + "\n");
+		sb.append("fragment=" + getLastParsedFragment() + "\n");
+		sb.append(getLastParsedFragment().getRawText() + "\n");
+
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+			prettyPrintableContents.debug(sb, 2);
+		}
+		return sb.toString();
 	}
 
 	// TODO

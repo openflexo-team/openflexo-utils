@@ -130,6 +130,7 @@ public class FileSystemMetaDataManager {
 				return getProperty(f.getName() + "." + key);
 			}
 			else {
+				Thread.dumpStack();
 				System.err.println("Error: cannot retrieve metadata from that file: " + f + " in " + directory);
 				return null;
 			}

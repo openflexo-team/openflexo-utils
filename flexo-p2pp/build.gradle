@@ -1,4 +1,5 @@
 dependencies {
   implementation connieUtils()
   implementation connie()
+  implementation testUtils()
 }

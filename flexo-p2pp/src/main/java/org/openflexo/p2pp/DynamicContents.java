@@ -48,9 +48,12 @@ import org.openflexo.toolbox.StringUtils;
  * 
  * @author sylvain
  *
+ * @param <N>
+ *            Type of AST node
  * @param <T>
+ *            General type of pretty-printable object
  */
-public class DynamicContents extends PrettyPrintableContents {
+public class DynamicContents<N, T> extends PrettyPrintableContents<N, T> {
 
 	private final Supplier<String> stringRepresentationSupplier;
 
@@ -62,8 +65,9 @@ public class DynamicContents extends PrettyPrintableContents {
 	 *            gives dynamic value of that contents
 	 * @param fragment
 	 */
-	public DynamicContents(String prelude, Supplier<String> stringRepresentationSupplier, String postlude, RawSourceFragment fragment) {
-		super(prelude, postlude);
+	public DynamicContents(P2PPNode<N, T> node, String prelude, Supplier<String> stringRepresentationSupplier, String postlude,
+			RawSourceFragment fragment) {
+		super(node, prelude, postlude);
 		this.stringRepresentationSupplier = stringRepresentationSupplier;
 		setFragment(fragment);
 	}
@@ -84,10 +88,46 @@ public class DynamicContents extends PrettyPrintableContents {
 		return sb.toString();
 	}
 
-	@Override
+	/*@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
+	
+		super.updatePrettyPrint(derivedRawSource, context);
+	
 		// System.out.println("> Pour DynamicContents, faudrait passer " + getFragment() + " a " + stringRepresentationSupplier.get());
 		derivedRawSource.replace(getFragment(), stringRepresentationSupplier.get());
+	}*/
+
+	@Override
+	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
+
+		super.updatePrettyPrint(derivedRawSource, context);
+
+		String replacedString = stringRepresentationSupplier.get();
+
+		RawSourceFragment fragmentToReplace = getFragment();
+
+		if (StringUtils.isNotEmpty(replacedString)) {
+			if (StringUtils.isNotEmpty(getPrelude())) {
+				if (getPreludeFragment() == null) {
+					replacedString = getPrelude() + replacedString;
+				}
+			}
+			if (StringUtils.isNotEmpty(getPostlude())) {
+				if (getPostludeFragment() == null) {
+					replacedString = replacedString + getPostlude();
+				}
+			}
+		}
+		else {
+			if (getFragment().getLength() > 0) {
+				// A significant portion of text (length>0) was initially parsed, but the value to pretty-print is empty now
+				// We have to remove eventual prelude and postlude
+				fragmentToReplace = getExtendedFragment();
+			}
+		}
+
+		derivedRawSource.replace(fragmentToReplace, replacedString);
+
 	}
 
 	@Override

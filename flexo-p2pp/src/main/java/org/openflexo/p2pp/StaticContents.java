@@ -46,24 +46,27 @@ import org.openflexo.toolbox.StringUtils;
  * 
  * @author sylvain
  *
+ * @param <N>
+ *            Type of AST node
  * @param <T>
+ *            General type of pretty-printable object
  */
-public class StaticContents extends PrettyPrintableContents {
+public class StaticContents<N, T> extends PrettyPrintableContents<N, T> {
 
 	private final String staticContents;
 
-	public StaticContents(String staticContents, RawSourceFragment fragment) {
-		super();
+	public StaticContents(P2PPNode<N, T> node, String staticContents, RawSourceFragment fragment) {
+		super(node);
 		this.staticContents = staticContents;
 	}
 
-	public StaticContents(String prelude, String staticContents, RawSourceFragment fragment) {
-		super(prelude, null);
+	public StaticContents(P2PPNode<N, T> node, String prelude, String staticContents, RawSourceFragment fragment) {
+		super(node, prelude, null);
 		this.staticContents = staticContents;
 	}
 
-	public StaticContents(String prelude, String staticContents, String postlude, RawSourceFragment fragment) {
-		super(prelude, postlude);
+	public StaticContents(P2PPNode<N, T> node, String prelude, String staticContents, String postlude, RawSourceFragment fragment) {
+		super(node, prelude, postlude);
 		this.staticContents = staticContents;
 	}
 
@@ -87,8 +90,41 @@ public class StaticContents extends PrettyPrintableContents {
 	}
 
 	@Override
+	public void setFragment(RawSourceFragment fragment) {
+		if (staticContents.equals("abstract")) {
+			System.out.println("*********** tiens on me donne le fragment " + fragment);
+		}
+		super.setFragment(fragment);
+	}
+
+	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
-		// Nothing to do
+
+		super.updatePrettyPrint(derivedRawSource, context);
+
+		String replacedString = getStaticContents();
+
+		/*if (staticContents.equals("abstract")) {
+			System.out.println("Prelude: [" + getPrelude() + "]");
+			System.out.println("Postlude: [" + getPostlude() + "]");
+			System.out.println("Found prelude: " + getPreludeFragment());
+			System.out.println("Found postlude: " + getPostludeFragment());
+			System.out.println("replacedString=[" + replacedString + "]");
+		}*/
+
+		if (StringUtils.isNotEmpty(getPrelude())) {
+			if (getPreludeFragment() == null) {
+				replacedString = getPrelude() + replacedString;
+			}
+		}
+		if (StringUtils.isNotEmpty(getPostlude())) {
+			if (getPostludeFragment() == null) {
+				replacedString = replacedString + getPostlude();
+			}
+		}
+
+		derivedRawSource.replace(getFragment(), replacedString);
+
 	}
 
 	@Override

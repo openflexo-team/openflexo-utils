@@ -137,12 +137,18 @@ public class DerivedRawSource {
 		for (Modification modification : modifications) {
 			RawSourceFragment replacedFragment = modification.getInitialFragment();
 			RawSourcePosition toPosition = replacedFragment.getStartPosition();
+			// Backtracking on derive which may be not a good idea
+			// TODO: investigate further is that case happens again
+			// int derive = 0;
 			if (current.isBefore(toPosition)) {
 				RawSourceFragment prelude = getSourceFragment().getRawSource().makeFragment(current, toPosition);
 				sb.append(prelude.getRawText());
 			}
 			else if (toPosition.isBefore(current)) {
-				logger.warning("Weird case: " + toPosition + " < " + current + " see logs for details");
+				// Backtracking on derive which may be not a good idea
+				// TODO: investigate further is that case happens again
+				// derive = toPosition.getLengthTo(current);
+				logger.warning("Weird case: " + getSourceFragment().getEndPosition() + " < " + current + " see logs for details");
 				System.out.println("DEBUGGING DerivedRowSource " + sourceFragment);
 				for (Modification m2 : modifications) {
 					System.out.println(" > " + m2);
@@ -162,6 +168,15 @@ public class DerivedRawSource {
 				// Do not append it !
 			}
 			current = replacedFragment.getEndPosition();
+			// Backtracking on derive which may be not a good idea
+			// TODO: investigate further is that case happens again
+			/*try {
+				if (derive > 0) {
+					current = current.increment(derive);
+				}
+			} catch (ArrayIndexOutOfBoundsException e) {
+				logger.warning("Detected derive in pretty-print which cannot be handled");
+			}*/
 			if (DEBUG) {
 				System.out.println("current is now: " + current);
 			}
