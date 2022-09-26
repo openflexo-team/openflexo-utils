@@ -150,4 +150,11 @@ public class SequentialContents<N, T> extends PrettyPrintableContents<N, T> {
 		}
 	}
 
+	@Override
+	protected void debug(StringBuffer sb, int identation) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+			prettyPrintableContents.debug(sb, identation + 2);
+		}
+	}
+
 }
