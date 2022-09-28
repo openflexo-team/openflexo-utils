@@ -41,6 +41,7 @@ package org.openflexo.p2pp;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.toolbox.StringUtils;
 
@@ -105,6 +106,24 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	}
 
 	public ConditionalContents<N, T> thenAppend(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
+
+		/*if (fragment == null) {
+			fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
+					.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
+			contents.setFragment(fragment);
+		}
+		if (fragment != null) {
+			if (contents.getPostludeFragment() != null) {
+				// In this case, insertion point is after the postlude
+				getNode().setDefaultInsertionPoint(contents.getPostludeFragment().getEndPosition());
+			}
+			else {
+				getNode().setDefaultInsertionPoint(fragment.getEndPosition());
+			}
+		}*/
+
+		// System.out.println("***** Appended " + contents + " in " + fragment + " insertionPoint=" + getNode().getDefaultInsertionPoint());
+
 		if (thenContents == null) {
 			if (fragment == null) {
 				fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
@@ -175,22 +194,33 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	@Override
 	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
 
+		String returned;
+
 		if (conditionSupplier.get()) {
 			if (getThenContents() != null) {
-				return getThenContents().getNormalizedPrettyPrint(context);
+				returned = getThenContents().getNormalizedPrettyPrint(context);
 			}
 			else {
-				return "<???>";
+				returned = "<???>";
 			}
 		}
 		else {
 			if (getElseContents() != null) {
-				return getElseContents().getNormalizedPrettyPrint(context);
+				returned = getElseContents().getNormalizedPrettyPrint(context);
 			}
 			else {
-				return "";
+				returned = "";
 			}
 		}
+
+		if (getIndentation() == Indentation.Indent) {
+			PrettyPrintContext derivedContext = context.derive(getIndentation());
+			System.out.println("WAS: [" + returned + "]");
+			System.out.println("NOW: [" + derivedContext.indent(returned) + "]");
+			return derivedContext.indent(returned);
+		}
+
+		return returned;
 
 	}
 

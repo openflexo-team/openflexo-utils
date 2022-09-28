@@ -471,6 +471,17 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
+	 * Declare and append a new sequence block
+	 * 
+	 * @return
+	 */
+	public SequentialContents<N, T> appendBlock() {
+		SequentialContents<N, T> sequence = new SequentialContents<>(this);
+		ppContents.add(sequence);
+		return sequence;
+	}
+
+	/**
 	 * Declare and append a new conditional contents
 	 * 
 	 * @param conditionSupplier
@@ -817,14 +828,6 @@ public abstract class P2PPNode<N, T> {
 	 */
 	protected DerivedRawSource computeTextualRepresentation(PrettyPrintContext context) {
 
-		/*RawSourceFragment completeFragment = getLastParsedFragment();
-		if (getPrelude() != null) {
-			completeFragment = completeFragment.union(getPrelude());
-		}
-		if (getPostlude() != null) {
-			completeFragment = completeFragment.union(getPostlude());
-		}*/
-
 		DerivedRawSource derivedRawSource = new DerivedRawSource(getLastParsedFragment());
 
 		if (getModelObject() == null) {
@@ -1011,7 +1014,9 @@ public abstract class P2PPNode<N, T> {
 	public boolean isFragmentMappedInPPContents(RawSourceFragment fragment) {
 		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			// System.out.println(" > PPContents " + prettyPrintableContents + " " + prettyPrintableContents.getFragment());
-			if (prettyPrintableContents.getExtendedFragmentNoRecomputation() != null
+			// Do not consider control graph structures, but terminals only (because such structures may contains some non-significant characters)
+			if ((!(prettyPrintableContents instanceof SequentialContents)) && (!(prettyPrintableContents instanceof ConditionalContents))
+					&& prettyPrintableContents.getExtendedFragmentNoRecomputation() != null
 					&& prettyPrintableContents.getExtendedFragmentNoRecomputation().intersects(fragment)) {
 				return true;
 			}

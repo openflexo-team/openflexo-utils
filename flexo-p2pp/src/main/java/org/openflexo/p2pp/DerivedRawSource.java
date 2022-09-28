@@ -100,6 +100,13 @@ public class DerivedRawSource {
 		modifications.add(new StringDeletion(fragment));
 	}
 
+	public void debugStringRepresentation() {
+		System.out.println("DEBUGGING DerivedRowSource " + sourceFragment);
+		for (Modification m2 : modifications) {
+			System.out.println(" > " + m2);
+		}
+	}
+
 	public String getStringRepresentation() {
 
 		// DEBUG = false;
