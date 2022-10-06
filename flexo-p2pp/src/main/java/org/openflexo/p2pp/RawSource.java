@@ -193,7 +193,7 @@ public class RawSource {
 		}
 
 		public int getLengthTo(RawSourcePosition other) {
-			//System.out.println("getLengthTo from " + this + " to " + other);
+			// System.out.println("getLengthTo from " + this + " to " + other);
 			int returned = 0;
 			RawSourcePosition current = other;
 			while (compareTo(current) != 0) {
@@ -205,9 +205,9 @@ public class RawSource {
 					current = current.decrement();
 					returned--;
 				}
-				//System.out.println("current=" + current);
+				// System.out.println("current=" + current);
 			}
-			//System.out.println("return " + returned);
+			// System.out.println("return " + returned);
 			return returned;
 		}
 
@@ -262,6 +262,16 @@ public class RawSource {
 				returned += (rows.get(i).length() + 1);
 			}
 			return returned + getPos();
+		}
+
+		public Character getCharAfter() {
+			if (getLine() <= rows.size()) {
+				String row = rows.get(getLine() - 1);
+				if (getPos() < row.length()) {
+					return row.charAt(getPos());
+				}
+			}
+			return null;
 		}
 	}
 
