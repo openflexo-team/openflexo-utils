@@ -39,6 +39,8 @@
 package org.openflexo.p2pp;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -186,7 +188,7 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 		}
 	}
 
-	public static boolean DEBUG = false;
+	public boolean DEBUG = false;
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
@@ -386,21 +388,52 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 		}
 	}
 
+	/**
+	 * Return list of all objects sorted by their position in the last parsed fragment
+	 * 
+	 * @return
+	 */
+	private List<? extends CT> getAllObjectsSortedByParsedPosition() {
+		List<? extends CT> returned = new ArrayList<CT>(childrenObjectsSupplier.get());
+		Collections.sort(returned, new Comparator<CT>() {
+			@Override
+			public int compare(CT o1, CT o2) {
+				P2PPNode<?, CT> childNode1 = getParentNode().getObjectNode(o1);
+				P2PPNode<?, CT> childNode2 = getParentNode().getObjectNode(o2);
+				if (childNode1 == null && childNode2 == null) {
+					return 0;
+				}
+				if (childNode1 == null) {
+					return -1;
+				}
+				if (childNode2 == null) {
+					return 1;
+				}
+				return childNode1.getLastParsedFragment().getStartPosition()
+						.compareTo(childNode2.getLastParsedFragment().getStartPosition());
+			}
+		});
+		return returned;
+	}
+
 	private void handlePreludeAndPoslude(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
-		List<? extends CT> allObjects = childrenObjectsSupplier.get();
+		// List<? extends CT> allObjects = childrenObjectsSupplier.get();
+		List<? extends CT> allObjects = getAllObjectsSortedByParsedPosition();
 		for (int i = 0; i < allObjects.size(); i++) {
 			CT childObject = allObjects.get(i);
 			String applicablePrelude = getPrelude();
-			if (i == 0 && StringUtils.isNotEmpty(preludeForFirstItem)) {
+			if (i == 0 && preludeForFirstItem != null) {
 				applicablePrelude = preludeForFirstItem;
 			}
 			if (StringUtils.isEmpty(applicablePrelude) && context.getIndentation() != Indentation.DoNotIndent) {
 				applicablePrelude = context.getResultingIndentation();
 			}
+
 			String applicablePostlude = getPostlude();
-			if (i == allObjects.size() - 1 && StringUtils.isNotEmpty(postludeForLastItem)) {
+			if (i == allObjects.size() - 1 && postludeForLastItem != null) {
 				applicablePostlude = postludeForLastItem;
 			}
+
 			P2PPNode<?, CT> childNode = getParentNode().getObjectNode(childObject);
 
 			if (childNode != null) {
