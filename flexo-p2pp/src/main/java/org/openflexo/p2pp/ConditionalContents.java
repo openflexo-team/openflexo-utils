@@ -215,8 +215,8 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 
 		if (getIndentation() == Indentation.Indent) {
 			PrettyPrintContext derivedContext = context.derive(getIndentation());
-			System.out.println("WAS: [" + returned + "]");
-			System.out.println("NOW: [" + derivedContext.indent(returned) + "]");
+			//System.out.println("WAS: [" + returned + "]");
+			//System.out.println("NOW: [" + derivedContext.indent(returned) + "]");
 			return derivedContext.indent(returned);
 		}
 
