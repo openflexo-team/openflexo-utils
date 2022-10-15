@@ -568,5 +568,15 @@ public class RawSource {
 		}
 		return sb.toString();
 	}
+	
+	public int getIndex(RawSourcePosition position) {
+		//System.out.println("Index de "+position);
+		int index = 0;
+		for (int i=1; i<position.getLine(); i++) {
+			index += getRow(i-1).length()+1;
+		}
+		index += position.pos;
+		return index;
+	}
 
 }
