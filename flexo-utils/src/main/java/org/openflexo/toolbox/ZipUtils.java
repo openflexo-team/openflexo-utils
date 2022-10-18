@@ -46,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class ZipUtils {
@@ -134,5 +135,38 @@ public class ZipUtils {
 				zos.write(readBuffer, 0, bytesIn);
 			}
 		}
+	}
+
+	public static void unzipFile(String source, String target) throws IOException {
+		byte[] buffer 		= new byte[1024];
+		ZipInputStream zis 	= new ZipInputStream(new FileInputStream(source));
+		ZipEntry zipEntry 	= zis.getNextEntry();
+
+		while (zipEntry != null) {
+			File newFile = new File(target, String.valueOf(zipEntry));
+			if (zipEntry.isDirectory()) {
+				if (!newFile.isDirectory() && !newFile.mkdirs()) {
+					throw new IOException("Failed to create directory " + newFile);
+				}
+			} else {
+				// fix for Windows-created archives
+				File parent = newFile.getParentFile();
+				if (!parent.isDirectory() && !parent.mkdirs()) {
+					throw new IOException("Failed to create directory " + parent);
+				}
+
+				// write file content
+				FileOutputStream fos = new FileOutputStream(newFile);
+				int len;
+				while ((len = zis.read(buffer)) > 0) {
+					fos.write(buffer, 0, len);
+				}
+				fos.close();
+			}
+			zipEntry = zis.getNextEntry();
+		}
+		zis.closeEntry();
+		zis.close();
+
 	}
 }
