@@ -362,9 +362,6 @@ public abstract class DirectoryWatcher extends TimerTask {
 		if (isWaitingCurrentExecution) {
 			return;
 		}
-		if (waitNextWatchingRequested) {
-			waitNextWatchingDone = true;
-		}
 		if (isRunning) {
 			return;
 		}
@@ -384,6 +381,7 @@ public abstract class DirectoryWatcher extends TimerTask {
 		}
 		if (waitNextWatchingRequested) {
 			waitNextWatchingRequested = false;
+			waitNextWatchingDone = true;
 		}
 		isRunning = false;
 		status = Status.IDLE;
