@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
+import org.openflexo.p2pp.RawSource.RawSourcePosition;
 import org.openflexo.toolbox.StringUtils;
 
 /**
@@ -126,14 +127,14 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 
 		if (thenContents == null) {
 			if (fragment == null) {
-				fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
-						.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
+				RawSourcePosition insertionPoint = getNode().getDefaultInsertionPoint();
+				fragment = insertionPoint != null ? insertionPoint.getOuterType().makeFragment(insertionPoint, insertionPoint) : null;
 			}
 			contents.setFragment(fragment);
 			thenContents = contents;
-			if (fragment != null) {
-				getNode().setDefaultInsertionPoint(fragment.getEndPosition());
-			}
+			/*if (fragment != null) {
+				getNode().setInsertionPoint(fragment.getEndPosition(), this);
+			}*/
 		}
 		else if (thenContents instanceof SequentialContents) {
 			((SequentialContents<N, T>) thenContents).append(contents, fragment);
@@ -162,14 +163,14 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	public ConditionalContents<N, T> elseAppend(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
 		if (elseContents == null) {
 			if (fragment == null) {
-				fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
-						.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
+				RawSourcePosition insertionPoint = getNode().getDefaultInsertionPoint();
+				fragment = insertionPoint != null ? insertionPoint.getOuterType().makeFragment(insertionPoint, insertionPoint) : null;
 			}
 			contents.setFragment(fragment);
 			elseContents = contents;
-			if (fragment != null) {
-				getNode().setDefaultInsertionPoint(fragment.getEndPosition());
-			}
+			/*if (fragment != null) {
+				getNode().setInsertionPoint(fragment.getEndPosition(), this);
+			}*/
 		}
 		else if (elseContents instanceof SequentialContents) {
 			((SequentialContents<N, T>) elseContents).append(contents, fragment);
@@ -215,8 +216,8 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 
 		if (getIndentation() == Indentation.Indent) {
 			PrettyPrintContext derivedContext = context.derive(getIndentation());
-			//System.out.println("WAS: [" + returned + "]");
-			//System.out.println("NOW: [" + derivedContext.indent(returned) + "]");
+			// System.out.println("WAS: [" + returned + "]");
+			// System.out.println("NOW: [" + derivedContext.indent(returned) + "]");
 			return derivedContext.indent(returned);
 		}
 

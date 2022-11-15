@@ -233,9 +233,15 @@ public abstract class P2PPNode<N, T> {
 		return new DefaultPrettyPrintContext(Indentation.DoNotIndent);
 	}
 
+	/**
+	 * Initialize pretty print features while recursively calling {@link #preparePrettyPrint(boolean)} for the whole {@link P2PPNode}
+	 * hierarchy
+	 * 
+	 * @param rootNode
+	 * @param context
+	 */
 	public final void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		preparePrettyPrint(getASTNode() != null);
-		// System.out.println("On regarde si pour ce noeud " + this + " il faudrait pas etendre le fragment " + getLastParsedFragment());
 
 		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			prettyPrintableContents.initializePrettyPrint(rootNode, context.derive(prettyPrintableContents.getIndentation()));
@@ -243,12 +249,22 @@ public abstract class P2PPNode<N, T> {
 
 	}
 
+	/**
+	 * This method is called to set the specifications of the pretty-print to apply for this node<br>
+	 * This is here a trivial initialization and this method should be overriden
+	 * 
+	 * @param hasParsedVersion
+	 */
 	protected void preparePrettyPrint(boolean hasParsedVersion) {
 		defaultInsertionPoint = getStartPosition();
 	}
 
-	// protected abstract void prepareNormalizedPrettyPrint();
-
+	/**
+	 * Return normalized textual representation for this node
+	 * 
+	 * @param context
+	 * @return
+	 */
 	public final String getNormalizedTextualRepresentation(PrettyPrintContext context) {
 		StringBuffer sb = new StringBuffer();
 		for (PrettyPrintableContents<N, T> child : ppContents) {
@@ -257,23 +273,18 @@ public abstract class P2PPNode<N, T> {
 				sb.append(normalizedPP);
 			}
 		}
-		// System.out.println("On indente pour indentation=[" + context.getResultingIndentation() + "]");
-		// System.out.println("Ce qu'on indente: " + sb.toString());
-		// System.out.println("On retourne: " + context.indent(sb.toString()));
 		return context.indent(sb.toString());
 	}
 
 	private RawSourcePosition defaultInsertionPoint;
 
 	public RawSourcePosition getDefaultInsertionPoint() {
-		if (defaultInsertionPoint == null && getParent() != null) {
-			return getParent().getDefaultInsertionPoint();
+		if (defaultInsertionPoint == null) {
+			if (getParent() != null) {
+				return getParent().getDefaultInsertionPoint();
+			}
 		}
 		return defaultInsertionPoint;
-	}
-
-	protected void setDefaultInsertionPoint(RawSourcePosition defaultInsertionPoint) {
-		this.defaultInsertionPoint = defaultInsertionPoint;
 	}
 
 	/**
@@ -530,57 +541,6 @@ public abstract class P2PPNode<N, T> {
 			defaultInsertionPoint = fragment.getEndPosition();
 		}
 	}
-
-	/**
-	 * Append {@link StaticContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
-	 * raw source)
-	 * 
-	 * @param staticContents
-	 *            value to append
-	 */
-	/*public void appendStaticContents(String staticContents) {
-		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
-		StaticContents newContents = new StaticContents(null, staticContents, null, insertionPointFragment);
-		ppContents.add(newContents);
-	}*/
-
-	/**
-	 * Append {@link StaticContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
-	 * raw source)
-	 * 
-	 * @param prelude
-	 *            prelude to add if normalized pretty-print is to be applied
-	 * @param staticContents
-	 *            value to append
-	 */
-	/*public void appendStaticContents(String prelude, String staticContents) {
-		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
-		StaticContents newContents = new StaticContents(prelude, staticContents, null, insertionPointFragment);
-		ppContents.add(newContents);
-	}*/
-
-	/**
-	 * Append {@link StaticContents}, whose value is intended to be inserted at current location (no current contents was parsed in initial
-	 * raw source)
-	 * 
-	 * @param prelude
-	 *            prelude to add if normalized pretty-print is to be applied
-	 * @param staticContents
-	 *            value to append
-	 * @param postlude
-	 *            postlude to add if normalized pretty-print is to be applied
-	 */
-	/*public void appendStaticContents(String prelude, String staticContents, String postlude) {
-		RawSourceFragment insertionPointFragment = defaultInsertionPoint != null
-				? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
-				: null;
-		StaticContents newContents = new StaticContents(prelude, staticContents, postlude, insertionPointFragment);
-		ppContents.add(newContents);
-	}*/
 
 	/**
 	 * Append {@link StaticContents}, whose value is intended to replace text determined with supplied fragment
@@ -1014,7 +974,8 @@ public abstract class P2PPNode<N, T> {
 	public boolean isFragmentMappedInPPContents(RawSourceFragment fragment) {
 		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			// System.out.println(" > PPContents " + prettyPrintableContents + " " + prettyPrintableContents.getFragment());
-			// Do not consider control graph structures, but terminals only (because such structures may contains some non-significant characters)
+			// Do not consider control graph structures, but terminals only (because such structures may contains some non-significant
+			// characters)
 			if ((!(prettyPrintableContents instanceof SequentialContents)) && (!(prettyPrintableContents instanceof ConditionalContents))
 					&& prettyPrintableContents.getExtendedFragmentNoRecomputation() != null
 					&& prettyPrintableContents.getExtendedFragmentNoRecomputation().intersects(fragment)) {

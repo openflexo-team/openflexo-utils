@@ -76,8 +76,6 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 	private ArrayList<P2PPNode<CN, CT>> lastParsedNodes;
 	private List<P2PPNode<CN, CT>> childrenNodes;
 
-	private RawSourcePosition defaultInsertionPoint;
-
 	public ChildrenContents(P2PPNode<PN, PT> parentNode, String prelude, Supplier<List<? extends CT>> childrenObjects, String postlude,
 			Indentation indentation, Class<CT> objectType) {
 		this(parentNode, null, prelude, childrenObjects, postlude, null, indentation, objectType);
@@ -90,11 +88,6 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 		super(parentNode, prelude, postlude, indentation);
 		this.preludeForFirstItem = preludeForFirstItem;
 		this.postludeForLastItem = postludeForLastItem;
-		// System.out.println("ChildrenContents for " + objectType);
-		// System.out.println("prelude=[" + getPrelude() + "]");
-		// System.out.println("postlude=[" + getPostlude() + "]");
-		// Unused this.objectType = objectType;
-		// setFragment(childNode.getLastParsedFragment());
 
 		childrenObjectsSupplier = childrenObjects;
 
@@ -107,16 +100,6 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 				lastParsedNodes.add((P2PPNode<CN, CT>) objectNode);
 			}
 		}
-		// System.out.println("Tous les nodes qu'on considere: " + lastParsedNodes);
-
-		// RawSourceFragment fragment = null;
-
-		/*for (FMLObjectNode<?, T> objectNode : lastParsedNodes) {
-			System.out.println("> fragment " + objectNode.getLastParsedFragment());
-		}*/
-
-		// Find a new default insertion point
-		updateDefaultInsertionPoint();
 
 	}
 
@@ -177,14 +160,25 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 		return sb.toString();
 	}
 
-	private void updateDefaultInsertionPoint() {
+	private RawSourcePosition getInsertionPoint() {
 		if (lastParsedNodes.size() > 0) {
-			// System.out.println("Hop: " + lastParsedNodes.get(0) + " of " + lastParsedNodes.get(0).getClass());
-			// System.out.println("Fragment: " + lastParsedNodes.get(0).getLastParsedFragment());
-			defaultInsertionPoint = lastParsedNodes.get(0).getLastParsedFragment().getStartPosition();
+			P2PPNode<CN, CT> lastNode = lastParsedNodes.get(lastParsedNodes.size() - 1);
+			if (lastNode.getPostlude() != null) {
+				return lastNode.getPostlude().getEndPosition();
+			}
+			else {
+				return lastNode.getLastParsedFragment().getEndPosition();
+			}
+		}
+		else if (getPreviousContents() instanceof ChildrenContents) {
+			return ((ChildrenContents) getPreviousContents()).getInsertionPoint();
+		}
+
+		else if (getFragment() != null) {
+			return getFragment().getStartPosition();
 		}
 		else {
-			defaultInsertionPoint = getParentNode().getDefaultInsertionPoint();
+			return getParentNode().getDefaultInsertionPoint();
 		}
 	}
 
@@ -204,11 +198,8 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 			}
 		}
 
-		// Find a new default insertion point
-		updateDefaultInsertionPoint();
-
-		RawSourcePosition insertionPoint = defaultInsertionPoint;
-		RawSourcePosition insertionPointAfterPostlude = defaultInsertionPoint;
+		RawSourcePosition insertionPoint = getInsertionPoint(); // defaultInsertionPoint;
+		RawSourcePosition insertionPointAfterPostlude = getInsertionPoint(); // defaultInsertionPoint;
 
 		PrettyPrintContext derivedContext = context.derive(getIndentation());
 
@@ -368,7 +359,7 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 		}
 
 		// Update parent default insertion point
-		getParentNode().setDefaultInsertionPoint(insertionPointAfterPostlude);
+		// getParentNode().setInsertionPoint(insertionPointAfterPostlude, this);
 	}
 
 	@Override
@@ -449,6 +440,14 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 			}
 		}
 
+	}
+
+	@Override
+	protected void debug(StringBuffer sb, int identation) {
+		String indent = StringUtils.buildWhiteSpaceIndentation(identation * 2);
+		sb.append(indent + "> " + getClass().getSimpleName() + " fragment=" + getFragment() + "["
+				+ (getFragment() != null ? getFragment().getRawText() : "?") + "] prelude=" + getPreludeFragment() + " postlude="
+				+ getPostludeFragment() + " insertionPoint=" + getInsertionPoint() + "\n");
 	}
 
 }

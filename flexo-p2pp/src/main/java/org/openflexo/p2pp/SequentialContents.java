@@ -43,6 +43,7 @@ import java.util.List;
 
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
+import org.openflexo.p2pp.RawSource.RawSourcePosition;
 
 /**
  * A sequential content
@@ -77,14 +78,14 @@ public class SequentialContents<N, T> extends PrettyPrintableContents<N, T> {
 
 	public SequentialContents<N, T> append(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
 		if (fragment == null) {
-			fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
-					.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
+			RawSourcePosition insertionPoint = getNode().getDefaultInsertionPoint();
+			fragment = insertionPoint != null ? insertionPoint.getOuterType().makeFragment(insertionPoint, insertionPoint) : null;
 		}
 		contents.setFragment(fragment);
 		ppContents.add(contents);
-		if (fragment != null) {
-			getNode().setDefaultInsertionPoint(fragment.getEndPosition());
-		}
+		/*if (fragment != null) {
+			getNode().setInsertionPoint(fragment.getEndPosition(), this);
+		}*/
 		sequenceFragment = null;
 		sequenceExtendedFragment = null;
 

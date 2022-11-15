@@ -147,6 +147,14 @@ public abstract class PrettyPrintableContents<N, T> {
 		this.fragment = fragment;
 	}
 
+	public PrettyPrintableContents<?, ?> getPreviousContents() {
+		int index = getNode().getPPContents().indexOf(this);
+		if (index > 0) {
+			return getNode().getPPContents().get(index - 1);
+		}
+		return null;
+	}
+
 	public abstract String getNormalizedPrettyPrint(PrettyPrintContext context);
 
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
