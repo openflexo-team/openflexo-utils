@@ -38,6 +38,7 @@
 
 package org.openflexo.p2pp;
 
+import org.openflexo.p2pp.DerivedRawSource.Modification;
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.p2pp.RawSource.RawSourcePosition;
@@ -65,6 +66,8 @@ public abstract class PrettyPrintableContents<N, T> {
 
 	private final P2PPNode<N, T> node;
 
+	private String identifier;
+
 	private final String prelude;
 	private final String postlude;
 	private Indentation indentation;
@@ -72,6 +75,8 @@ public abstract class PrettyPrintableContents<N, T> {
 	private RawSourceFragment fragment = null;
 	private RawSourceFragment preludeFragment;
 	private RawSourceFragment postludeFragment;
+
+	private PrettyPrintableContents<N, T> parentContents;
 
 	public PrettyPrintableContents(P2PPNode<N, T> node, String prelude, String postlude, Indentation indentation) {
 		super();
@@ -101,6 +106,25 @@ public abstract class PrettyPrintableContents<N, T> {
 		this.node = node;
 		this.prelude = null;
 		this.postlude = null;
+	}
+
+	public String getIdentifier() {
+		if (identifier == null) {
+			return getClass().getSimpleName() + getIndex();
+		}
+		return identifier;
+	}
+
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
+	}
+
+	public PrettyPrintableContents<N, T> getParentContents() {
+		return parentContents;
+	}
+
+	protected void setParentContents(PrettyPrintableContents<N, T> parentContents) {
+		this.parentContents = parentContents;
 	}
 
 	/**
@@ -147,22 +171,136 @@ public abstract class PrettyPrintableContents<N, T> {
 		this.fragment = fragment;
 	}
 
+	/**
+	 * Return index of this contents in container
+	 * 
+	 * @return
+	 */
+	public int getIndex() {
+		if (getParentContents() == null) {
+			return getNode().getPPContents().indexOf(this);
+		}
+		if (getParentContents() instanceof SequentialContents) {
+			return ((SequentialContents<N, T>) getParentContents()).getPPContents().indexOf(this);
+		}
+		if (getParentContents() instanceof ConditionalContents) {
+			ConditionalContents<N, T> cc = (ConditionalContents<N, T>) getParentContents();
+			if (cc.getThenContents() == this) {
+				return 0;
+			}
+			if (cc.getElseContents() == this) {
+				return 1;
+			}
+		}
+		System.err.println("Unexpected parent " + getParentContents());
+		return -1;
+	}
+
+	/**
+	 * Return the previous contents found in related {@link P2PPNode}, relatively to the pretty-print semantics
+	 * 
+	 * This is the contents used to retrieve an insertion point
+	 * 
+	 * @return
+	 */
 	public PrettyPrintableContents<?, ?> getPreviousContents() {
-		int index = getNode().getPPContents().indexOf(this);
-		if (index > 0) {
-			return getNode().getPPContents().get(index - 1);
+		if (getParentContents() == null) {
+			if (getIndex() > 0) {
+				return getNode().getPPContents().get(getIndex() - 1);
+			}
+			return null;
+		}
+		if (getParentContents() instanceof SequentialContents) {
+			if (getIndex() > 0) {
+				return ((SequentialContents<N, T>) getParentContents()).getPPContents().get(getIndex() - 1);
+			}
+		}
+		return getParentContents().getPreviousContents();
+	}
+
+	/**
+	 * Return the position where to insert a new contents when this {@link PrettyPrintableContents} is applied
+	 * 
+	 * This scheme is applied when no existing fragment was found (the last parsing could not locate any existing fragment), in this case,
+	 * we must compute the location where new contents has to be inserted
+	 * 
+	 * @return
+	 */
+	public RawSourcePosition getInsertionPoint() {
+		// If we are a THEN or ELSE, delegate computation of insertion point to the ConditionalContents
+		if (getParentContents() instanceof ConditionalContents) {
+			return getParentContents().getInsertionPoint();
+		}
+		// Otherwise, identify previous contents
+		if (getPreviousContents() != null) {
+			// If previous contents relies on an existing fragment, return end position (including postlude when existing)
+			if (getPreviousContents().getEndPosition() != null) {
+				return getPreviousContents().getEndPosition();
+			}
+			else {
+				// Otherwise delegate computation of insertion point to the previous contents (until an existing content is found)
+				return getPreviousContents().getInsertionPoint();
+			}
+		}
+		if (getNode().getLastParsedFragment() != null) {
+			return getNode().getLastParsedFragment().getStartPosition();
+		}
+		return getNode().getDefaultInsertionPoint();
+	}
+
+	/**
+	 * Return end position of this contents, asserting that it relies on an existing fragment
+	 * 
+	 * @return
+	 */
+	public RawSourcePosition getEndPosition() {
+		if (getFragment() != null) {
+			if (getPostludeFragment() != null) {
+				return getPostludeFragment().getEndPosition();
+			}
+			return getFragment().getEndPosition();
 		}
 		return null;
 	}
 
+	/**
+	 * Build and return an empty fragment located on insertion point
+	 * 
+	 * @return
+	 */
+	public RawSourceFragment makeInsertionFragment() {
+		return getInsertionPoint().getOuterType().makeFragment(getInsertionPoint(), getInsertionPoint());
+	}
+
+	/**
+	 * Build an return String encoding normalized pretty-print, given a {@link PrettyPrintContext}
+	 * 
+	 * @param context
+	 * @return
+	 */
 	public abstract String getNormalizedPrettyPrint(PrettyPrintContext context);
 
+	/**
+	 * Update pretty-print for this contents, given a {@link PrettyPrintContext} and a {@link DerivedRawSource}
+	 * 
+	 * This method append required {@link Modification} to the supplied {@link DerivedRawSource} (result is then stored in the
+	 * {@link DerivedRawSource})
+	 * 
+	 * @param derivedRawSource
+	 * @param context
+	 */
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
 		// No need to recompute, since it will not change during the whole life-cycle of this PrettyPrintableContents
 		// preludeFragment = null;
 		// postludeFragment = null;
 	}
 
+	/**
+	 * Called during initialization of pretty-print scheme
+	 * 
+	 * @param rootNode
+	 * @param context
+	 */
 	public abstract void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context);
 
 	/**
@@ -284,9 +422,16 @@ public abstract class PrettyPrintableContents<N, T> {
 
 	protected void debug(StringBuffer sb, int identation) {
 		String indent = StringUtils.buildWhiteSpaceIndentation(identation * 2);
-		sb.append(indent + "> " + getClass().getSimpleName() + " fragment=" + getFragment() + "["
+		sb.append(indent + "> " + getClass().getSimpleName() + "[" + getIdentifier() + "]" + " fragment=" + getFragment() + "["
 				+ (getFragment() != null ? getFragment().getRawText() : "?") + "] prelude=" + getPreludeFragment() + " postlude="
-				+ getPostludeFragment() + "\n");
+				+ getPostludeFragment() + " insertionPoint=" + getInsertionPoint() + "\n");
+	}
+
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		debug(sb, 0);
+		return sb.toString();
 	}
 
 }

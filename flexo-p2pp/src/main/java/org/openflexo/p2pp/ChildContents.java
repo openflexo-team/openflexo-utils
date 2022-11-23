@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
+import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.toolbox.StringUtils;
 
 /**
@@ -76,6 +77,14 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 			setFragment(parsedChildNode.getLastParsedFragment());
 			parsedChildNode.setRegisteredForContents(this);
 		}
+	}
+
+	@Override
+	public RawSourceFragment getFragment() {
+		if (getParsedChildNode() != null) {
+			return getParsedChildNode().getLastParsedFragment();
+		}
+		return super.getFragment();
 	}
 
 	public P2PPNode<CN, CT> getParsedChildNode() {
@@ -125,6 +134,7 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 		super.updatePrettyPrint(derivedRawSource, context);
 
 		CT childObject = childObjectSupplier.get();
+
 		if (childObject != null) {
 			P2PPNode<?, CT> childNode = getParentNode().getObjectNode(childObject);
 			if (childNode == null) {

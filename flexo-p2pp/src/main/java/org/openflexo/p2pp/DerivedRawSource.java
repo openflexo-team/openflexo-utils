@@ -50,6 +50,12 @@ import org.openflexo.p2pp.RawSource.RawSourcePosition;
 /**
  * Represent a RawSource which stores evolution of a parsed code (a RawSource)
  * 
+ * A {@link DerivedRawSource} is based on an initial {@link RawSourceFragment} (text initially parsed) on which we apply some
+ * {@link Modification}
+ * 
+ * Result of initial fragment where modifications are applied may be obtained using {@link #getStringRepresentation()} method
+ * 
+ * 
  * @author sylvain
  * 
  */
@@ -85,7 +91,8 @@ public class DerivedRawSource {
 
 	public void replace(RawSourceFragment fragment, DerivedRawSource replacement) {
 		if (!fragment.getRawText().equals(replacement)) {
-			// System.out.println("On remplace " + fragment + " (values [" + fragment.getRawText() + "]) par " + replacement);
+			// System.out.println(toString() + " : On remplace " + fragment + " (values [" + fragment.getRawText() + "]) par " +
+			// replacement);
 			modifications.add(new DerivedRawSourceReplacement(fragment, replacement));
 		}
 	}
@@ -107,6 +114,11 @@ public class DerivedRawSource {
 		}
 	}
 
+	/**
+	 * This is the method used to get result of initial parsed fragment where all modifications are applied
+	 * 
+	 * @return
+	 */
 	public String getStringRepresentation() {
 
 		// DEBUG = false;
@@ -311,7 +323,8 @@ public class DerivedRawSource {
 
 		@Override
 		public String toString() {
-			return "DerivedRawSourceReplacement " + getInitialFragment() + " with DerivedRawSourceReplacement";
+			return "DerivedRawSourceReplacement " + getInitialFragment() + " with DerivedRawSourceReplacement "
+					+ getInitialFragment().getRawText() + " > " + replacement.getStringRepresentation();
 		}
 
 	}

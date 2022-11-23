@@ -160,7 +160,12 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 		return sb.toString();
 	}
 
-	private RawSourcePosition getInsertionPoint() {
+	/**
+	 * Override {@link #getInsertionPoint()} by looking up last parsed nodes
+	 */
+	@Override
+	public RawSourcePosition getInsertionPoint() {
+		// System.out.println("lastParsedNodes=" + lastParsedNodes);
 		if (lastParsedNodes.size() > 0) {
 			P2PPNode<CN, CT> lastNode = lastParsedNodes.get(lastParsedNodes.size() - 1);
 			if (lastNode.getPostlude() != null) {
@@ -170,19 +175,10 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 				return lastNode.getLastParsedFragment().getEndPosition();
 			}
 		}
-		else if (getPreviousContents() instanceof ChildrenContents) {
-			return ((ChildrenContents) getPreviousContents()).getInsertionPoint();
-		}
-
-		else if (getFragment() != null) {
-			return getFragment().getStartPosition();
-		}
-		else {
-			return getParentNode().getDefaultInsertionPoint();
-		}
+		return super.getInsertionPoint();
 	}
 
-	public boolean DEBUG = false;
+	private boolean DEBUG = false;
 
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
@@ -442,12 +438,12 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 
 	}
 
-	@Override
+	/*@Override
 	protected void debug(StringBuffer sb, int identation) {
 		String indent = StringUtils.buildWhiteSpaceIndentation(identation * 2);
-		sb.append(indent + "> " + getClass().getSimpleName() + " fragment=" + getFragment() + "["
+		sb.append(indent + "> " + getClass().getSimpleName() + "[" + getIdentifier() + "]" + " fragment=" + getFragment() + "["
 				+ (getFragment() != null ? getFragment().getRawText() : "?") + "] prelude=" + getPreludeFragment() + " postlude="
 				+ getPostludeFragment() + " insertionPoint=" + getInsertionPoint() + "\n");
-	}
+	}*/
 
 }

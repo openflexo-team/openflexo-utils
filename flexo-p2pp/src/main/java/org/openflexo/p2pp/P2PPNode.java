@@ -364,7 +364,30 @@ public abstract class P2PPNode<N, T> {
 	/**
 	 * Make new {@link ChildContents}, indicating that a child referenced by the supplier must be serialized at this pretty-print level
 	 * 
-	 * @param <C>
+	 * @param <CN>
+	 * @param <CT>
+	 * @param prelude
+	 *            A String to append before serialized object
+	 * @param childObjectSupplier
+	 *            Supply object to be serialized here
+	 * @param postude
+	 *            A String to append after serialized object
+	 * @param indentation
+	 *            Indentation for the serialization of children
+	 * @param identifier
+	 *            Identifier used in debug
+	 * @return
+	 */
+	public <CN, CT> ChildContents<N, T, CN, CT> childContents(String prelude, Supplier<CT> childObjectSupplier, String postude,
+			Indentation indentation, String identifier) {
+		ChildContents<N, T, CN, CT> returned = new ChildContents<N, T, CN, CT>(this, prelude, childObjectSupplier, postude, indentation);
+		returned.setIdentifier(identifier);
+		return returned;
+	}
+
+	/**
+	 * Make new {@link ChildContents}, indicating that a child referenced by the supplier must be serialized at this pretty-print level
+	 * 
 	 * @param prelude
 	 *            A String to append before serialized object
 	 * @param childObjectSupplier
@@ -433,6 +456,67 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
+	 * Make new {@link ChildrenContents}, indicating that some children referenced by the supplier must be serialized at this pretty-print
+	 * level
+	 * 
+	 * @param <C>
+	 * @param preludeForFirstItem
+	 *            A String to append before the first object of the list
+	 * @param prelude
+	 *            A String to append for each object of the list except the first one
+	 * @param childrenObjects
+	 *            Supply all objects to be serialized here
+	 * @param postude
+	 *            A String to append after each object of the list except the last one
+	 * @param postludeForLastItem
+	 *            A String to append after last object of the list
+	 * @param indentation
+	 *            Indentation for the serialization of children
+	 * @param childrenType
+	 *            Type (class) of addressed children
+	 * @param identifier
+	 *            Identifier used in debug
+	 * @return
+	 */
+	public <CN, CT> ChildrenContents<N, T, CN, CT> childrenContents(String preludeForFirstItem, String prelude,
+			Supplier<List<? extends CT>> childrenObjects, String postude, String postludeForLastItem, Indentation indentation,
+			Class<CT> childrenType, String identifier) {
+
+		ChildrenContents<N, T, CN, CT> returned = new ChildrenContents<N, T, CN, CT>(this, preludeForFirstItem, prelude, childrenObjects,
+				postude, postludeForLastItem, indentation, childrenType);
+		returned.setIdentifier(identifier);
+		return returned;
+	}
+
+	/**
+	 * Make new {@link ChildrenContents}, indicating that some children referenced by the supplier must be serialized at this pretty-print
+	 * level
+	 * 
+	 * @param <C>
+	 * @param prelude
+	 *            A String to append for each object of the list
+	 * @param childrenObjects
+	 *            Supply all objects to be serialized here
+	 * @param postude
+	 *            A String to append after each object of the list
+	 * @param indentation
+	 *            Indentation for the serialization of children
+	 * @param childrenType
+	 *            Type (class) of addressed children
+	 * @param identifier
+	 *            Identifier used in debug
+	 * @return
+	 */
+	public <CN, CT> ChildrenContents<N, T, CN, CT> childrenContents(String prelude, Supplier<List<? extends CT>> childrenObjects,
+			String postude, Indentation indentation, Class<CT> childrenType, String identifier) {
+
+		ChildrenContents<N, T, CN, CT> returned = new ChildrenContents<N, T, CN, CT>(this, prelude, childrenObjects, postude, indentation,
+				childrenType);
+		returned.setIdentifier(identifier);
+		return returned;
+	}
+
+	/**
 	 * Sequentially append supplied {@link PrettyPrintableContents}, declaring a contents to serialize at this point
 	 * 
 	 * @param contents
@@ -442,11 +526,11 @@ public abstract class P2PPNode<N, T> {
 	 * @return supplied contents, for cascading calls
 	 */
 	public <PPC extends PrettyPrintableContents<N, T>> PPC append(PPC contents, RawSourceFragment fragment) {
-		if (fragment == null) {
+		/*if (fragment == null) {
 			fragment = defaultInsertionPoint != null
 					? defaultInsertionPoint.getOuterType().makeFragment(defaultInsertionPoint, defaultInsertionPoint)
 					: null;
-		}
+		}*/
 		contents.setFragment(fragment);
 		ppContents.add(contents);
 		if (fragment != null) {
@@ -462,13 +546,42 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
+	 * Sequentially append supplied {@link PrettyPrintableContents}, declaring a contents to serialize at this point
+	 * 
+	 * @param contents
+	 *            contents to serialize
+	 * @param fragment
+	 *            current serialized fragment in original textual version, not null if contents was parsed
+	 * @param identifier
+	 *            Identifier used in debug
+	 * @return supplied contents, for cascading calls
+	 */
+	public <PPC extends PrettyPrintableContents<N, T>> PPC append(PPC contents, RawSourceFragment fragment, String identifier) {
+		PPC returned = append(contents, fragment);
+		returned.setIdentifier(identifier);
+		return returned;
+	}
+
+	/**
 	 * Convenient method to append a {@link ChildContents} (fragment is not required in this case)
 	 * 
 	 * @param contents
 	 * @return supplied contents, for cascading calls
 	 */
 	public <CN, CT> ChildContents<N, T, CN, CT> append(ChildContents<N, T, CN, CT> contents) {
-		return append(contents, null);
+		return append(contents, (RawSourceFragment) null);
+	}
+
+	/**
+	 * Convenient method to append a {@link ChildContents} (fragment is not required in this case)
+	 * 
+	 * @param contents
+	 * @param identifier
+	 *            Identifier used in debug
+	 * @return supplied contents, for cascading calls
+	 */
+	public <CN, CT> ChildContents<N, T, CN, CT> append(ChildContents<N, T, CN, CT> contents, String identifier) {
+		return append(contents, null, identifier);
 	}
 
 	/**
@@ -478,7 +591,19 @@ public abstract class P2PPNode<N, T> {
 	 * @return supplied contents, for cascading calls
 	 */
 	public <CN, CT> ChildrenContents<N, T, CN, CT> append(ChildrenContents<N, T, CN, CT> contents) {
-		return append(contents, null);
+		return append(contents, (RawSourceFragment) null);
+	}
+
+	/**
+	 * Convenient method to append a {@link ChildrenContents} (fragment is not required in this case)
+	 * 
+	 * @param contents
+	 * @param identifier
+	 *            Identifier used in debug
+	 * @return supplied contents, for cascading calls
+	 */
+	public <CN, CT> ChildrenContents<N, T, CN, CT> append(ChildrenContents<N, T, CN, CT> contents, String identifier) {
+		return append(contents, null, identifier);
 	}
 
 	/**
@@ -490,6 +615,21 @@ public abstract class P2PPNode<N, T> {
 		SequentialContents<N, T> sequence = new SequentialContents<>(this);
 		ppContents.add(sequence);
 		return sequence;
+	}
+
+	/**
+	 * Declare and append a new conditional contents
+	 * 
+	 * @param conditionSupplier
+	 *            determines the condition to compute at run-time
+	 * @param identifier
+	 *            Identifier used in debug
+	 * @return
+	 */
+	public ConditionalContents<N, T> when(Supplier<Boolean> conditionSupplier, String identifier) {
+		ConditionalContents<N, T> returned = when(conditionSupplier);
+		returned.setIdentifier(identifier);
+		return returned;
 	}
 
 	/**
