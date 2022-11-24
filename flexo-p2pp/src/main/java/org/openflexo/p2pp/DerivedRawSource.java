@@ -131,6 +131,9 @@ public class DerivedRawSource {
 		Collections.sort(modifications, new Comparator<Modification>() {
 			@Override
 			public int compare(Modification o1, Modification o2) {
+				if (o1.getInitialFragment().getStartPosition().equals(o2.getInitialFragment().getStartPosition())) {
+					return o1.getInitialFragment().getEndPosition().compareTo(o2.getInitialFragment().getEndPosition());
+				}
 				return o1.getInitialFragment().getStartPosition().compareTo(o2.getInitialFragment().getStartPosition());
 			}
 		});
