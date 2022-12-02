@@ -243,7 +243,7 @@ public abstract class P2PPNode<N, T> {
 	public final void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		preparePrettyPrint(getASTNode() != null);
 
-		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : new ArrayList<>(ppContents)) {
 			prettyPrintableContents.initializePrettyPrint(rootNode, context.derive(prettyPrintableContents.getIndentation()));
 		}
 
@@ -267,7 +267,7 @@ public abstract class P2PPNode<N, T> {
 	 */
 	public final String getNormalizedTextualRepresentation(PrettyPrintContext context) {
 		StringBuffer sb = new StringBuffer();
-		for (PrettyPrintableContents<N, T> child : ppContents) {
+		for (PrettyPrintableContents<N, T> child : new ArrayList<>(ppContents)) {
 			String normalizedPP = child.getNormalizedPrettyPrint(context);
 			if (normalizedPP != null) {
 				sb.append(normalizedPP);
@@ -935,7 +935,7 @@ public abstract class P2PPNode<N, T> {
 			return derivedRawSource;
 		}
 
-		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : new ArrayList<>(ppContents)) {
 			prettyPrintableContents.updatePrettyPrint(derivedRawSource, context);
 		}
 
@@ -1112,11 +1112,12 @@ public abstract class P2PPNode<N, T> {
 	 * @return
 	 */
 	public boolean isFragmentMappedInPPContents(RawSourceFragment fragment) {
-		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : new ArrayList<>(ppContents)) {
 			// System.out.println(" > PPContents " + prettyPrintableContents + " " + prettyPrintableContents.getFragment());
 			// Do not consider control graph structures, but terminals only (because such structures may contains some non-significant
 			// characters)
-			if ((!(prettyPrintableContents instanceof SequentialContents)) && (!(prettyPrintableContents instanceof ConditionalContents))
+			if ((prettyPrintableContents != null) && (!(prettyPrintableContents instanceof SequentialContents))
+					&& (!(prettyPrintableContents instanceof ConditionalContents))
 					&& prettyPrintableContents.getExtendedFragmentNoRecomputation() != null
 					&& prettyPrintableContents.getExtendedFragmentNoRecomputation().intersects(fragment)) {
 				return true;
@@ -1131,7 +1132,7 @@ public abstract class P2PPNode<N, T> {
 		sb.append("fragment=" + getLastParsedFragment() + "\n");
 		sb.append(getLastParsedFragment().getRawText() + "\n");
 
-		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : new ArrayList<>(ppContents)) {
 			prettyPrintableContents.debug(sb, 2);
 		}
 		return sb.toString();
