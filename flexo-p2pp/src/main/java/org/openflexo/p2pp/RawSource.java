@@ -85,6 +85,7 @@ public class RawSource {
 	private List<String> rows;
 	private final RawSourcePosition startPosition;
 	private final RawSourcePosition endPosition;
+	private StringBuffer rawText;
 
 	/**
 	 * Encodes a position in the RawSource, using line and position in line<br>
@@ -474,6 +475,7 @@ public class RawSource {
 	}
 
 	public RawSource(Reader reader) throws IOException {
+		rawText = new StringBuffer();
 		rows = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(reader)) {
 			String nextLine = null;
@@ -481,6 +483,7 @@ public class RawSource {
 				nextLine = br.readLine();
 				if (nextLine != null) {
 					rows.add(nextLine);
+					rawText.append(nextLine + StringUtils.LINE_SEPARATOR);
 				}
 			} while (nextLine != null);
 		}
@@ -568,15 +571,19 @@ public class RawSource {
 		}
 		return sb.toString();
 	}
-	
+
 	public int getIndex(RawSourcePosition position) {
-		//System.out.println("Index de "+position);
+		// System.out.println("Index de "+position);
 		int index = 0;
-		for (int i=1; i<position.getLine(); i++) {
-			index += getRow(i-1).length()+1;
+		for (int i = 1; i < position.getLine(); i++) {
+			index += getRow(i - 1).length() + 1;
 		}
 		index += position.pos;
 		return index;
+	}
+
+	public String getRawText() {
+		return rawText.toString();
 	}
 
 }
