@@ -1,4 +1,6 @@
 dependencies {
   implementation connieUtils()
   implementation testUtils()
+
+  compile group: 'org.apache.commons', name: 'commons-compress', version: '1.22'
 }
