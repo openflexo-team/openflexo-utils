@@ -76,6 +76,7 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 		if (parsedChildNode != null) {
 			setFragment(parsedChildNode.getLastParsedFragment());
 			parsedChildNode.setRegisteredForContents(this);
+			currentChildNode = parsedChildNode;
 		}
 	}
 
@@ -128,6 +129,8 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 		return null;
 	}
 
+	P2PPNode<?, CT> currentChildNode;
+
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
 
@@ -163,6 +166,7 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 				// + childNode.getTextualRepresentation(derivedContext));
 				derivedRawSource.insert(getParentNode().getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
 			}
+			currentChildNode = childNode;
 		}
 		else {
 			// new child is null
