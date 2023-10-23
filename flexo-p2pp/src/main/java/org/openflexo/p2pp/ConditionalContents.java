@@ -66,8 +66,6 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	private PrettyPrintableContents<N, T> thenContents;
 	private PrettyPrintableContents<N, T> elseContents;
 
-	private boolean isFinal = false;
-
 	/**
 	 * Build a new {@link ConditionalContents}, whose value is intented to replace text determined with supplied fragment
 	 * 
@@ -79,16 +77,6 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	public ConditionalContents(P2PPNode<N, T> node, Supplier<Boolean> conditionSupplier) {
 		super(node);
 		this.conditionSupplier = conditionSupplier;
-	}
-
-	// TODO / hacking area : investigate
-	public boolean isFinal() {
-		return isFinal;
-	}
-
-	// TODO / hacking area : investigate
-	public void setFinal(boolean isFinal) {
-		this.isFinal = isFinal;
 	}
 
 	public PrettyPrintableContents<N, T> getThenContents() {

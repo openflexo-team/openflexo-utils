@@ -646,21 +646,6 @@ public abstract class P2PPNode<N, T> {
 	}
 
 	/**
-	 * Declare and append a new conditional contents with final condition
-	 * 
-	 * @param conditionSupplier
-	 *            determines the condition to compute at run-time
-	 * @param isFinal
-	 *            determines if this conditional supports value change
-	 * @return
-	 */
-	public ConditionalContents<N, T> when(Supplier<Boolean> conditionSupplier, boolean isFinal) {
-		ConditionalContents<N, T> conditionalContents = when(conditionSupplier);
-		conditionalContents.setFinal(isFinal);
-		return conditionalContents;
-	}
-
-	/**
 	 * Append {@link StaticContents}, whose value is intended to replace text determined with supplied fragment
 	 * 
 	 * @param staticContents
