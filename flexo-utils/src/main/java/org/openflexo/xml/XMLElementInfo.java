@@ -65,6 +65,8 @@ public class XMLElementInfo {
 	private Map<String, String> attributes = null;
 	private List<XMLElementInfo> elements = null;
 
+	private String rootNamespace = null;
+
 	private String name;
 
 	private String URI;
@@ -77,9 +79,28 @@ public class XMLElementInfo {
 		elements = new ArrayList<>();
 	}
 
+	public Map<String, String> getNamespaces() {
+		return namespaces;
+	}
+
+	public String getRootNamespacePrefix() {
+		return rootNamespace;
+	}
+
+	public String getRootNamespaceURI() {
+		return namespaces.get(rootNamespace);
+	}
+
+	public Map<String, String> getAttributes() {
+		return attributes;
+	}
+
 	public void addNamespace(String prefix, String uri) {
 		if (namespaces.get(prefix) == null) {
 			namespaces.put(prefix, uri);
+		}
+		if (rootNamespace == null) {
+			rootNamespace = prefix;
 		}
 	}
 
@@ -103,6 +124,11 @@ public class XMLElementInfo {
 		returned.setURI(uri);
 
 		String NSPrefix = "xmlns:p"; // default
+
+		// System.out.println("------------------> addElement ");
+		// System.out.println("uri=" + uri);
+		// System.out.println("localName=" + localName);
+		// System.out.println("qName=" + qName);
 
 		if (qName != null && localName != null) {
 			NSPrefix = qName;
