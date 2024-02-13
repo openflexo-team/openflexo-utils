@@ -193,6 +193,14 @@ public class RawSource {
 			return compareTo(other) > 0;
 		}
 
+		public boolean isBeforeOrEquals(RawSourcePosition other) {
+			return compareTo(other) <= 0;
+		}
+
+		public boolean isAfterOrEquals(RawSourcePosition other) {
+			return compareTo(other) >= 0;
+		}
+
 		public int getLengthTo(RawSourcePosition other) {
 			// System.out.println("getLengthTo from " + this + " to " + other);
 			int returned = 0;
@@ -273,6 +281,13 @@ public class RawSource {
 				}
 			}
 			return null;
+		}
+
+		public boolean isInside(RawSourceFragment fragment) {
+			if (fragment == null || fragment.getStartPosition() == null || fragment.getEndPosition() == null) {
+				return false;
+			}
+			return isAfterOrEquals(fragment.getStartPosition()) && isBeforeOrEquals(fragment.getEndPosition());
 		}
 	}
 
