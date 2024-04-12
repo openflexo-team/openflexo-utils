@@ -114,6 +114,9 @@ public class HTMLUtils {
 	private static final Pattern EMPTY_PARAGRAPH_PATTERN = Pattern.compile(EMPTY_PARAGRAPH_REGEXP, Pattern.CASE_INSENSITIVE);
 
 	public static String removeHTMLTags(String html) {
+		if (html == null) {
+			return null;
+		}
 		String returned = html;
 		if (html.startsWith(START_HTML_TAG)) {
 			returned = returned.substring(START_HTML_TAG.length());
