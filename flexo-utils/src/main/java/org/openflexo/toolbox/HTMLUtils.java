@@ -834,4 +834,26 @@ public class HTMLUtils {
 		return 7;
 	}
 	*/
+
+	/**
+	 * Convert supplied {@link String} into latex format
+	 * 
+	 * @param input
+	 * @return
+	 */
+	public static String htmlToLatex(String input) {
+		String output = removeHTMLTags(input);
+		output = output.replaceAll("<br>", "\n\n");
+		output = output.replaceAll("_", "\\\\_");
+		output = output.replaceAll("<b>(.*?)</b>", "\\\\textbf{$1}");
+		output = output.replaceAll("<i>(.*?)</i>", "\\\\textit{$1}");
+		output = output.replaceAll("<p>(.*?)</p>", "$1\n\n");
+		return output;
+	}
+
+	public static void main(String[] args) {
+		String toto = "<html><p>Salut <b>les</b> gars !</p><p><i>Ca roule ?</i></p></html>";
+		System.out.println("Avec : " + toto);
+		System.out.println("Ca donne " + htmlToLatex(toto));
+	}
 }
