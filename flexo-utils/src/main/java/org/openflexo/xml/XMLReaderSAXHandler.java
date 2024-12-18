@@ -91,7 +91,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 				List<String> namespace = new ArrayList<>();
 				namespace.add(uri);
 				namespace.add(NSPrefix);
-				factory.setContextProperty(NAMESPACE_Property, namespace);
+				factory.setModelProperty(NAMESPACE_Property, namespace);
 			}
 
 		}
@@ -108,8 +108,8 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 			else {
 				if (currentContainer != null) {
 					// find if there is an object property corresponding
-					if (factory.objectHasAttributeNamed(currentContainer, localName)) {
-						currentObjectType = factory.getAttributeType(currentContainer, localName);
+					if (factory.objectHasPropertyNamed(currentContainer, localName)) {
+						currentObjectType = factory.getTypeForProperty(currentContainer, localName);
 					}
 					else {
 						currentObjectType = factory.getTypeForObject(uri + "#" + localName, currentContainer, localName);
@@ -124,7 +124,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 			// creates individual if it is a complex Type
 			if (currentObjectType != null) {
 
-				currentObject = factory.getInstanceOf(currentObjectType, localName);
+				currentObject = factory.createInstance(currentObjectType, localName);
 
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
@@ -161,7 +161,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 					}
 					// add anything as attribute except name spaces....
 					if (!NSPrefix.equalsIgnoreCase(XMLCst.XML_NS)) {
-						factory.addAttributeValueForObject(currentObject, attrName, attributes.getValue(i));
+						factory.addPropertyValueForObject(currentObject, attrName, attributes.getValue(i));
 					}
 
 				}
@@ -191,7 +191,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 		boolean isAttribute = false;
 
 		if (currentContainer != null) {
-			isAttribute = factory.objectHasAttributeNamed(currentContainer, localName);
+			isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
 		}
 
 		// CDATA allocation
@@ -203,7 +203,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 		if (isAttribute && currentObject == null) {
 			currentObject = currentContainer;
 			if (str.length() > 0) {
-				factory.addAttributeValueForObject(currentObject, localName, str);
+				factory.addPropertyValueForObject(currentObject, localName, str);
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
 		}
@@ -221,7 +221,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 				currentContainer = null;
 			}
 
-			isAttribute = factory.objectHasAttributeNamed(currentContainer, localName);
+			isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
 
 			// Allocation of CDATA information depends on the type of entity we
 			// have to allocate content to (Individual or Attribute)
@@ -231,7 +231,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 			// Same stands for individuals to be allocated to ObjectProperties
 
 			if (str.length() > 0) {
-				factory.addAttributeValueForObject(currentObject, XMLCst.CDATA_ATTR_NAME, str);
+				factory.addPropertyValueForObject(currentObject, XMLCst.CDATA_ATTR_NAME, str);
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
 
@@ -241,12 +241,11 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 			if (currentContainer != null && currentContainer != currentObject) {
 
 				if (isAttribute) {
-					factory.addAttributeValueForObject(currentContainer, localName, currentObject);
+					factory.addPropertyValueForObject(currentContainer, localName, currentObject);
 
 				}
-				else {
-					factory.addChildToObject(currentObject, currentContainer);
-				}
+				// Always add to children
+				factory.addChildToObject(currentObject, currentContainer);
 			}
 		}
 

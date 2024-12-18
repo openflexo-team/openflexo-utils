@@ -36,7 +36,6 @@
  * 
  */
 
-
 package org.openflexo.xml;
 
 import java.util.logging.Logger;
@@ -47,33 +46,32 @@ import javax.xml.parsers.SAXParserFactory;
 import org.openflexo.IObjectGraphFactory;
 
 /**
- * An ObjectGraphFactory using a SaxParser to deserialize XMLDocuments into
- * Objects Graph
+ * An {@link IObjectGraphFactory} using a SaxParser to deserialize XML documents into objects Graph
  * 
  * @author xtof
  * 
  */
-public abstract class SaxBasedObjectGraphFactory implements IObjectGraphFactory {
+public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> implements IObjectGraphFactory<M, E, O> {
 
-    protected static final Logger LOGGER    = Logger.getLogger(SaxBasedObjectGraphFactory.class.getPackage().getName());
+	protected static final Logger LOGGER = Logger.getLogger(SaxBasedObjectGraphFactory.class.getPackage().getName());
 
-    protected SAXParserFactory    factory   = null;
-    protected SAXParser           saxParser = null;
-    protected XMLReaderSAXHandler handler   = null;
+	protected SAXParserFactory factory = null;
+	protected SAXParser saxParser = null;
+	protected XMLReaderSAXHandler handler = null;
 
-    public SaxBasedObjectGraphFactory() {
-        factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setXIncludeAware(true);
-        handler = new XMLReaderSAXHandler(this);
+	public SaxBasedObjectGraphFactory() {
+		factory = SAXParserFactory.newInstance();
+		factory.setNamespaceAware(true);
+		factory.setXIncludeAware(true);
+		handler = new XMLReaderSAXHandler(this);
 
-        try {
-            factory.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
-            saxParser = factory.newSAXParser();
+		try {
+			factory.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
+			saxParser = factory.newSAXParser();
 
-        } catch (Exception e) {
-            LOGGER.warning("Cannot create PARSER: " + e.getMessage());
-        }
-    }
+		} catch (Exception e) {
+			LOGGER.warning("Cannot create PARSER: " + e.getMessage());
+		}
+	}
 
 }

@@ -93,7 +93,7 @@ public class MapFactory implements IObjectGraphFactory {
 	}
 
 	@Override
-	public Object getInstanceOf(Type aType, String name) {
+	public Object createInstance(Type aType, String name) {
 		if (aType == MapModel.class) {
 			return context;
 		}
@@ -162,22 +162,22 @@ public class MapFactory implements IObjectGraphFactory {
 	}
 
 	@Override
-	public void setContextProperty(String propertyName, Object value) {
+	public void setModelProperty(String propertyName, Object value) {
 		// Irrelevant for this test
 	}
 
 	@Override
-	public void setContext(Object objectGraph) {
+	public void setModelContext(Object objectGraph) {
 		context = (MapModel) objectGraph;
 	}
 
 	@Override
-	public void resetContext() {
+	public void resetModelContext() {
 		context = null;
 	}
 
 	@Override
-	public void addAttributeValueForObject(Object object, String attrName, Object value) {
+	public void addPropertyValueForObject(Object object, String attrName, Object value) {
 		if (object instanceof NodeBuffer) {
 			if (attrName.equals(XMLCst.CDATA_ATTR_NAME)) {
 				_node.value = (String) value;
@@ -199,7 +199,7 @@ public class MapFactory implements IObjectGraphFactory {
 	}
 
 	@Override
-	public boolean objectHasAttributeNamed(Object object, String localName) {
+	public boolean objectHasPropertyNamed(Object object, String localName) {
 		if (object instanceof MapModel) {
 			return localName.equals(NODE_TAG);
 		}
@@ -214,7 +214,7 @@ public class MapFactory implements IObjectGraphFactory {
 	}
 
 	@Override
-	public Type getAttributeType(Object currentContainer, String localName) {
+	public Type getTypeForProperty(Object currentContainer, String localName) {
 		if (localName.equals(NODE_TAG)) {
 			return MapModel.class;
 		}

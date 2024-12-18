@@ -53,7 +53,7 @@ public class ModelFactory extends SaxBasedObjectGraphFactory {
     private XMLModel.StringAttribute attrStringBuffer = null;
 
     @Override
-    public Object getInstanceOf(Type aType, String name) {
+    public Object createInstance(Type aType, String name) {
         if (aType instanceof XMLType) {
             XMLIndiv _inst = (XMLIndiv) model.addNewIndividual(aType);
             _inst.setName(name);
@@ -117,7 +117,7 @@ public class ModelFactory extends SaxBasedObjectGraphFactory {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void setContextProperty(String propertyName, Object value) {
+    public void setModelProperty(String propertyName, Object value) {
         if (propertyName.equals(XMLReaderSAXHandler.NAMESPACE_Property)) {
             model.setNamespace(((List<String>) value).get(0), ((List<String>) value).get(1));
         }
@@ -125,18 +125,18 @@ public class ModelFactory extends SaxBasedObjectGraphFactory {
     }
 
     @Override
-    public void setContext(Object objectGraph) {
+    public void setModelContext(Object objectGraph) {
         model = (XMLModel) objectGraph;
 
     }
 
     @Override
-    public void resetContext() {
+    public void resetModelContext() {
         model = null;
     }
 
     @Override
-    public boolean objectHasAttributeNamed(Object object, String attrName) {
+    public boolean objectHasPropertyNamed(Object object, String attrName) {
         if (object instanceof XMLIndiv) {
 
             XMLAttr attr = ((XMLIndiv) object).getAttributeByName(attrName);
@@ -152,7 +152,7 @@ public class ModelFactory extends SaxBasedObjectGraphFactory {
     }
 
     @Override
-    public void addAttributeValueForObject(Object object, String attrName, Object value) {
+    public void addPropertyValueForObject(Object object, String attrName, Object value) {
 
         if (object instanceof XMLIndiv) {
             XMLAttr attr = ((XMLIndiv) object).getAttributeByName(attrName);
@@ -180,7 +180,7 @@ public class ModelFactory extends SaxBasedObjectGraphFactory {
     }
 
     @Override
-    public Type getAttributeType(Object currentContainer, String localName) {
+    public Type getTypeForProperty(Object currentContainer, String localName) {
         return XMLModel.StringAttribute.class;
     }
 }
