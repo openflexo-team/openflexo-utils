@@ -160,7 +160,8 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 
 					}
 					// add anything as attribute except name spaces....
-					if (!NSPrefix.equalsIgnoreCase(XMLCst.XML_NS)) {
+					if (!NSPrefix.equalsIgnoreCase(XMLCst.XML_NS) && !NSPrefix.equalsIgnoreCase(XMLCst.XSI)
+							&& !attrName.equalsIgnoreCase(XMLCst.XML_NS)) {
 						factory.addPropertyValueForObject(currentObject, attrName, attributes.getValue(i));
 					}
 

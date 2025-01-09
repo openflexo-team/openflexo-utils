@@ -36,18 +36,17 @@
  * 
  */
 
-
 package org.openflexo.xml;
 
 final public class XMLCst {
-    // Constants
+	// Constants
 
-    public static final String  CDATA_TYPE_NAME = "CDATA";
-    public static final String CDATA_ATTR_NAME = "PCDATA";
-
+	public static final String CDATA_TYPE_NAME = "CDATA";
+	public static final String CDATA_ATTR_NAME = "PCDATA";
 
 	public static final String DEFAULT_NS = "ns1";
-	
+
 	public static final String XML_NS = "xmlns";
-	
+	public static final String XSI = "xsi";
+
 }
