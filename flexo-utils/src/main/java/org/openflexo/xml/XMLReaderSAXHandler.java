@@ -50,7 +50,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.ext.DefaultHandler2;
 
 /**
- * This SaxHandler is used to de-serialize any XML file
+ * This SaxHandler is used to de-serialize any XML file<br>
+ * It works with a {@link IObjectGraphFactory} which must implement the building logic
  * 
  * @param <M>
  *            type of model being built, a sub-type of O
@@ -112,8 +113,8 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 		currentObject = null;
 
-		// ************************************
 		// Current element is not contained => root node, set NameSpace
+
 		if (currentContainer == null) {
 			if (uri != null && !uri.isEmpty()) {
 				List<String> namespace = new ArrayList<>();
@@ -162,7 +163,7 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 			}
 
 			if (currentObject != null) {
-				// ************************************
+
 				// processing Attributes
 
 				int len = attributes.getLength();
@@ -199,8 +200,8 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 				}
 
-				// ************************************
 				// Current element is not contained in another one, it is root!
+
 				if (currentContainer == null && currentObject != null) {
 
 					factory.addToRootNodes(currentObject);
@@ -240,8 +241,7 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 		String str = cdataBuffer.toString().trim();
 
-		// Element is a simple attribute of current container => only allocate
-		// String
+		// Element is a simple attribute of current container => only allocate String
 		if (isAttribute && currentObject == null) {
 			currentObject = currentContainer;
 			if (str.length() > 0) {
@@ -250,19 +250,6 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 			}
 		}
 		else {
-
-			/*if (!indivStack.isEmpty()) {
-				currentObject = indivStack.pop();
-			}
-			
-			// node stack management
-			
-			if (!indivStack.isEmpty()) {
-				currentContainer = indivStack.lastElement();
-			}
-			else {
-				currentContainer = null;
-			}*/
 
 			isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
 
@@ -278,7 +265,6 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
 
-			// ************************************
 			// Current element is contained in another one
 
 			if (currentContainer != null && currentContainer != currentObject) {
@@ -293,8 +279,6 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 				}
 			}
 		}
-
-		// currentObject = currentContainer;
 
 	}
 
