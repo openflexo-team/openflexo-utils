@@ -52,27 +52,55 @@ import org.xml.sax.ext.DefaultHandler2;
 /**
  * This SaxHandler is used to de-serialize any XML file
  * 
- * @author xtof
+ * @param <M>
+ *            type of model being built, a sub-type of O
+ * @param <E>
+ *            type of model element being built, a sub-type of O
+ * @param <O>
+ *            generic type of objects being part of built model
+ * 
+ * 
+ * @author xtof,sylvain
  * 
  */
 
-public class XMLReaderSAXHandler extends DefaultHandler2 {
+public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHandler2 {
 
 	protected static final Logger LOGGER = Logger.getLogger(XMLReaderSAXHandler.class.getPackage().getName());
 
 	public static final String NAMESPACE_Property = "Namespace";
 
-	private Object currentContainer = null;
-	private Object currentObject = null;
+	private E currentContainer = null;
+	private E currentObject = null;
 	private Type currentObjectType = null;
 
 	private final StringBuffer cdataBuffer = new StringBuffer();
 
-	private final Stack<Object> indivStack = new Stack<>();
+	private final Stack<ParsedElement> indivStack = new Stack<>();
 
-	private IObjectGraphFactory factory = null;
+	private IObjectGraphFactory<M, E, O> factory = null;
 
-	public XMLReaderSAXHandler(IObjectGraphFactory aFactory) {
+	class ParsedElement {
+		String uri;
+		String localName;
+		String qName;
+		Type objectType;
+		E object;
+		E container;
+
+		public ParsedElement(String uri, String localName, String qName) {
+			this.uri = uri;
+			this.localName = localName;
+			this.qName = qName;
+		}
+
+		@Override
+		public String toString() {
+			return "<" + localName + "> -> " + object + " in " + container;
+		}
+	}
+
+	public XMLReaderSAXHandler(IObjectGraphFactory<M, E, O> aFactory) {
 		super();
 		factory = aFactory;
 	}
@@ -118,6 +146,7 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 				}
 				else {
 					currentObjectType = factory.getTypeForObject(uri + "#" + localName, null, localName);
+
 				}
 			}
 
@@ -127,6 +156,9 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 				currentObject = factory.createInstance(currentObjectType, localName);
 
 				cdataBuffer.delete(0, cdataBuffer.length());
+			}
+			else {
+				LOGGER.warning("Could not find type " + uri + "#" + localName);
 			}
 
 			if (currentObject != null) {
@@ -174,12 +206,17 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 					factory.addToRootNodes(currentObject);
 				}
 
-				if (currentObject != null) {
-					indivStack.push(currentObject);
-				}
-				currentContainer = currentObject;
-
 			}
+
+			ParsedElement pe = new ParsedElement(uri, localName, qName);
+			pe.objectType = currentObjectType;
+			pe.object = currentObject;
+			pe.container = currentContainer;
+
+			indivStack.push(pe);
+
+			currentContainer = currentObject;
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -188,6 +225,10 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
+
+		ParsedElement pe = indivStack.pop();
+		currentObject = pe.object;
+		currentContainer = pe.container;
 
 		boolean isAttribute = false;
 
@@ -209,18 +250,19 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 			}
 		}
 		else {
-			if (!indivStack.isEmpty()) {
+
+			/*if (!indivStack.isEmpty()) {
 				currentObject = indivStack.pop();
 			}
-
+			
 			// node stack management
-
+			
 			if (!indivStack.isEmpty()) {
 				currentContainer = indivStack.lastElement();
 			}
 			else {
 				currentContainer = null;
-			}
+			}*/
 
 			isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
 
@@ -241,16 +283,18 @@ public class XMLReaderSAXHandler extends DefaultHandler2 {
 
 			if (currentContainer != null && currentContainer != currentObject) {
 
-				if (isAttribute) {
+				if (isAttribute && currentObject != null) {
 					factory.addPropertyValueForObject(currentContainer, localName, currentObject);
 
 				}
 				// Always add to children
-				factory.addChildToObject(currentObject, currentContainer);
+				if (currentObject != null) {
+					factory.addChildToObject(currentObject, currentContainer);
+				}
 			}
 		}
 
-		currentObject = currentContainer;
+		// currentObject = currentContainer;
 
 	}
 
