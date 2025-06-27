@@ -44,6 +44,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.openflexo.IObjectGraphFactory;
+import org.openflexo.xml.XMLReaderSAXHandler.ParsedElement;
 
 /**
  * An {@link IObjectGraphFactory} using a SaxParser to deserialize XML documents into objects Graph
@@ -51,7 +52,7 @@ import org.openflexo.IObjectGraphFactory;
  * @author xtof
  * 
  */
-public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> implements IObjectGraphFactory<M, E, O> {
+public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> implements IObjectGraphFactory<M, E, O, ParsedElement<E>> {
 
 	protected static final Logger LOGGER = Logger.getLogger(SaxBasedObjectGraphFactory.class.getPackage().getName());
 

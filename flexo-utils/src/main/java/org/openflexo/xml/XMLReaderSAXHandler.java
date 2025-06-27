@@ -77,19 +77,20 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 	private final StringBuffer cdataBuffer = new StringBuffer();
 
-	private final Stack<ParsedElement> indivStack = new Stack<>();
+	private final Stack<ParsedElement<E>> indivStack = new Stack<>();
 
-	private IObjectGraphFactory<M, E, O> factory = null;
+	private IObjectGraphFactory<M, E, O, ParsedElement<E>> factory = null;
 
-	class ParsedElement {
+	public static class ParsedElement<E> {
 		String uri;
 		String localName;
 		String qName;
+		Attributes attributes;
 		Type objectType;
 		E object;
 		E container;
 
-		public ParsedElement(String uri, String localName, String qName) {
+		public ParsedElement(String uri, String localName, String qName, Attributes attributes) {
 			this.uri = uri;
 			this.localName = localName;
 			this.qName = qName;
@@ -101,7 +102,7 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 		}
 	}
 
-	public XMLReaderSAXHandler(IObjectGraphFactory<M, E, O> aFactory) {
+	public XMLReaderSAXHandler(IObjectGraphFactory<M, E, O, ParsedElement<E>> aFactory) {
 		super();
 		factory = aFactory;
 	}
@@ -110,6 +111,8 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 
 		String NSPrefix = "p"; // default
+
+		ParsedElement<E> pe = new ParsedElement<>(uri, localName, qName, attributes);
 
 		currentObject = null;
 
@@ -154,7 +157,7 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 			// creates individual if it is a complex Type
 			if (currentObjectType != null) {
 
-				currentObject = factory.createInstance(currentObjectType, localName);
+				currentObject = factory.createInstance(currentObjectType, localName, pe);
 
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
@@ -209,7 +212,6 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 			}
 
-			ParsedElement pe = new ParsedElement(uri, localName, qName);
 			pe.objectType = currentObjectType;
 			pe.object = currentObject;
 			pe.container = currentContainer;
@@ -227,7 +229,7 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 
-		ParsedElement pe = indivStack.pop();
+		ParsedElement<E> pe = indivStack.pop();
 		currentObject = pe.object;
 		currentContainer = pe.container;
 
@@ -236,16 +238,34 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 		if (currentContainer != null) {
 			isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
 		}
+		else {
+			isAttribute = factory.modelHasPropertyNamed(localName);
+		}
 
 		// CDATA allocation
 
 		String str = cdataBuffer.toString().trim();
 
+		/*if (localName.equals("name")) {
+			System.out.println("Bon on est la");
+			System.out.println("localName=" + localName);
+			System.out.println("str=" + str);
+			System.out.println("isAttribute=" + isAttribute);
+			System.out.println("currentObject=" + currentObject);
+			System.out.println("currentContainer=" + currentContainer);
+		}*/
+
 		// Element is a simple attribute of current container => only allocate String
 		if (isAttribute && currentObject == null) {
 			currentObject = currentContainer;
 			if (str.length() > 0) {
-				factory.addPropertyValueForObject(currentObject, localName, str);
+				if (currentObject != null) {
+					factory.addPropertyValueForObject(currentObject, localName, str);
+				}
+				else {
+					// System.out.println("Bon on passe bien la");
+					factory.addPropertyValueForModel(localName, str);
+				}
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
 		}

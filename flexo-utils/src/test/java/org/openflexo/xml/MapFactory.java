@@ -93,7 +93,7 @@ public class MapFactory implements IObjectGraphFactory {
 	}
 
 	@Override
-	public Object createInstance(Type aType, String name) {
+	public Object createInstance(Type aType, String name, Object parsed) {
 		if (aType == MapModel.class) {
 			return context;
 		}
@@ -196,6 +196,17 @@ public class MapFactory implements IObjectGraphFactory {
 			}
 		}
 
+	}
+
+	@Override
+	public void addPropertyValueForModel(String propertyName, Object value) {
+		// logger.warning("Please implement me");
+	}
+
+	@Override
+	public boolean modelHasPropertyNamed(String propertyName) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override

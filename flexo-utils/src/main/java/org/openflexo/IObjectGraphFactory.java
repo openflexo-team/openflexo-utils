@@ -54,11 +54,13 @@ import java.lang.reflect.Type;
  *            type of model element being built, a sub-type of O
  * @param <O>
  *            generic type of objects being part of built model
+ * @param <P>
+ *            type of parsed object
  *
  * @author xtof,sylvain
  * 
  */
-public interface IObjectGraphFactory<M extends O, E extends O, O> {
+public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 
 	/**
 	 * Initialize the model context : the graph being built
@@ -123,9 +125,19 @@ public interface IObjectGraphFactory<M extends O, E extends O, O> {
 	 * 
 	 * @param aType
 	 * @param name
+	 * @param object
+	 *            object being parsed
 	 * @return
 	 */
-	public E createInstance(Type aType, String name);
+	public E createInstance(Type aType, String name, P parsed);
+
+	/**
+	 * Returns boolean indicating if model has a property with supplied name
+	 * 
+	 * @param propertyName
+	 * @return
+	 */
+	public boolean modelHasPropertyNamed(String propertyName);
 
 	/**
 	 * Returns boolean indicating if supplied object has a property with supplied name
@@ -140,6 +152,11 @@ public interface IObjectGraphFactory<M extends O, E extends O, O> {
 	 * Add (or set if the property has single cardinality) value for property
 	 */
 	public void addPropertyValueForObject(E object, String propertyName, Object value);
+
+	/**
+	 * Add (or set if the property has single cardinality) value for property
+	 */
+	public void addPropertyValueForModel(String propertyName, Object value);
 
 	// ***************************************************
 	// Methods concerning deserialization
