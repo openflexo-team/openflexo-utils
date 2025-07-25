@@ -39,76 +39,93 @@
 
 package org.openflexo.toolbox;
 
+import java.util.regex.Pattern;
+
+@SuppressWarnings("unused")
 public class HTMLUtils {
-	// Unused private static final String START_HTML_TAG = "<html>";
-	// Unused private static final String END_HTML_TAG = "</html>";
-	// Unused private static final String START_HEAD_TAG = "<HEAD>";
-	// Unused private static final String END_HEAD_TAG = "</HEAD>";
+	private static final String START_HTML_TAG = "<html>";
+	private static final String END_HTML_TAG = "</html>";
+	private static final String START_HEAD_TAG = "<HEAD>";
+	private static final String END_HEAD_TAG = "</HEAD>";
 	private static final String START_BODY_TAG = "<BODY>";
 	private static final String END_BODY_TAG = "</BODY>";
 
-	// Unused private static final String START_BOLD_TAG = "<B>";
-	// Unused private static final String END_BOLD_TAG = "</B>";
-	// Unused private static final String START_ITALIC_TAG = "<I>";
-	// Unused private static final String END_ITALIC_TAG = "</I>";
-	// Unused private static final String START_UNDERLINE_TAG = "<U>";
-	// Unused private static final String END_UNDERLINE_TAG = "</U>";
-	// Unused private static final String START_UNORDERED_TAG = "<UL>";
-	// Unused private static final String END_UNORDERED_TAG = "</UL>";
-	// Unused private static final String START_ORDERED_TAG = "<OL>";
-	// Unused private static final String END_ORDERED_TAG = "</OL>";
-	// Unused private static final String START_LIST_ITEM_TAG = "<LI>";
-	// Unused private static final String END_LIST_ITEM_TAG = "</LI>";
+	private static final String START_BOLD_TAG = "<B>";
+	private static final String END_BOLD_TAG = "</B>";
+	private static final String START_ITALIC_TAG = "<I>";
+	private static final String END_ITALIC_TAG = "</I>";
+	private static final String START_UNDERLINE_TAG = "<U>";
+	private static final String END_UNDERLINE_TAG = "</U>";
+	private static final String START_UNORDERED_TAG = "<UL>";
+	private static final String END_UNORDERED_TAG = "</UL>";
+	private static final String START_ORDERED_TAG = "<OL>";
+	private static final String END_ORDERED_TAG = "</OL>";
+	private static final String START_LIST_ITEM_TAG = "<LI>";
+	private static final String END_LIST_ITEM_TAG = "</LI>";
 
-	// Unused private static final String BREAK = "<BR>";
-	// Unused private static final String XHTML_BREAK = "<BR/>";
-	// Unused private static final String START_PARAGRAPH_TAG = "<P>";
-	// Unused private static final String END_PARAGRAPH_TAG = "</P>";
+	private static final String BREAK = "<BR>";
+	private static final String XHTML_BREAK = "<BR/>";
+	private static final String START_PARAGRAPH_TAG = "<P>";
+	private static final String END_PARAGRAPH_TAG = "</P>";
 
-	// Unused private static final String SMALLER = "&lt;";
-	// Unused private static final String GREATER = "&gt;";
-	// Unused private static final String AMPERSAND = "&amp;";
-	// Unused private static final String QUOTE = "&quot;";
-	// Unused private static final String a_GRAVE = "&agrave;";
-	// Unused private static final String A_GRAVE = "&Agrave;";
-	// Unused private static final String a_CIRC = "&acirc;";
-	// Unused private static final String A_CIRC = "&Acirc;";
-	// Unused private static final String a_UML = "&auml;";
-	// Unused private static final String A_UML = "&Auml;";
-	// Unused private static final String a_RING = "&aring;";
-	// Unused private static final String A_RING = "&Aring;";
-	// Unused private static final String ae_LIGATURE = "&aelig;";
-	// Unused private static final String AE_LIGATURE = "&AElig;";
-	// Unused private static final String c_CEDILLA = "&ccedil;";
-	// Unused private static final String C_CEDILLA = "&Ccedil;";
-	// Unused private static final String e_ACUTE = "&eacute;";
-	// Unused private static final String E_ACUTE = "&Eacute;";
-	// Unused private static final String e_GRAVE = "&egrave;";
-	// Unused private static final String E_GRAVE = "&Egrave;";
-	// Unused private static final String e_CIRC = "&ecirc;";
-	// Unused private static final String E_CIRC = "&Ecirc;";
-	// Unused private static final String e_UML = "&euml;";
-	// Unused private static final String E_UML = "&Euml;";
-	// Unused private static final String i_UML = "&iuml;";
-	// Unused private static final String I_UML = "&Iuml;";
-	// Unused private static final String o_CIRC = "&ocirc;";
-	// Unused private static final String O_CIRC = "&Ocirc;";
-	// Unused private static final String o_UML = "&ouml;";
-	// Unused private static final String O_UML = "&Ouml;";
-	// Unused private static final String u_GRAVE = "&ugrave;";
-	// Unused private static final String U_GRAVE = "&Ugrave;";
-	// Unused private static final String u_CIRC = "&ucirc;";
-	// Unused private static final String U_CIRC = "&Ucirc;";
-	// Unused private static final String u_UML = "&uuml;";
-	// Unused private static final String U_UML = "&Uuml;";
-	// Unused private static final String REGISTERED = "&reg;";
-	// Unused private static final String COPYRIGHT = "&copy;";
-	// Unused private static final String EURO = "&euro;";
-	// Unused private static final String NON_BREAKING_SPACE = "&nbsp;";
-	// Unused private static final String FOOTNOTE_TAG = "footnote";
+	private static final String SMALLER = "&lt;";
+	private static final String GREATER = "&gt;";
+	private static final String AMPERSAND = "&amp;";
+	private static final String QUOTE = "&quot;";
+	private static final String a_GRAVE = "&agrave;";
+	private static final String A_GRAVE = "&Agrave;";
+	private static final String a_CIRC = "&acirc;";
+	private static final String A_CIRC = "&Acirc;";
+	private static final String a_UML = "&auml;";
+	private static final String A_UML = "&Auml;";
+	private static final String a_RING = "&aring;";
+	private static final String A_RING = "&Aring;";
+	private static final String ae_LIGATURE = "&aelig;";
+	private static final String AE_LIGATURE = "&AElig;";
+	private static final String c_CEDILLA = "&ccedil;";
+	private static final String C_CEDILLA = "&Ccedil;";
+	private static final String e_ACUTE = "&eacute;";
+	private static final String E_ACUTE = "&Eacute;";
+	private static final String e_GRAVE = "&egrave;";
+	private static final String E_GRAVE = "&Egrave;";
+	private static final String e_CIRC = "&ecirc;";
+	private static final String E_CIRC = "&Ecirc;";
+	private static final String e_UML = "&euml;";
+	private static final String E_UML = "&Euml;";
+	private static final String i_UML = "&iuml;";
+	private static final String I_UML = "&Iuml;";
+	private static final String o_CIRC = "&ocirc;";
+	private static final String O_CIRC = "&Ocirc;";
+	private static final String o_UML = "&ouml;";
+	private static final String O_UML = "&Ouml;";
+	private static final String u_GRAVE = "&ugrave;";
+	private static final String U_GRAVE = "&Ugrave;";
+	private static final String u_CIRC = "&ucirc;";
+	private static final String U_CIRC = "&Ucirc;";
+	private static final String u_UML = "&uuml;";
+	private static final String U_UML = "&Uuml;";
+	private static final String REGISTERED = "&reg;";
+	private static final String COPYRIGHT = "&copy;";
+	private static final String EURO = "&euro;";
+	private static final String NON_BREAKING_SPACE = "&nbsp;";
+	private static final String FOOTNOTE_TAG = "footnote";
 
-	// Unused private static final String EMPTY_PARAGRAPH_REGEXP = "\\s*" + START_PARAGRAPH_TAG + "\\s*" + END_PARAGRAPH_TAG + "\\s*";
-	// Unused private static final Pattern EMPTY_PARAGRAPH_PATTERN = Pattern.compile(EMPTY_PARAGRAPH_REGEXP, Pattern.CASE_INSENSITIVE);
+	private static final String EMPTY_PARAGRAPH_REGEXP = "\\s*" + START_PARAGRAPH_TAG + "\\s*" + END_PARAGRAPH_TAG + "\\s*";
+	private static final Pattern EMPTY_PARAGRAPH_PATTERN = Pattern.compile(EMPTY_PARAGRAPH_REGEXP, Pattern.CASE_INSENSITIVE);
+
+	public static String removeHTMLTags(String html) {
+		if (html == null) {
+			return null;
+		}
+		String returned = html;
+		if (html.startsWith(START_HTML_TAG)) {
+			returned = returned.substring(START_HTML_TAG.length());
+		}
+		if (returned.endsWith(END_HTML_TAG)) {
+			returned = returned.substring(0, returned.length() - END_HTML_TAG.length());
+		}
+		return returned;
+	}
 
 	/* Unused
 	private static String extractImageHeight(String img) {
@@ -400,6 +417,29 @@ public class HTMLUtils {
 					if (keepText) {
 						sb.append(c);
 					}
+					break;
+			}
+		}
+		return sb.toString();
+	}
+
+	public static String toHTML(String s) {
+		if (s == null) {
+			return null;
+		}
+		StringBuffer sb = new StringBuffer();
+		int n = s.length();
+		for (int i = 0; i < n; i++) {
+			char c = s.charAt(i);
+			switch (c) {
+				case '<':
+					sb.append("&lt;");
+					break;
+				case '>':
+					sb.append("&gt;");
+					break;
+				default:
+					sb.append(c);
 					break;
 			}
 		}
@@ -794,4 +834,26 @@ public class HTMLUtils {
 		return 7;
 	}
 	*/
+
+	/**
+	 * Convert supplied {@link String} into latex format
+	 * 
+	 * @param input
+	 * @return
+	 */
+	public static String htmlToLatex(String input) {
+		String output = removeHTMLTags(input);
+		output = output.replaceAll("<br>", "\n\n");
+		output = output.replaceAll("_", "\\\\_");
+		output = output.replaceAll("<b>(.*?)</b>", "\\\\textbf{$1}");
+		output = output.replaceAll("<i>(.*?)</i>", "\\\\textit{$1}");
+		output = output.replaceAll("<p>(.*?)</p>", "$1\n\n");
+		return output;
+	}
+
+	public static void main(String[] args) {
+		String toto = "<html><p>Salut <b>les</b> gars !</p><p><i>Ca roule ?</i></p></html>";
+		System.out.println("Avec : " + toto);
+		System.out.println("Ca donne " + htmlToLatex(toto));
+	}
 }

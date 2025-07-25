@@ -85,6 +85,7 @@ public class RawSource {
 	private List<String> rows;
 	private final RawSourcePosition startPosition;
 	private final RawSourcePosition endPosition;
+	private StringBuffer rawText;
 
 	/**
 	 * Encodes a position in the RawSource, using line and position in line<br>
@@ -192,8 +193,16 @@ public class RawSource {
 			return compareTo(other) > 0;
 		}
 
+		public boolean isBeforeOrEquals(RawSourcePosition other) {
+			return compareTo(other) <= 0;
+		}
+
+		public boolean isAfterOrEquals(RawSourcePosition other) {
+			return compareTo(other) >= 0;
+		}
+
 		public int getLengthTo(RawSourcePosition other) {
-			//System.out.println("getLengthTo from " + this + " to " + other);
+			// System.out.println("getLengthTo from " + this + " to " + other);
 			int returned = 0;
 			RawSourcePosition current = other;
 			while (compareTo(current) != 0) {
@@ -205,9 +214,9 @@ public class RawSource {
 					current = current.decrement();
 					returned--;
 				}
-				//System.out.println("current=" + current);
+				// System.out.println("current=" + current);
 			}
-			//System.out.println("return " + returned);
+			// System.out.println("return " + returned);
 			return returned;
 		}
 
@@ -262,6 +271,23 @@ public class RawSource {
 				returned += (rows.get(i).length() + 1);
 			}
 			return returned + getPos();
+		}
+
+		public Character getCharAfter() {
+			if (getLine() <= rows.size()) {
+				String row = rows.get(getLine() - 1);
+				if (getPos() < row.length()) {
+					return row.charAt(getPos());
+				}
+			}
+			return null;
+		}
+
+		public boolean isInside(RawSourceFragment fragment) {
+			if (fragment == null || fragment.getStartPosition() == null || fragment.getEndPosition() == null) {
+				return false;
+			}
+			return isAfterOrEquals(fragment.getStartPosition()) && isBeforeOrEquals(fragment.getEndPosition());
 		}
 	}
 
@@ -464,6 +490,7 @@ public class RawSource {
 	}
 
 	public RawSource(Reader reader) throws IOException {
+		rawText = new StringBuffer();
 		rows = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(reader)) {
 			String nextLine = null;
@@ -471,6 +498,7 @@ public class RawSource {
 				nextLine = br.readLine();
 				if (nextLine != null) {
 					rows.add(nextLine);
+					rawText.append(nextLine + StringUtils.LINE_SEPARATOR);
 				}
 			} while (nextLine != null);
 		}
@@ -557,6 +585,20 @@ public class RawSource {
 			i++;
 		}
 		return sb.toString();
+	}
+
+	public int getIndex(RawSourcePosition position) {
+		// System.out.println("Index de "+position);
+		int index = 0;
+		for (int i = 1; i < position.getLine(); i++) {
+			index += getRow(i - 1).length() + 1;
+		}
+		index += position.pos;
+		return index;
+	}
+
+	public String getRawText() {
+		return rawText.toString();
 	}
 
 }

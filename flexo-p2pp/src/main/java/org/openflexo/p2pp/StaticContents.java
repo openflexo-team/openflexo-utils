@@ -90,14 +90,6 @@ public class StaticContents<N, T> extends PrettyPrintableContents<N, T> {
 	}
 
 	@Override
-	public void setFragment(RawSourceFragment fragment) {
-		if (staticContents.equals("abstract")) {
-			System.out.println("*********** tiens on me donne le fragment " + fragment);
-		}
-		super.setFragment(fragment);
-	}
-
-	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
 
 		super.updatePrettyPrint(derivedRawSource, context);
@@ -123,7 +115,7 @@ public class StaticContents<N, T> extends PrettyPrintableContents<N, T> {
 			}
 		}
 
-		derivedRawSource.replace(getFragment(), replacedString);
+		derivedRawSource.replace(getFragment() == null ? makeInsertionFragment() : getFragment(), replacedString);
 
 	}
 

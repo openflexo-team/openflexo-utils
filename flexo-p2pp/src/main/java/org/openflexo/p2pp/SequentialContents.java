@@ -41,6 +41,7 @@ package org.openflexo.p2pp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 
 /**
@@ -70,18 +71,18 @@ public class SequentialContents<N, T> extends PrettyPrintableContents<N, T> {
 		ppContents = new ArrayList<>();
 	}
 
-	public void append(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
-		if (fragment == null) {
-			fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
-					.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
-		}
+	public SequentialContents<N, T> append(PrettyPrintableContents<N, T> contents) {
+		return append(contents, null);
+	}
+
+	public SequentialContents<N, T> append(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
+		contents.setParentContents(this);
 		contents.setFragment(fragment);
 		ppContents.add(contents);
-		if (fragment != null) {
-			getNode().setDefaultInsertionPoint(fragment.getEndPosition());
-		}
 		sequenceFragment = null;
 		sequenceExtendedFragment = null;
+
+		return this;
 	}
 
 	private RawSourceFragment sequenceFragment;
@@ -130,6 +131,11 @@ public class SequentialContents<N, T> extends PrettyPrintableContents<N, T> {
 		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			sb.append(prettyPrintableContents.getNormalizedPrettyPrint(context));
 		}
+		// If sequence block is indented, do it now
+		if (getIndentation() == Indentation.Indent) {
+			PrettyPrintContext derivedContext = context.derive(getIndentation());
+			return derivedContext.indent(sb.toString());
+		}
 		return sb.toString();
 	}
 
@@ -147,6 +153,14 @@ public class SequentialContents<N, T> extends PrettyPrintableContents<N, T> {
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
 		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
 			prettyPrintableContents.initializePrettyPrint(rootNode, context);
+		}
+	}
+
+	@Override
+	protected void debug(StringBuffer sb, int identation) {
+		super.debug(sb, identation);
+		for (PrettyPrintableContents<N, T> prettyPrintableContents : ppContents) {
+			prettyPrintableContents.debug(sb, identation + 2);
 		}
 	}
 

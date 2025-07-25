@@ -41,11 +41,12 @@ package org.openflexo.p2pp;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import org.openflexo.p2pp.PrettyPrintContext.Indentation;
 import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.toolbox.StringUtils;
 
 /**
- * A conditional PrettyPrintableContents
+ * A conditional {@link PrettyPrintableContents}
  * 
  * This is a control-structure defining alternatives for pretty-printing for a {@link P2PPNode}
  * 
@@ -65,8 +66,6 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	private PrettyPrintableContents<N, T> thenContents;
 	private PrettyPrintableContents<N, T> elseContents;
 
-	private boolean isFinal = false;
-
 	/**
 	 * Build a new {@link ConditionalContents}, whose value is intented to replace text determined with supplied fragment
 	 * 
@@ -78,14 +77,6 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	public ConditionalContents(P2PPNode<N, T> node, Supplier<Boolean> conditionSupplier) {
 		super(node);
 		this.conditionSupplier = conditionSupplier;
-	}
-
-	public boolean isFinal() {
-		return isFinal;
-	}
-
-	public void setFinal(boolean isFinal) {
-		this.isFinal = isFinal;
 	}
 
 	public PrettyPrintableContents<N, T> getThenContents() {
@@ -105,22 +96,20 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	}
 
 	public ConditionalContents<N, T> thenAppend(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
+
+		// System.out.println("***** Appended " + contents + " in " + fragment + " insertionPoint=" + getNode().getDefaultInsertionPoint());
+
 		if (thenContents == null) {
-			if (fragment == null) {
-				fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
-						.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
-			}
+			contents.setParentContents(this);
 			contents.setFragment(fragment);
 			thenContents = contents;
-			if (fragment != null) {
-				getNode().setDefaultInsertionPoint(fragment.getEndPosition());
-			}
 		}
 		else if (thenContents instanceof SequentialContents) {
 			((SequentialContents<N, T>) thenContents).append(contents, fragment);
 		}
 		else {
 			SequentialContents<N, T> sequentialContents = new SequentialContents<>(getNode());
+			sequentialContents.setParentContents(this);
 			sequentialContents.append(thenContents, thenContents.getFragment());
 			sequentialContents.append(contents, fragment);
 			thenContents = sequentialContents;
@@ -136,27 +125,19 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 		return thenAppend(contents, null);
 	}
 
-	/*public ConditionalContents<N, T> thenAppend(ConditionalContents<N, T> contents) {
-		return (ConditionalContents) thenAppend(contents, null);
-	}*/
-
 	public ConditionalContents<N, T> elseAppend(PrettyPrintableContents<N, T> contents, RawSourceFragment fragment) {
+
 		if (elseContents == null) {
-			if (fragment == null) {
-				fragment = getNode().getDefaultInsertionPoint() != null ? getNode().getDefaultInsertionPoint().getOuterType()
-						.makeFragment(getNode().getDefaultInsertionPoint(), getNode().getDefaultInsertionPoint()) : null;
-			}
+			contents.setParentContents(this);
 			contents.setFragment(fragment);
 			elseContents = contents;
-			if (fragment != null) {
-				getNode().setDefaultInsertionPoint(fragment.getEndPosition());
-			}
 		}
 		else if (elseContents instanceof SequentialContents) {
 			((SequentialContents<N, T>) elseContents).append(contents, fragment);
 		}
 		else {
 			SequentialContents<N, T> sequentialContents = new SequentialContents<N, T>(getNode());
+			sequentialContents.setParentContents(this);
 			sequentialContents.append(elseContents, elseContents.getFragment());
 			sequentialContents.append(contents, fragment);
 			elseContents = sequentialContents;
@@ -175,22 +156,33 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	@Override
 	public String getNormalizedPrettyPrint(PrettyPrintContext context) {
 
+		String returned;
+
 		if (conditionSupplier.get()) {
 			if (getThenContents() != null) {
-				return getThenContents().getNormalizedPrettyPrint(context);
+				returned = getThenContents().getNormalizedPrettyPrint(context);
 			}
 			else {
-				return "<???>";
+				returned = "<???>";
 			}
 		}
 		else {
 			if (getElseContents() != null) {
-				return getElseContents().getNormalizedPrettyPrint(context);
+				returned = getElseContents().getNormalizedPrettyPrint(context);
 			}
 			else {
-				return "";
+				returned = "";
 			}
 		}
+
+		if (getIndentation() == Indentation.Indent) {
+			PrettyPrintContext derivedContext = context.derive(getIndentation());
+			// System.out.println("WAS: [" + returned + "]");
+			// System.out.println("NOW: [" + derivedContext.indent(returned) + "]");
+			return derivedContext.indent(returned);
+		}
+
+		return returned;
 
 	}
 
@@ -199,54 +191,68 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 
 		super.updatePrettyPrint(derivedRawSource, context);
 
-		if (conditionSupplier.get()) {
-			// If initial contents was parsed with ELSE clause, remove that text
-			if (getThenContents() != null) {
-				getThenContents().updatePrettyPrint(derivedRawSource, context);
-			}
-			else {
-				logger.warning("Unexpected null THEN contents");
-			}
+		boolean currentCondition = conditionSupplier.get();
 
-			if (!isFinal() && getElseContents() != null) {
-				if (getElseContents().getFragment() != null && getElseContents().getExtendedFragment().getLength() > 0) {
-					derivedRawSource.replace(getElseContents().getExtendedFragment(), "");
+		if (initialCondition) {
+			// This match a fragment that was existing when initially parsed
+			// Original fragment : initialExtendedFragment
+			if (currentCondition) { // Condition still valid
+				if (getThenContents() != null) {
+					getThenContents().updatePrettyPrint(derivedRawSource, context);
+				}
+				else {
+					logger.warning("Unexpected null THEN contents");
 				}
 			}
-
+			else { // Condition changed : we have now to remove this fragment
+				if (getElseContents() != null) {
+					getElseContents().updatePrettyPrint(derivedRawSource, context);
+				}
+				if (initialExtendedFragment != null) {
+					derivedRawSource.replace(initialExtendedFragment, "");
+				}
+			}
 		}
-		else {
-			if (getElseContents() != null) {
-				getElseContents().updatePrettyPrint(derivedRawSource, context);
-			}
 
-			// If initial contents was parsed with THEN clause, remove that text
-			if (!isFinal() && getThenContents() != null) {
-				if (getThenContents().getFragment() != null && getThenContents().getExtendedFragment().getLength() > 0) {
-					derivedRawSource.replace(getThenContents().getExtendedFragment(), "");
+		else {
+			if (currentCondition) { // This conditional was initially false and is now true
+				if (getThenContents() != null) {
+					getThenContents().updatePrettyPrint(derivedRawSource, context);
+				}
+				if (initialExtendedFragment != null) {
+					derivedRawSource.replace(initialExtendedFragment, "");
 				}
 			}
-
+			else { // Was false and still false > update Else
+				if (getElseContents() != null) {
+					getElseContents().updatePrettyPrint(derivedRawSource, context);
+				}
+			}
 		}
 
 	}
 
 	@Override
 	public void initializePrettyPrint(P2PPNode<?, ?> rootNode, PrettyPrintContext context) {
-		if (getThenContents() != null) {
+		initialCondition = conditionSupplier.get();
+		initialExtendedFragment = getExtendedFragment();
+		if (getThenContents() != null && initialCondition) {
 			getThenContents().initializePrettyPrint(rootNode, context);
 		}
-		if (getElseContents() != null) {
+		if (getElseContents() != null && (!initialCondition)) {
 			getElseContents().initializePrettyPrint(rootNode, context);
 		}
 	}
 
+	private boolean initialCondition;
+	private RawSourceFragment initialExtendedFragment;
+
 	@Override
 	public RawSourceFragment getFragment() {
-		if (getThenContents() != null && getThenContents().getFragment() != null) {
+		if (conditionSupplier.get() && getThenContents() != null) {
 			return getThenContents().getFragment();
 		}
-		if (getElseContents() != null && getElseContents().getFragment() != null) {
+		else if (getElseContents() != null) {
 			return getElseContents().getFragment();
 		}
 		return null;
@@ -254,10 +260,10 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 
 	@Override
 	public RawSourceFragment getExtendedFragment() {
-		if (getThenContents() != null && getThenContents().getExtendedFragment() != null) {
+		if (conditionSupplier.get() && getThenContents() != null) {
 			return getThenContents().getExtendedFragment();
 		}
-		if (getElseContents() != null && getElseContents().getExtendedFragment() != null) {
+		else if (getElseContents() != null) {
 			return getElseContents().getExtendedFragment();
 		}
 		return null;
@@ -266,9 +272,9 @@ public class ConditionalContents<N, T> extends PrettyPrintableContents<N, T> {
 	@Override
 	protected void debug(StringBuffer sb, int identation) {
 		String indent = StringUtils.buildWhiteSpaceIndentation(identation * 2);
-		sb.append(indent + "> " + getClass().getSimpleName() + " fragment=" + getFragment() + "["
+		sb.append(indent + "> " + getClass().getSimpleName() + "[" + getIdentifier() + "]" + " fragment=" + getFragment() + "["
 				+ (getFragment() != null ? getFragment().getRawText() : "?") + "] prelude=" + getPreludeFragment() + " postlude="
-				+ getPostludeFragment() + "\n");
+				+ getPostludeFragment() + " insertionPoint=" + getInsertionPoint() + "\n");
 		if (getThenContents() != null) {
 			sb.append(indent + "  THEN\n");
 			getThenContents().debug(sb, identation + 2);

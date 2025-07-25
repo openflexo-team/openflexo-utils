@@ -43,65 +43,124 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 
 /**
- * A Factory Interface used to create factories for graph of objects.
+ * An abstract factory interface used to create factories for graph of objects.
  * 
- * @author xtof
+ * The graph being built is formed of vertices of type E, which are structured with parent/child relationships, and with associations based
+ * on property names
+ * 
+ * @param <M>
+ *            type of model being built, a sub-type of O
+ * @param <E>
+ *            type of model element being built, a sub-type of O
+ * @param <O>
+ *            generic type of objects being part of built model
+ * @param <P>
+ *            type of parsed object
+ *
+ * @author xtof,sylvain
  * 
  */
-
-public interface IObjectGraphFactory {
-
-	// ***************************************************
-	// Methods concerning the resulting Object graph
+public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 
 	/**
-	 * Sets the context that contains the graph to be built
+	 * Initialize the model context : the graph being built
 	 * 
 	 * @param objectGraph
 	 */
-	public void setContext(Object objectGraph);
+	public void setModelContext(M objectGraph);
 
 	/**
-	 * Resets The Context, enables re-use of the same Factory in various contexts
+	 * Resets the model context, enables re-use of the same factory in various contexts
 	 */
-	public void resetContext();
-
-	public void addToRootNodes(Object anObject);
-
-	public void setContextProperty(String propertyName, Object value);
+	public void resetModelContext();
 
 	/**
-	 * Retuns the type of Object corresponding to the given URI, it must be a type of object relevant in the context of the current graph to
-	 * be built
+	 * Adds anObject to root nodes of model being built
+	 * 
+	 * @param anObject
+	 */
+	public void addToRootNodes(E anObject);
+
+	/**
+	 * Add supplied child to supplied container
+	 * 
+	 * @param child
+	 * @param container
+	 */
+	public void addChildToObject(E child, E container);
+
+	/**
+	 * Sets a property value for the model being built
+	 * 
+	 * @param propertyName
+	 * @param value
+	 */
+	public void setModelProperty(String propertyName, Object value);
+
+	/**
+	 * Returns the type of object corresponding to the given URI, it must be a type of object relevant in the context of the current graph
+	 * to be built
 	 * 
 	 * @param typeURI
-	 *            =&gt; URI of the type
+	 *            URI of the type
 	 * @param objectName
-	 *            =&gt; the name of the object to be typed
+	 *            the name of the object to be typed
 	 * @param container
-	 *            =&gt; the object containing the object to be typed
+	 *            the object containing the object to be typed
 	 * @return the relevant Type
 	 */
-	public Type getTypeForObject(String typeURI, Object container, String objectName);
+	public Type getTypeForObject(String typeURI, O container, String objectName);
 
-	// ***************************************************
-	// Methods concerning Objects in the graph
+	/**
+	 * Returns the type of object corresponding a given container and a local name
+	 * 
+	 * @param currentContainer
+	 * @param localName
+	 * @return
+	 */
+	public Type getTypeForProperty(E currentContainer, String localName);
 
-	public Object getInstanceOf(Type aType, String name);
+	/**
+	 * Create an instance of supplied type and name
+	 * 
+	 * @param aType
+	 * @param name
+	 * @param object
+	 *            object being parsed
+	 * @return
+	 */
+	public E createInstance(Type aType, String name, P parsed);
 
-	//
-	// public boolean objectHasAttributeNamed(Object object, Type attrType,
-	// String attrName);
-	public boolean objectHasAttributeNamed(Object object, String attrName);
+	/**
+	 * Returns boolean indicating if model has a property with supplied name
+	 * 
+	 * @param propertyName
+	 * @return
+	 */
+	public boolean modelHasPropertyNamed(String propertyName);
 
-	public Type getAttributeType(Object currentContainer, String localName);
+	/**
+	 * Returns boolean indicating if supplied object has a property with supplied name
+	 * 
+	 * @param object
+	 * @param propertyName
+	 * @return
+	 */
+	public boolean objectHasPropertyNamed(O object, String propertyName);
 
-	public void addAttributeValueForObject(Object object, String attrName, Object value);
+	/**
+	 * Add (or set if the property has single cardinality) value for property
+	 */
+	public void addPropertyValueForObject(E object, String propertyName, Object value);
 
-	public void addChildToObject(Object child, Object container);
+	/**
+	 * Add (or set if the property has single cardinality) value for property
+	 */
+	public void addPropertyValueForModel(String propertyName, Object value);
 
 	// ***************************************************
 	// Methods concerning deserialization
+	// ***************************************************
 
 	public Object deserialize(String input) throws Exception, IOException;
 

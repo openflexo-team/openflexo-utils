@@ -83,7 +83,7 @@ public class TestXMLSAXParser extends TestCase {
 		XMLModel model = new XMLModel();
 		assertNotNull(model);
 
-		modelFactory.setContext(model);
+		modelFactory.setModelContext(model);
 
 		try (InputStream in = rsc.openInputStream()) {
 			modelFactory.deserialize(in);
@@ -108,7 +108,7 @@ public class TestXMLSAXParser extends TestCase {
 		XMLModel model = new XMLModel();
 		assertNotNull(model);
 
-		modelFactory.setContext(model);
+		modelFactory.setModelContext(model);
 
 		try (InputStream in = rsc.openInputStream()) {
 			modelFactory.deserialize(in);
@@ -132,7 +132,7 @@ public class TestXMLSAXParser extends TestCase {
 		XMLModel model = new XMLModel();
 		assertNotNull(model);
 
-		modelFactory.setContext(model);
+		modelFactory.setModelContext(model);
 
 		try (InputStream in = rsc.openInputStream()) {
 			modelFactory.deserialize(in);
@@ -157,7 +157,7 @@ public class TestXMLSAXParser extends TestCase {
 		XMLModel model = new XMLModel();
 		assertNotNull(model);
 
-		modelFactory.setContext(model);
+		modelFactory.setModelContext(model);
 
 		try (InputStream in = rsc.openInputStream()) {
 			modelFactory.deserialize(in);
@@ -183,7 +183,7 @@ public class TestXMLSAXParser extends TestCase {
 		MapModel model = new MapModel();
 		assertNotNull(model);
 
-		mapFactory.setContext(model);
+		mapFactory.setModelContext(model);
 
 		try (InputStream in = rsc.openInputStream()) {
 			mapFactory.deserialize(in);
@@ -202,7 +202,7 @@ public class TestXMLSAXParser extends TestCase {
 
 		System.out.println("MAP: " + model.getValues());
 
-		mapFactory.resetContext();
+		mapFactory.resetModelContext();
 
 	}
 }

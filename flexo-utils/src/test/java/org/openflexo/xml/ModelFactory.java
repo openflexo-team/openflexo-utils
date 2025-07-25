@@ -36,7 +36,6 @@
  * 
  */
 
-
 package org.openflexo.xml;
 
 import java.io.IOException;
@@ -48,139 +47,150 @@ import org.xml.sax.SAXException;
 
 public class ModelFactory extends SaxBasedObjectGraphFactory {
 
-    private XMLModel                 model            = null;
+	private XMLModel model = null;
 
-    private XMLModel.StringAttribute attrStringBuffer = null;
+	private XMLModel.StringAttribute attrStringBuffer = null;
 
-    @Override
-    public Object getInstanceOf(Type aType, String name) {
-        if (aType instanceof XMLType) {
-            XMLIndiv _inst = (XMLIndiv) model.addNewIndividual(aType);
-            _inst.setName(name);
-            return _inst;
-        }
-        else if (aType == XMLModel.StringAttribute.class) {
-            if (attrStringBuffer == null)
-                attrStringBuffer = model.new StringAttribute();
-            return attrStringBuffer;
-        }
-        return null;
-    }
+	@Override
+	public Object createInstance(Type aType, String name, Object parsed) {
+		if (aType instanceof XMLType) {
+			XMLIndiv _inst = (XMLIndiv) model.addNewIndividual(aType);
+			_inst.setName(name);
+			return _inst;
+		}
+		else if (aType == XMLModel.StringAttribute.class) {
+			if (attrStringBuffer == null)
+				attrStringBuffer = model.new StringAttribute();
+			return attrStringBuffer;
+		}
+		return null;
+	}
 
-    @Override
-    public Type getTypeForObject(String typeURI, Object container, String objectName) {
-        return model.getTypeFromURI(typeURI);
-    }
+	@Override
+	public Type getTypeForObject(String typeURI, Object container, String objectName) {
+		return model.getTypeFromURI(typeURI);
+	}
 
-    @Override
-    public Object deserialize(String input) throws IOException {
-        if (model != null) {
+	@Override
+	public Object deserialize(String input) throws IOException {
+		if (model != null) {
 
-            try {
-                saxParser.parse(input, handler);
-            } catch (SAXException e) {
-                LOGGER.warning("Cannot parse document: " + e.getMessage());
-                throw new IOException(e.getMessage());
-            }
-            return this.model;
+			try {
+				saxParser.parse(input, handler);
+			} catch (SAXException e) {
+				LOGGER.warning("Cannot parse document: " + e.getMessage());
+				throw new IOException(e.getMessage());
+			}
+			return this.model;
 
-        }
-        else {
-            LOGGER.warning("Context is not set for parsing, aborting");
-        }
-        return null;
-    }
+		}
+		else {
+			LOGGER.warning("Context is not set for parsing, aborting");
+		}
+		return null;
+	}
 
-    @Override
-    public Object deserialize(InputStream input) throws IOException {
-        if (model != null) {
+	@Override
+	public Object deserialize(InputStream input) throws IOException {
+		if (model != null) {
 
-            try {
-                saxParser.parse(input, handler);
-            } catch (SAXException e) {
-                LOGGER.warning("Cannot parse document: " + e.getMessage());
-                throw new IOException(e.getMessage());
-            }
-            return this.model;
+			try {
+				saxParser.parse(input, handler);
+			} catch (SAXException e) {
+				LOGGER.warning("Cannot parse document: " + e.getMessage());
+				throw new IOException(e.getMessage());
+			}
+			return this.model;
 
-        }
-        else {
-            LOGGER.warning("Context is not set for parsing, aborting");
-        }
-        return null;
-    }
+		}
+		else {
+			LOGGER.warning("Context is not set for parsing, aborting");
+		}
+		return null;
+	}
 
-    @Override
-    public void addToRootNodes(Object anObject) {
-        model.setRoot((XMLIndiv) anObject);
-    }
+	@Override
+	public void addToRootNodes(Object anObject) {
+		model.setRoot((XMLIndiv) anObject);
+	}
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void setContextProperty(String propertyName, Object value) {
-        if (propertyName.equals(XMLReaderSAXHandler.NAMESPACE_Property)) {
-            model.setNamespace(((List<String>) value).get(0), ((List<String>) value).get(1));
-        }
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setModelProperty(String propertyName, Object value) {
+		if (propertyName.equals(XMLReaderSAXHandler.NAMESPACE_Property)) {
+			model.setNamespace(((List<String>) value).get(0), ((List<String>) value).get(1));
+		}
 
-    }
+	}
 
-    @Override
-    public void setContext(Object objectGraph) {
-        model = (XMLModel) objectGraph;
+	@Override
+	public void setModelContext(Object objectGraph) {
+		model = (XMLModel) objectGraph;
 
-    }
+	}
 
-    @Override
-    public void resetContext() {
-        model = null;
-    }
+	@Override
+	public void resetModelContext() {
+		model = null;
+	}
 
-    @Override
-    public boolean objectHasAttributeNamed(Object object, String attrName) {
-        if (object instanceof XMLIndiv) {
+	@Override
+	public boolean modelHasPropertyNamed(String propertyName) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
-            XMLAttr attr = ((XMLIndiv) object).getAttributeByName(attrName);
-            /*
-                        if (aType == testXMLModel.StringAttribute.class) {
-                            return true;
-                        }
-                        else {*/
-            return (attr != null);
-            // }
-        }
-        return false;
-    }
+	@Override
+	public boolean objectHasPropertyNamed(Object object, String attrName) {
+		if (object instanceof XMLIndiv) {
 
-    @Override
-    public void addAttributeValueForObject(Object object, String attrName, Object value) {
+			XMLAttr attr = ((XMLIndiv) object).getAttributeByName(attrName);
+			/*
+			            if (aType == testXMLModel.StringAttribute.class) {
+			                return true;
+			            }
+			            else {*/
+			return (attr != null);
+			// }
+		}
+		return false;
+	}
 
-        if (object instanceof XMLIndiv) {
-            XMLAttr attr = ((XMLIndiv) object).getAttributeByName(attrName);
+	@Override
+	public void addPropertyValueForObject(Object object, String attrName, Object value) {
 
-            if (attr == null) {
-                attr = (XMLAttr) ((XMLIndiv) object).createAttribute(attrName, String.class, (String) value);
-            }
-            else {
+		if (object instanceof XMLIndiv) {
+			XMLAttr attr = ((XMLIndiv) object).getAttributeByName(attrName);
 
-                attr.addValue(((XMLIndiv) object), value);
+			if (attr == null) {
+				attr = (XMLAttr) ((XMLIndiv) object).createAttribute(attrName, String.class, (String) value);
+			}
+			else {
 
-            }
-        }
-        else if (object instanceof XMLModel.StringAttribute) {
-            ((XMLModel.StringAttribute) object).setValue((String) value);
-        }
-    }
+				attr.addValue(((XMLIndiv) object), value);
 
-    @Override
-    public void addChildToObject(Object currentObject, Object currentContainer) {
-        if (currentContainer instanceof XMLIndiv) {
-            ((XMLIndiv) currentContainer).addChild((XMLIndiv) currentObject);
-        }
+			}
+		}
+		else if (object instanceof XMLModel.StringAttribute) {
+			((XMLModel.StringAttribute) object).setValue((String) value);
+		}
+	}
 
-    }
+	@Override
+	public void addPropertyValueForModel(String propertyName, Object value) {
+		// logger.warning("Please implement me");
+	}
 
-    @Override
-    public Type getAttributeType(Object currentContainer, String localName) {
-        return XMLModel.StringAttribute.class;
-    }
+	@Override
+	public void addChildToObject(Object currentObject, Object currentContainer) {
+		if (currentContainer instanceof XMLIndiv) {
+			((XMLIndiv) currentContainer).addChild((XMLIndiv) currentObject);
+		}
+
+	}
+
+	@Override
+	public Type getTypeForProperty(Object currentContainer, String localName) {
+		return XMLModel.StringAttribute.class;
+	}
 }

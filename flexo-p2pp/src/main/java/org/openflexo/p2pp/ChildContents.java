@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.openflexo.p2pp.PrettyPrintContext.Indentation;
+import org.openflexo.p2pp.RawSource.RawSourceFragment;
 import org.openflexo.toolbox.StringUtils;
 
 /**
@@ -75,7 +76,16 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 		if (parsedChildNode != null) {
 			setFragment(parsedChildNode.getLastParsedFragment());
 			parsedChildNode.setRegisteredForContents(this);
+			currentChildNode = parsedChildNode;
 		}
+	}
+
+	@Override
+	public RawSourceFragment getFragment() {
+		if (getParsedChildNode() != null) {
+			return getParsedChildNode().getLastParsedFragment();
+		}
+		return super.getFragment();
 	}
 
 	public P2PPNode<CN, CT> getParsedChildNode() {
@@ -119,12 +129,15 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 		return null;
 	}
 
+	P2PPNode<?, CT> currentChildNode;
+
 	@Override
 	public void updatePrettyPrint(DerivedRawSource derivedRawSource, PrettyPrintContext context) {
 
 		super.updatePrettyPrint(derivedRawSource, context);
 
 		CT childObject = childObjectSupplier.get();
+
 		if (childObject != null) {
 			P2PPNode<?, CT> childNode = getParentNode().getObjectNode(childObject);
 			if (childNode == null) {
@@ -153,6 +166,7 @@ public class ChildContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN, P
 				// + childNode.getTextualRepresentation(derivedContext));
 				derivedRawSource.insert(getParentNode().getDefaultInsertionPoint(), childNode.getTextualRepresentation(derivedContext));
 			}
+			currentChildNode = childNode;
 		}
 		else {
 			// new child is null
