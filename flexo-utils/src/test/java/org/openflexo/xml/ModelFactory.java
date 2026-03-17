@@ -125,6 +125,7 @@ public class ModelFactory extends SaxBasedObjectGraphFactory {
 
 	@Override
 	public void setModelContext(Object objectGraph) {
+		super.setModelContext(objectGraph);
 		model = (XMLModel) objectGraph;
 
 	}
@@ -192,5 +193,17 @@ public class ModelFactory extends SaxBasedObjectGraphFactory {
 	@Override
 	public Type getTypeForProperty(Object currentContainer, String localName) {
 		return XMLModel.StringAttribute.class;
+	}
+
+	@Override
+	public String getPropertyName(Object object, String propertyName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void addPropertyObject(Object object, String propertyName, Object value) {
+		// TODO Auto-generated method stub
+
 	}
 }

@@ -87,7 +87,7 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	 * @param child
 	 * @param container
 	 */
-	public void addChildToObject(E child, E container);
+	public void addChildToObject(E child, O container);
 
 	/**
 	 * Sets a property value for the model being built
@@ -118,7 +118,7 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	 * @param localName
 	 * @return
 	 */
-	public Type getTypeForProperty(E currentContainer, String localName);
+	public Type getTypeForProperty(O currentContainer, String localName);
 
 	/**
 	 * Create an instance of supplied type and name
@@ -130,6 +130,8 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	 * @return
 	 */
 	public E createInstance(Type aType, String name, P parsed);
+
+	public String getPropertyName(O object, String propertyName);
 
 	/**
 	 * Returns boolean indicating if model has a property with supplied name
@@ -151,12 +153,14 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	/**
 	 * Add (or set if the property has single cardinality) value for property
 	 */
-	public void addPropertyValueForObject(E object, String propertyName, Object value);
+	public void addPropertyValueForObject(O object, String propertyName, Object value);
 
 	/**
 	 * Add (or set if the property has single cardinality) value for property
 	 */
 	public void addPropertyValueForModel(String propertyName, Object value);
+
+	public <T> void addPropertyObject(O object, String propertyName, O value);
 
 	// ***************************************************
 	// Methods concerning deserialization

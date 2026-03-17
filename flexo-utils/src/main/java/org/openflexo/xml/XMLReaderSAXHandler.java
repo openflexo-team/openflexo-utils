@@ -71,24 +71,27 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 	public static final String NAMESPACE_Property = "Namespace";
 
-	private E currentContainer = null;
+	private O currentContainer = null;
 	private E currentObject = null;
 	private Type currentObjectType = null;
 
 	private final StringBuffer cdataBuffer = new StringBuffer();
 
-	private final Stack<ParsedElement<E>> indivStack = new Stack<>();
+	private final Stack<ParsedElement<E, O>> indivStack = new Stack<>();
 
-	private IObjectGraphFactory<M, E, O, ParsedElement<E>> factory = null;
+	private IObjectGraphFactory<M, E, O, ParsedElement<E, O>> factory = null;
 
-	public static class ParsedElement<E> {
+	private boolean isRoot;
+
+	public static class ParsedElement<E extends O, O> {
 		String uri;
 		String localName;
 		String qName;
 		Attributes attributes;
 		Type objectType;
 		E object;
-		E container;
+		O container;
+		String propertyName;
 
 		public ParsedElement(String uri, String localName, String qName, Attributes attributes) {
 			this.uri = uri;
@@ -102,9 +105,16 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 		}
 	}
 
-	public XMLReaderSAXHandler(IObjectGraphFactory<M, E, O, ParsedElement<E>> aFactory) {
+	public XMLReaderSAXHandler(IObjectGraphFactory<M, E, O, ParsedElement<E, O>> aFactory) {
 		super();
 		factory = aFactory;
+	}
+
+	public void initModelContext(M objectGraph) {
+		currentContainer = objectGraph;
+		System.err.println("*********** initModelContext with " + objectGraph);
+		// Thread.dumpStack();
+		isRoot = true;
 	}
 
 	@Override
@@ -112,7 +122,7 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 		String NSPrefix = "p"; // default
 
-		ParsedElement<E> pe = new ParsedElement<>(uri, localName, qName, attributes);
+		ParsedElement<E, O> pe = new ParsedElement<>(uri, localName, qName, attributes);
 
 		currentObject = null;
 
@@ -127,9 +137,13 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 			}
 
 		}
-		if (indivStack.isEmpty()) {
+		/*if (indivStack.isEmpty()) {
 			currentContainer = null;
-		}
+		}*/
+
+		// System.err.println(">>>> startElement " + localName + " container=" + currentContainer);
+
+		String propertyName = factory.getPropertyName(currentContainer, localName);
 
 		try {
 
@@ -154,6 +168,8 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 				}
 			}
 
+			// System.err.println("currentObjectType=" + currentObjectType);
+
 			// creates individual if it is a complex Type
 			if (currentObjectType != null) {
 
@@ -162,8 +178,18 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
 			else {
-				LOGGER.warning("Could not find type " + uri + "#" + localName);
+
+				if (factory.objectHasPropertyNamed(currentContainer, localName)) {
+					// Element matches a property
+					// We will handle CDATA in endElement()
+				}
+				else {
+					LOGGER.warning("Could not find type " + uri + "#" + localName + " currentContainer=" + currentContainer);
+
+				}
 			}
+
+			// System.err.println("currentObject=" + currentObject);
 
 			if (currentObject != null) {
 
@@ -179,6 +205,8 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 					// Unused String attrURI = attributes.getURI(i);
 					NSPrefix = "p"; // default
 
+					// System.err.println("typeName=" + typeName + " attrQName=" + attrQName + " attrName=" + attrName);
+
 					if (attrQName != null && attrName != null && currentContainer == null) {
 						// we only set prefix if there is no other Root Element
 						NSPrefix = attrQName.split(":")[0];
@@ -189,10 +217,18 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 					if (typeName.equals(XMLCst.CDATA_TYPE_NAME)) {
 						// Unused Type aType = String.class;
 						if ((attrName == null || attrName.equals("")) && attrQName != null)
-							if (NSPrefix.equals(""))
+							if (NSPrefix.equals("")) {
 								attrName = attrQName;
-							else
-								attrName = attrQName.split(":")[1];
+							}
+							else {
+								String[] split = attrQName.split(":");
+								if (split.length > 1) {
+									attrName = split[1];
+								}
+								else {
+									attrName = split[0];
+								}
+							}
 
 					}
 					// add anything as attribute except name spaces....
@@ -205,20 +241,30 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 				// Current element is not contained in another one, it is root!
 
-				if (currentContainer == null && currentObject != null) {
+				if (/*currentContainer == null*/isRoot && currentObject != null) {
 
 					factory.addToRootNodes(currentObject);
+					isRoot = false;
 				}
+
+				/*if (isRoot) {
+					factory.addToRootNodes(currentContainer);
+					isRoot = false;
+				}*/
 
 			}
 
 			pe.objectType = currentObjectType;
 			pe.object = currentObject;
 			pe.container = currentContainer;
+			pe.propertyName = propertyName;
 
 			indivStack.push(pe);
 
-			currentContainer = currentObject;
+			if (currentObject != null) {
+				System.err.println("---------> Hop, je mets le currentContainer a " + currentObject);
+				currentContainer = currentObject;
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -229,9 +275,11 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 
-		ParsedElement<E> pe = indivStack.pop();
+		ParsedElement<E, O> pe = indivStack.pop();
 		currentObject = pe.object;
 		currentContainer = pe.container;
+
+		System.err.println("<<< endElement " + localName + " container=" + currentContainer);
 
 		boolean isAttribute = false;
 
@@ -246,18 +294,9 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 		String str = cdataBuffer.toString().trim();
 
-		/*if (localName.equals("name")) {
-			System.out.println("Bon on est la");
-			System.out.println("localName=" + localName);
-			System.out.println("str=" + str);
-			System.out.println("isAttribute=" + isAttribute);
-			System.out.println("currentObject=" + currentObject);
-			System.out.println("currentContainer=" + currentContainer);
-		}*/
-
 		// Element is a simple attribute of current container => only allocate String
 		if (isAttribute && currentObject == null) {
-			currentObject = currentContainer;
+			currentObject = (E) currentContainer;
 			if (str.length() > 0) {
 				if (currentObject != null) {
 					factory.addPropertyValueForObject(currentObject, localName, str);
@@ -275,8 +314,7 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 			// Allocation of CDATA information depends on the type of entity we
 			// have to allocate content to (Individual or Attribute)
-			// As such, it depends on the interpretation that has been done of
-			// XSD MetaModel
+			// As such, it depends on the interpretation that has been done
 			//
 			// Same stands for individuals to be allocated to ObjectProperties
 
@@ -298,6 +336,12 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 					factory.addChildToObject(currentObject, currentContainer);
 				}
 			}
+		}
+
+		if (pe.propertyName != null) {
+			System.err.println("Tiens c'est une property !!!! " + pe.propertyName + " currentContainer=" + pe.container + " currentObject="
+					+ currentObject);
+			factory.addPropertyObject(currentContainer, pe.propertyName, currentObject);
 		}
 
 	}

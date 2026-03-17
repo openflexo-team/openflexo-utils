@@ -52,19 +52,19 @@ import org.openflexo.xml.XMLReaderSAXHandler.ParsedElement;
  * @author xtof
  * 
  */
-public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> implements IObjectGraphFactory<M, E, O, ParsedElement<E>> {
+public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> implements IObjectGraphFactory<M, E, O, ParsedElement<E, O>> {
 
 	protected static final Logger LOGGER = Logger.getLogger(SaxBasedObjectGraphFactory.class.getPackage().getName());
 
 	protected SAXParserFactory factory = null;
 	protected SAXParser saxParser = null;
-	protected XMLReaderSAXHandler handler = null;
+	protected XMLReaderSAXHandler<M, E, O> handler = null;
 
 	public SaxBasedObjectGraphFactory() {
 		factory = SAXParserFactory.newInstance();
 		factory.setNamespaceAware(true);
 		factory.setXIncludeAware(true);
-		handler = new XMLReaderSAXHandler(this);
+		handler = new XMLReaderSAXHandler<>(this);
 
 		try {
 			factory.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
@@ -73,6 +73,11 @@ public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> im
 		} catch (Exception e) {
 			LOGGER.warning("Cannot create PARSER: " + e.getMessage());
 		}
+	}
+
+	@Override
+	public void setModelContext(M objectGraph) {
+		handler.initModelContext(objectGraph);
 	}
 
 }

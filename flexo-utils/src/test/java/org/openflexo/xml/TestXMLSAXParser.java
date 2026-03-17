@@ -51,6 +51,9 @@ import junit.framework.TestCase;
 public class TestXMLSAXParser extends TestCase {
 
 	private void printXMLNode(XMLIndiv node, String indent) {
+		if (node == null) {
+			return;
+		}
 		System.out.println(indent + "[N]" + node.getName());
 
 		for (XMLAttr a : node.getAttributes()) {
