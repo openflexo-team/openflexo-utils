@@ -52,15 +52,23 @@ import java.lang.reflect.Type;
  *            type of model being built, a sub-type of O
  * @param <E>
  *            type of model element being built, a sub-type of O
- * @param <O>
+ * @param <T>
  *            generic type of objects being part of built model
  * @param <P>
+ *            type of properties
+ * @param <O>
  *            type of parsed object
  *
  * @author xtof,sylvain
  * 
  */
-public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
+public interface IObjectGraphFactory<M extends T, E extends T, T, P, O> {
+
+	public enum RootNodeStrategy {
+		SINGLE_ROOT_NODE, // The model M contains a single root node E
+		MULTIPLE_ROOT_NODES, // The model M contains multiple root nodes E
+		ROOT_NODE_IS_THE_MODEL // The model M is the root node
+	}
 
 	/**
 	 * Initialize the model context : the graph being built
@@ -75,11 +83,32 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	public void resetModelContext();
 
 	/**
-	 * Adds anObject to root nodes of model being built
+	 * Return strategy for the root node(s)
+	 * 
+	 * @return
+	 */
+	public RootNodeStrategy getRootNodeStrategy();
+
+	/**
+	 * Sets root node of model being built, considering RootNodeStratgey is SINGLE_ROOT_NODE
 	 * 
 	 * @param anObject
 	 */
-	public void addToRootNodes(E anObject);
+	public void setRootNode(E rootNode);
+
+	/**
+	 * Adds anObject to root nodes of model being built, considering RootNodeStratgey is MULTIPLE_ROOT_NODES
+	 * 
+	 * @param anObject
+	 */
+	public void addToRootNodes(E rootNode);
+
+	/**
+	 * Update already created root node (the model context) with parsed object
+	 * 
+	 * @param supportObject
+	 */
+	public void updateRootNode(O parsed);
 
 	/**
 	 * Add supplied child to supplied container
@@ -87,15 +116,7 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	 * @param child
 	 * @param container
 	 */
-	public void addChildToObject(E child, O container);
-
-	/**
-	 * Sets a property value for the model being built
-	 * 
-	 * @param propertyName
-	 * @param value
-	 */
-	public void setModelProperty(String propertyName, Object value);
+	public void addChildToObject(E child, T container);
 
 	/**
 	 * Returns the type of object corresponding to the given URI, it must be a type of object relevant in the context of the current graph
@@ -103,22 +124,13 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	 * 
 	 * @param typeURI
 	 *            URI of the type
-	 * @param objectName
+	 * @param localName
 	 *            the name of the object to be typed
 	 * @param container
 	 *            the object containing the object to be typed
 	 * @return the relevant Type
 	 */
-	public Type getTypeForObject(String typeURI, O container, String objectName);
-
-	/**
-	 * Returns the type of object corresponding a given container and a local name
-	 * 
-	 * @param currentContainer
-	 * @param localName
-	 * @return
-	 */
-	public Type getTypeForProperty(O currentContainer, String localName);
+	public Type getType(String typeURI, String localName, T container);
 
 	/**
 	 * Create an instance of supplied type and name
@@ -129,45 +141,49 @@ public interface IObjectGraphFactory<M extends O, E extends O, O, P> {
 	 *            object being parsed
 	 * @return
 	 */
-	public E createInstance(Type aType, String name, P parsed);
-
-	public String getPropertyName(O object, String propertyName);
+	public E createInstance(Type aType, String name, O parsed);
 
 	/**
-	 * Returns boolean indicating if model has a property with supplied name
-	 * 
-	 * @param propertyName
-	 * @return
-	 */
-	public boolean modelHasPropertyNamed(String propertyName);
-
-	/**
-	 * Returns boolean indicating if supplied object has a property with supplied name
+	 * Return property applicable to supplied object with supplied name
 	 * 
 	 * @param object
 	 * @param propertyName
 	 * @return
 	 */
-	public boolean objectHasPropertyNamed(O object, String propertyName);
+	public P getPropertyNamed(T object, String propertyName);
+
+	/**
+	 * Returns the type of object corresponding a given property
+	 * 
+	 * @param property
+	 * @return
+	 */
+	public Type getTypeForProperty(P property);
 
 	/**
 	 * Add (or set if the property has single cardinality) value for property
 	 */
-	public void addPropertyValueForObject(O object, String propertyName, Object value);
+	public void addOrSetDataPropertyValue(T targetObject, P property, Object value);
 
 	/**
 	 * Add (or set if the property has single cardinality) value for property
 	 */
-	public void addPropertyValueForModel(String propertyName, Object value);
+	public void addOrSetObjectPropertyValue(T targetObject, P property, T value);
 
-	public <T> void addPropertyObject(O object, String propertyName, O value);
+	/**
+	 * Sets a property value for the model being built
+	 * 
+	 * @param propertyName
+	 * @param value
+	 */
+	public void setModelProperty(String propertyName, Object value);
 
 	// ***************************************************
 	// Methods concerning deserialization
 	// ***************************************************
 
-	public Object deserialize(String input) throws Exception, IOException;
+	public M deserialize(String input) throws Exception, IOException;
 
-	public Object deserialize(InputStream input) throws Exception, IOException;
+	public M deserialize(InputStream input) throws Exception, IOException;
 
 }

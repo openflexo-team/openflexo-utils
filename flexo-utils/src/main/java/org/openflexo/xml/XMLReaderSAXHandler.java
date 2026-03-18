@@ -45,6 +45,7 @@ import java.util.Stack;
 import java.util.logging.Logger;
 
 import org.openflexo.IObjectGraphFactory;
+import org.openflexo.IObjectGraphFactory.RootNodeStrategy;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.DefaultHandler2;
@@ -57,41 +58,44 @@ import org.xml.sax.ext.DefaultHandler2;
  *            type of model being built, a sub-type of O
  * @param <E>
  *            type of model element being built, a sub-type of O
- * @param <O>
+ * @param <T>
  *            generic type of objects being part of built model
+ * @param <P>
+ *            type of properties
  * 
  * 
  * @author xtof,sylvain
  * 
  */
 
-public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHandler2 {
+public class XMLReaderSAXHandler<M extends T, E extends T, T, P> extends DefaultHandler2 {
 
 	protected static final Logger LOGGER = Logger.getLogger(XMLReaderSAXHandler.class.getPackage().getName());
 
 	public static final String NAMESPACE_Property = "Namespace";
 
-	private O currentContainer = null;
+	private T currentContainer = null;
 	private E currentObject = null;
 	private Type currentObjectType = null;
 
 	private final StringBuffer cdataBuffer = new StringBuffer();
 
-	private final Stack<ParsedElement<E, O>> indivStack = new Stack<>();
+	private final Stack<ParsedElement<E, T, P>> indivStack = new Stack<>();
 
-	private IObjectGraphFactory<M, E, O, ParsedElement<E, O>> factory = null;
+	private SaxBasedObjectGraphFactory<M, E, T, P> factory = null;
 
 	private boolean isRoot;
 
-	public static class ParsedElement<E extends O, O> {
-		String uri;
-		String localName;
-		String qName;
-		Attributes attributes;
-		Type objectType;
-		E object;
-		O container;
-		String propertyName;
+	public static class ParsedElement<E extends T, T, P> {
+		public String uri;
+		public String localName;
+		public String qName;
+		public Attributes attributes;
+		public Type objectType;
+		public E object;
+		public T container;
+		// If element was parsed in a property context, store this property
+		public P property;
 
 		public ParsedElement(String uri, String localName, String qName, Attributes attributes) {
 			this.uri = uri;
@@ -105,14 +109,14 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 		}
 	}
 
-	public XMLReaderSAXHandler(IObjectGraphFactory<M, E, O, ParsedElement<E, O>> aFactory) {
+	public XMLReaderSAXHandler(SaxBasedObjectGraphFactory<M, E, T, P> aFactory) {
 		super();
 		factory = aFactory;
 	}
 
 	public void initModelContext(M objectGraph) {
 		currentContainer = objectGraph;
-		System.err.println("*********** initModelContext with " + objectGraph);
+		// System.err.println("*********** initModelContext with " + objectGraph);
 		// Thread.dumpStack();
 		isRoot = true;
 	}
@@ -122,152 +126,177 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 
 		String NSPrefix = "p"; // default
 
-		ParsedElement<E, O> pe = new ParsedElement<>(uri, localName, qName, attributes);
+		ParsedElement<E, T, P> pe = new ParsedElement<>(uri, localName, qName, attributes);
 
 		currentObject = null;
 
 		// Current element is not contained => root node, set NameSpace
 
-		if (currentContainer == null) {
+		if (isRoot) {
 			if (uri != null && !uri.isEmpty()) {
 				List<String> namespace = new ArrayList<>();
 				namespace.add(uri);
 				namespace.add(NSPrefix);
 				factory.setModelProperty(NAMESPACE_Property, namespace);
 			}
-
 		}
 		/*if (indivStack.isEmpty()) {
 			currentContainer = null;
 		}*/
 
-		// System.err.println(">>>> startElement " + localName + " container=" + currentContainer);
+		System.err.println(">>>> startElement " + localName + " container=" + currentContainer);
 
-		String propertyName = factory.getPropertyName(currentContainer, localName);
+		P property = factory.getPropertyForElementName(currentContainer, localName);
+		if (property != null) {
+			currentObjectType = factory.getTypeForProperty(property);
+		}
 
-		try {
-
+		if (currentObjectType == null) {
 			if (uri == null || (uri.length() == 0)) {
 				// If there is no base uri, we use the localName of the XML Tag
-				currentObjectType = factory.getTypeForObject(localName, currentContainer, localName);
+				currentObjectType = factory.getType(localName, localName, currentContainer);
 			}
 			else {
-				if (currentContainer != null) {
-					// find if there is an object property corresponding
-					if (factory.objectHasPropertyNamed(currentContainer, localName)) {
-						currentObjectType = factory.getTypeForProperty(currentContainer, localName);
-					}
-					else {
-						currentObjectType = factory.getTypeForObject(uri + "#" + localName, currentContainer, localName);
-
-					}
-				}
-				else {
-					currentObjectType = factory.getTypeForObject(uri + "#" + localName, null, localName);
-
-				}
+				currentObjectType = factory.getType(uri + "#" + localName, localName, currentContainer);
 			}
+		}
 
-			// System.err.println("currentObjectType=" + currentObjectType);
+		pe.objectType = currentObjectType;
+		pe.container = currentContainer;
+		pe.property = property;
 
-			// creates individual if it is a complex Type
-			if (currentObjectType != null) {
+		if (isRoot && factory.getRootNodeStrategy() == RootNodeStrategy.ROOT_NODE_IS_THE_MODEL) {
+			factory.updateRootNode(pe);
+			isRoot = false;
+		}
 
-				currentObject = factory.createInstance(currentObjectType, localName, pe);
-
-				cdataBuffer.delete(0, cdataBuffer.length());
+		/*if (currentContainer != null) {
+			if (property != null) {
+				currentObjectType = factory.getTypeForProperty(property);
+			}
+		
+		
+			// find if there is an object property corresponding
+			if (factory.objectHasPropertyNamed(currentContainer, localName)) {
+				currentObjectType = factory.getTypeForProperty(currentContainer, localName);
 			}
 			else {
-
-				if (factory.objectHasPropertyNamed(currentContainer, localName)) {
-					// Element matches a property
-					// We will handle CDATA in endElement()
-				}
-				else {
-					LOGGER.warning("Could not find type " + uri + "#" + localName + " currentContainer=" + currentContainer);
-
-				}
+				currentObjectType = factory.getType(uri + "#" + localName, localName, currentContainer);
+		
 			}
+		}
+		else {
+			currentObjectType = factory.getTypeForObject(uri + "#" + localName, null, localName);
+		}*/
 
-			// System.err.println("currentObject=" + currentObject);
+		// System.err.println("currentObjectType=" + currentObjectType);
 
-			if (currentObject != null) {
+		// creates individual if it is a complex Type
+		else if (currentObjectType != null) {
 
-				// processing Attributes
+			currentObject = factory.createInstance(currentObjectType, localName, pe);
 
-				int len = attributes.getLength();
+		}
+		else {
+			if (property == null) {
+				LOGGER.warning("Could not find type " + uri + "#" + localName + " currentContainer=" + currentContainer);
+			}
+			else {
+				// Maybe element matches a property
+				// We will handle CDATA in endElement()
+			}
+		}
 
-				for (int i = 0; i < len; i++) {
+		cdataBuffer.delete(0, cdataBuffer.length());
 
-					String typeName = attributes.getType(i);
-					String attrQName = attributes.getQName(i);
-					String attrName = attributes.getLocalName(i);
-					// Unused String attrURI = attributes.getURI(i);
-					NSPrefix = "p"; // default
+		/*boolean DEBUG = false;
+		
+		if (localName.equals("name")) {
+			DEBUG = true;
+			System.err.println("Je l'ai, pour currentObject=" + currentObject + " currentContainer=" + currentContainer);
+			System.err.println("pe.property=" + pe.property);
+		}*/
 
-					// System.err.println("typeName=" + typeName + " attrQName=" + attrQName + " attrName=" + attrName);
+		// System.err.println("currentObject=" + currentObject);
 
-					if (attrQName != null && attrName != null && currentContainer == null) {
-						// we only set prefix if there is no other Root Element
-						NSPrefix = attrQName.split(":")[0];
-						if (NSPrefix.equals(attrQName))
-							NSPrefix = "";
-					}
+		if (currentObject != null) {
 
-					if (typeName.equals(XMLCst.CDATA_TYPE_NAME)) {
-						// Unused Type aType = String.class;
-						if ((attrName == null || attrName.equals("")) && attrQName != null)
-							if (NSPrefix.equals("")) {
-								attrName = attrQName;
+			// processing Attributes
+
+			int len = attributes.getLength();
+
+			for (int i = 0; i < len; i++) {
+
+				String typeName = attributes.getType(i);
+				String attrQName = attributes.getQName(i);
+				String attrName = attributes.getLocalName(i);
+				// Unused String attrURI = attributes.getURI(i);
+				NSPrefix = "p"; // default
+
+				// System.err.println("typeName=" + typeName + " attrQName=" + attrQName + " attrName=" + attrName);
+
+				if (attrQName != null && attrName != null && currentContainer == null) {
+					// we only set prefix if there is no other Root Element
+					NSPrefix = attrQName.split(":")[0];
+					if (NSPrefix.equals(attrQName))
+						NSPrefix = "";
+				}
+
+				if (typeName.equals(XMLCst.CDATA_TYPE_NAME)) {
+					// Unused Type aType = String.class;
+					if ((attrName == null || attrName.equals("")) && attrQName != null)
+						if (NSPrefix.equals("")) {
+							attrName = attrQName;
+						}
+						else {
+							String[] split = attrQName.split(":");
+							if (split.length > 1) {
+								attrName = split[1];
 							}
 							else {
-								String[] split = attrQName.split(":");
-								if (split.length > 1) {
-									attrName = split[1];
-								}
-								else {
-									attrName = split[0];
-								}
+								attrName = split[0];
 							}
-
-					}
-					// add anything as attribute except name spaces....
-					if (!NSPrefix.equalsIgnoreCase(XMLCst.XML_NS) && !NSPrefix.equalsIgnoreCase(XMLCst.XSI)
-							&& !attrName.equalsIgnoreCase(XMLCst.XML_NS)) {
-						factory.addPropertyValueForObject(currentObject, attrName, attributes.getValue(i));
-					}
+						}
 
 				}
+				// add anything as attribute except name spaces....
+				if (!NSPrefix.equalsIgnoreCase(XMLCst.XML_NS) && !NSPrefix.equalsIgnoreCase(XMLCst.XSI)
+						&& !attrName.equalsIgnoreCase(XMLCst.XML_NS)) {
+					P prop = factory.getPropertyForAttributeName(currentObject, attrName);
+					if (prop != null) {
+						factory.addOrSetDataPropertyValue(currentObject, prop, attributes.getValue(i));
+					}
+					else {
+						LOGGER.warning("Cannot find property " + attrName + " for " + currentObject);
+					}
+				}
 
-				// Current element is not contained in another one, it is root!
+			}
 
-				if (/*currentContainer == null*/isRoot && currentObject != null) {
+			// Current element is not contained in another one, it is root!
+			if (isRoot && currentObject != null) {
 
+				if (factory.getRootNodeStrategy() == RootNodeStrategy.SINGLE_ROOT_NODE) {
+					factory.setRootNode(currentObject);
+				}
+				else if (factory.getRootNodeStrategy() == RootNodeStrategy.MULTIPLE_ROOT_NODES) {
 					factory.addToRootNodes(currentObject);
-					isRoot = false;
 				}
-
-				/*if (isRoot) {
-					factory.addToRootNodes(currentContainer);
-					isRoot = false;
-				}*/
-
+				isRoot = false;
 			}
 
-			pe.objectType = currentObjectType;
-			pe.object = currentObject;
-			pe.container = currentContainer;
-			pe.propertyName = propertyName;
+		}
 
-			indivStack.push(pe);
+		pe.objectType = currentObjectType;
+		pe.object = currentObject;
+		pe.container = currentContainer;
+		pe.property = property;
 
-			if (currentObject != null) {
-				System.err.println("---------> Hop, je mets le currentContainer a " + currentObject);
-				currentContainer = currentObject;
-			}
+		indivStack.push(pe);
 
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (currentObject != null) {
+			// System.err.println("---------> Hop, je mets le currentContainer a " + currentObject);
+			currentContainer = currentObject;
 		}
 
 	}
@@ -275,73 +304,99 @@ public class XMLReaderSAXHandler<M extends O, E extends O, O> extends DefaultHan
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 
-		ParsedElement<E, O> pe = indivStack.pop();
+		ParsedElement<E, T, P> pe = indivStack.pop();
 		currentObject = pe.object;
 		currentContainer = pe.container;
 
 		System.err.println("<<< endElement " + localName + " container=" + currentContainer);
 
-		boolean isAttribute = false;
+		boolean DEBUG = false;
 
+		if (localName.equals("name")) {
+			DEBUG = true;
+			System.err.println("Je l'ai, pour currentObject=" + currentObject + " currentContainer=" + currentContainer);
+			System.err.println("pe.property=" + pe.property);
+		}
+
+		/*boolean isAttribute = false;
+		
 		if (currentContainer != null) {
 			isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
 		}
 		else {
 			isAttribute = factory.modelHasPropertyNamed(localName);
-		}
+		}*/
 
 		// CDATA allocation
 
 		String str = cdataBuffer.toString().trim();
 
+		if (DEBUG) {
+			System.err.println("Dommage, j'ai ca: " + str);
+		}
+
+		boolean propertyWasHandled = false;
+
+		if (str.length() > 0) {
+			// Some contents to handle in this element
+			if (pe.property != null && currentObject == null) {
+				if (currentContainer != null) {
+					factory.addOrSetDataPropertyValue(currentContainer, pe.property, str);
+					propertyWasHandled = true;
+				}
+			}
+			else if (currentObject != null) {
+				factory.handleCData(currentObject, str);
+			}
+			cdataBuffer.delete(0, cdataBuffer.length());
+		}
+
 		// Element is a simple attribute of current container => only allocate String
-		if (isAttribute && currentObject == null) {
-			currentObject = (E) currentContainer;
+		/*if (pe.property != null && currentObject == null) {
+			// currentObject = (E) currentContainer;
 			if (str.length() > 0) {
-				if (currentObject != null) {
-					factory.addPropertyValueForObject(currentObject, localName, str);
-				}
-				else {
-					// System.out.println("Bon on passe bien la");
-					factory.addPropertyValueForModel(localName, str);
+				if (currentContainer != null) {
+					factory.addOrSetDataPropertyValue(currentContainer, pe.property, str);
 				}
 				cdataBuffer.delete(0, cdataBuffer.length());
 			}
 		}
-		else {
+		else {*/
 
-			isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
+		// isAttribute = factory.objectHasPropertyNamed(currentContainer, localName);
 
-			// Allocation of CDATA information depends on the type of entity we
-			// have to allocate content to (Individual or Attribute)
-			// As such, it depends on the interpretation that has been done
-			//
-			// Same stands for individuals to be allocated to ObjectProperties
+		// Allocation of CDATA information depends on the type of entity we
+		// have to allocate content to (Individual or Attribute)
+		// As such, it depends on the interpretation that has been done
+		//
+		// Same stands for individuals to be allocated to ObjectProperties
 
-			if (str.length() > 0) {
-				factory.addPropertyValueForObject(currentObject, XMLCst.CDATA_ATTR_NAME, str);
-				cdataBuffer.delete(0, cdataBuffer.length());
+		/*if (str.length() > 0) {
+			factory.addPropertyValueForObject(currentObject, XMLCst.CDATA_ATTR_NAME, str);
+			cdataBuffer.delete(0, cdataBuffer.length());
+		}*/
+
+		// Current element is contained in another one
+
+		if (!propertyWasHandled && currentContainer != null && currentContainer != currentObject) {
+
+			/*if (pe.property != null && currentObject != null) {
+				factory.addOrSetObjectPropertyValue(currentContainer, pe.property, currentObject);
+			
+			}*/
+
+			if (pe.property != null) {
+				// System.err.println("Tiens c'est une property !!!! " + pe.property + " currentContainer=" + pe.container + "
+				// currentObject="
+				// + currentObject);
+				factory.addOrSetObjectPropertyValue(currentContainer, pe.property, currentObject);
 			}
 
-			// Current element is contained in another one
-
-			if (currentContainer != null && currentContainer != currentObject) {
-
-				if (isAttribute && currentObject != null) {
-					factory.addPropertyValueForObject(currentContainer, localName, currentObject);
-
-				}
-				// Always add to children
-				if (currentObject != null) {
-					factory.addChildToObject(currentObject, currentContainer);
-				}
+			// Always add to children
+			if (currentObject != null) {
+				factory.addChildToObject(currentObject, currentContainer);
 			}
-		}
-
-		if (pe.propertyName != null) {
-			System.err.println("Tiens c'est une property !!!! " + pe.propertyName + " currentContainer=" + pe.container + " currentObject="
-					+ currentObject);
-			factory.addPropertyObject(currentContainer, pe.propertyName, currentObject);
+			// }
 		}
 
 	}

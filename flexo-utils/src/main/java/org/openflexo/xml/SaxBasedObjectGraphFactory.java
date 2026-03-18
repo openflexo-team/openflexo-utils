@@ -38,6 +38,8 @@
 
 package org.openflexo.xml;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.SAXParser;
@@ -45,20 +47,24 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.openflexo.IObjectGraphFactory;
 import org.openflexo.xml.XMLReaderSAXHandler.ParsedElement;
+import org.xml.sax.SAXException;
 
 /**
  * An {@link IObjectGraphFactory} using a SaxParser to deserialize XML documents into objects Graph
  * 
- * @author xtof
+ * @author xtof, sylvain
  * 
  */
-public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> implements IObjectGraphFactory<M, E, O, ParsedElement<E, O>> {
+public abstract class SaxBasedObjectGraphFactory<M extends T, E extends T, T, P>
+		implements IObjectGraphFactory<M, E, T, P, ParsedElement<E, T, P>> {
 
 	protected static final Logger LOGGER = Logger.getLogger(SaxBasedObjectGraphFactory.class.getPackage().getName());
 
-	protected SAXParserFactory factory = null;
-	protected SAXParser saxParser = null;
-	protected XMLReaderSAXHandler<M, E, O> handler = null;
+	private SAXParserFactory factory = null;
+	private SAXParser saxParser = null;
+	private XMLReaderSAXHandler<M, E, T, P> handler = null;
+
+	private M model;
 
 	public SaxBasedObjectGraphFactory() {
 		factory = SAXParserFactory.newInstance();
@@ -75,9 +81,78 @@ public abstract class SaxBasedObjectGraphFactory<M extends O, E extends O, O> im
 		}
 	}
 
-	@Override
-	public void setModelContext(M objectGraph) {
-		handler.initModelContext(objectGraph);
+	public M getModelContext() {
+		return model;
 	}
+
+	@Override
+	public void setModelContext(M model) {
+		this.model = model;
+		handler.initModelContext(model);
+	}
+
+	@Override
+	public void resetModelContext() {
+		model = null;
+	}
+
+	@Override
+	public final M deserialize(String input) throws IOException {
+		if (model != null) {
+
+			try {
+				saxParser.parse(input, handler);
+			} catch (SAXException e) {
+				LOGGER.warning("Cannot parse document: " + e.getMessage());
+				throw new IOException(e.getMessage());
+			}
+			return this.model;
+		}
+		LOGGER.warning("Context is not set for parsing, aborting");
+		return null;
+	}
+
+	@Override
+	public final M deserialize(InputStream input) throws IOException {
+		if (model != null) {
+
+			try {
+				saxParser.parse(input, handler);
+			} catch (SAXException e) {
+				LOGGER.warning("Cannot parse document: " + e.getMessage());
+				throw new IOException(e.getMessage());
+			}
+			return this.model;
+
+		}
+		LOGGER.warning("Context is not set for parsing, aborting");
+		return null;
+	}
+
+	/**
+	 * Return property applicable to supplied object with supplied element name in 'object' context
+	 * 
+	 * @param object
+	 * @param elementName
+	 * @return
+	 */
+	public abstract P getPropertyForElementName(T object, String elementName);
+
+	/**
+	 * Return property applicable to supplied object with supplied attribute name in 'object' context
+	 * 
+	 * @param object
+	 * @param elementName
+	 * @return
+	 */
+	public abstract P getPropertyForAttributeName(T object, String attributeName);
+
+	/**
+	 * Handle CData for an object if not related to a given property
+	 * 
+	 * @param object
+	 * @param value
+	 */
+	public abstract void handleCData(E object, String value);
 
 }
