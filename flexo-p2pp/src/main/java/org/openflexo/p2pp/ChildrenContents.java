@@ -223,6 +223,9 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 			childNode.setRegisteredForContents(this);
 			if (!lastParsedNodes.contains(childNode)) {
 				// In this case manage insertion
+				// KNOWN ISSUE: with no parsed sibling, the insertion point is the start of the parent node, i.e. AFTER its indentation.
+				// A child inserted in front of an indented node leaves that node at column 0 - see "Inserting a child in front of an
+				// indented node" in KNOWN_DEFECTS.md, at the root of flexo-p2pp.
 
 				boolean handleSpecificPrelude = false;
 				boolean handleSpecificPostlude = false;
