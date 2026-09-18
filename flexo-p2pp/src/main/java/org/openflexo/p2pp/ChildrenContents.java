@@ -223,6 +223,9 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 			childNode.setRegisteredForContents(this);
 			if (!lastParsedNodes.contains(childNode)) {
 				// In this case manage insertion
+				// KNOWN ISSUE: with no parsed sibling, the insertion point is the start of the parent node, i.e. AFTER its indentation.
+				// A child inserted in front of an indented node leaves that node at column 0 - see "Inserting a child in front of an
+				// indented node" in KNOWN_DEFECTS.md, at the root of flexo-p2pp.
 
 				boolean handleSpecificPrelude = false;
 				boolean handleSpecificPostlude = false;
@@ -255,19 +258,30 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 					if (handleSpecificPostlude) {
 						// We have a special postlude for last item and this is the last item
 						String insertThis = "";
+						RawSourcePosition insertThisAt = insertionPoint;
 						if (i > 0) {
 							CT previousObject = childrenObjectsList.get(i - 1);
 							P2PPNode<?, CT> previousObjectNode = getParentNode().getObjectNode(previousObject);
 							if (lastParsedNodes.contains(previousObjectNode)) {
-								// In this case, previous node hasn't appened postlude, so do it first
-								insertThis = (getPostlude() != null ? getPostlude() : "");
+								boolean previousWasLastParsed = lastParsedNodes.get(lastParsedNodes.size() - 1) == previousObjectNode;
+								if (!previousWasLastParsed && previousObjectNode.getPostlude() != null) {
+									// Previous node was not the last one when parsed: its postlude (the separator) is already there, insert
+									// after it. Adding the postlude again would duplicate the separator ("A;" + ";B"), and the original
+									// separator would end up after the inserted node. When it was the last one, its postlude is the
+									// postlude for last item (e.g. "}"), and the insertion must stay before it
+									insertThisAt = insertionPointAfterPostlude;
+								}
+								else {
+									// In this case, previous node hasn't appened postlude, so do it first
+									insertThis = (getPostlude() != null ? getPostlude() : "");
+								}
 							}
 						}
 						insertThis = insertThis + applicablePrelude + childNode.getTextualRepresentation(derivedContext)
 								+ (lastParsedNodes.size() > 0 ? "" : applicablePostlude);
 						if (DEBUG)
-							System.out.println("Case 3: Inserting in " + insertionPoint + " value=[" + insertThis + "]");
-						derivedRawSource.insert(insertionPoint, insertThis);
+							System.out.println("Case 3: Inserting in " + insertThisAt + " value=[" + insertThis + "]");
+						derivedRawSource.insert(insertThisAt, insertThis);
 					}
 					else {
 						String insertThis = applicablePrelude + childNode.getTextualRepresentation(derivedContext) + applicablePostlude;

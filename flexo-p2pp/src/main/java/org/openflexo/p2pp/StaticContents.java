@@ -105,7 +105,14 @@ public class StaticContents<N, T> extends PrettyPrintableContents<N, T> {
 		}*/
 
 		if (StringUtils.isNotEmpty(getPrelude())) {
-			if (getPreludeFragment() == null) {
+			// Inject the canonical prelude only when it is not already materialized in the source.
+			// getPreludeFragment() detects an EXACT match of the canonical separator; but when the
+			// token already exists and is directly preceded by whitespace, that whitespace already
+			// separates it and must be preserved. Re-injecting the canonical prelude here corrupted
+			// inline constructs whose source whitespace differs from the canonical separator, e.g.
+			// turning `{ return x; }` into `{ return x; \n}` (the closing brace has a LINE_SEPARATOR
+			// prelude that no longer matches the inline space).
+			if (getPreludeFragment() == null && !isPrecededByWhitespaceInSource()) {
 				replacedString = getPrelude() + replacedString;
 			}
 		}
@@ -117,6 +124,26 @@ public class StaticContents<N, T> extends PrettyPrintableContents<N, T> {
 
 		derivedRawSource.replace(getFragment() == null ? makeInsertionFragment() : getFragment(), replacedString);
 
+	}
+
+	/**
+	 * Return true when this token exists in the parsed source and is immediately preceded by a
+	 * whitespace character. In that case the source already separates the token, so the canonical
+	 * prelude must not be re-injected (which would otherwise duplicate/replace the original whitespace
+	 * with the canonical separator and break inline constructs).
+	 */
+	private boolean isPrecededByWhitespaceInSource() {
+		if (getFragment() == null || getFragment().getStartPosition() == null) {
+			return false;
+		}
+		try {
+			Character before = getFragment().getStartPosition().decrement().getCharAfter();
+			return before != null && Character.isWhitespace(before);
+		}
+		catch (RuntimeException e) {
+			// Start of source (nothing before): not preceded by whitespace
+			return false;
+		}
 	}
 
 	@Override
