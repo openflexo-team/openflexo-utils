@@ -218,6 +218,9 @@ public class ChildrenContents<PN, PT, CN, CT> extends PrettyPrintableContents<PN
 			P2PPNode<?, CT> childNode = getParentNode().getObjectNode(childObject);
 			if (childNode == null) {
 				childNode = getParentNode().makeObjectNode(childObject);
+				if (childNode == null) {
+					System.err.println("Cannot make P2PPNode for " + childObject + " in " + getParentNode());
+				}
 				getParentNode().addToChildren(childNode);
 			}
 			childNode.setRegisteredForContents(this);
