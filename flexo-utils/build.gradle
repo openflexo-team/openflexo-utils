@@ -1,6 +1,7 @@
 dependencies {
   implementation connieUtils()
-  implementation testUtils()
+  // for the tests only: as 'implementation' it brought JUnit to every application using this module
+  testImplementation testUtils()
 
   implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.26.1'
 }
