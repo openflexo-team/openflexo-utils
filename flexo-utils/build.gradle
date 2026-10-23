@@ -1,7 +1,7 @@
 dependencies {
-  implementation connieUtils()
   // for the tests only: as 'implementation' it brought JUnit to every application using this module
-  testImplementation testUtils()
+  testImplementation project(':testutils')
 
+  api commonsIo()
   implementation commonsCompress()
 }
