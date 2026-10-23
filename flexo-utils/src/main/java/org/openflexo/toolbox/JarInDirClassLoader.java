@@ -71,12 +71,6 @@ public class JarInDirClassLoader extends URLClassLoader {
 		}
 	}
 
-	@Override
-	protected void finalize() throws Throwable {
-		LOGGER.info("Finalizing Jar Class Loader");
-		super.finalize();
-	}
-
 	/**
 	 * adds a Directory in the list of directories to search for
 	 * 
