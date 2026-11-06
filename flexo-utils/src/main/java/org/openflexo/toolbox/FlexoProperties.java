@@ -41,11 +41,17 @@ package org.openflexo.toolbox;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author gpolet
@@ -77,8 +83,26 @@ public class FlexoProperties extends Properties implements Comparator<Object> {
 	@Override
 	public synchronized void store(OutputStream out, String header) throws IOException {
 		isStoring = true;
-		super.store(out, header);
-		isStoring = false;
+		try {
+			super.store(out, header);
+		} finally {
+			isStoring = false;
+		}
+	}
+
+	/**
+	 * Since Java 9, {@link Properties#store(OutputStream, String)} writes the entries of {@link #entrySet()} and no longer the elements of
+	 * {@link #keys()}: while storing, the entries are given in the order of their keys, so that the files stay sorted (and a change of one
+	 * entry changes one line, not the whole file).
+	 */
+	@Override
+	public Set<Map.Entry<Object, Object>> entrySet() {
+		if (isStoring) {
+			List<Map.Entry<Object, Object>> entries = new ArrayList<>(super.entrySet());
+			Collections.sort(entries, (e1, e2) -> compare(e1.getKey(), e2.getKey()));
+			return new LinkedHashSet<>(entries);
+		}
+		return super.entrySet();
 	}
 
 	/*
